@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "Aethel BioPharma Global Corp",
+    "ticker": "ABIO",
+    "industry": "Specialty Pharmaceuticals & Oncology Therapeutics",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "High-margin commercial oncology biopharma with accelerating pipeline commercialization"
+  },
+  "valuation": {
+    "fair_value_per_share": 151.13,
+    "fair_value_rounded": 151,
+    "current_market_price": 75.0,
+    "projected_upside_pct": 101.5,
+    "enterprise_value": 5935.0,
+    "equity_value": 6045.0,
+    "wacc": 0.09086,
+    "wacc_displayed": 0.091,
+    "cost_of_equity": 0.09525,
+    "after_tax_cost_of_debt": 0.05135,
+    "debt_weight": 0.10,
+    "equity_weight": 0.90,
+    "sum_pv_fcff": 1280.0,
+    "terminal_value_gordon": 7192.0,
+    "pv_terminal_value": 4655.0,
+    "terminal_value_pct_of_ev": 78.43,
+    "terminal_growth_rate": 0.030,
+    "shares_outstanding": 40.0,
+    "base_debt_fy25": 100.0,
+    "base_cash_fy25": 210.0,
+    "net_debt_fy25": -110.0
+  },
+  "comps": {
+    "implied_price_per_share": 145.0,
+    "median_ev_ebitda": 14.0
+  },
+  "lbo": {
+    "moic": 3.10,
+    "irr": 0.254
+  },
+  "monte_carlo": {
+    "mean_price": 153.4,
+    "median_price": 152.0,
+    "pct_5_var": 118.5,
+    "pct_95": 204.2,
+    "prob_undervalued": 97.2
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true,
+    "max_discrepancy": 0.0
+  }
+}

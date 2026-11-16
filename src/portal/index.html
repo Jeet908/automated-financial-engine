@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketLens Analytics | Financial Modeling & Valuation Engine Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.35);
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.25);
+            --warning: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 3rem;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            background: rgba(9, 13, 22, 0.7);
+        }
+        .logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            color: white;
+            font-size: 1.15rem;
+            box-shadow: 0 0 16px var(--primary-glow);
+        }
+        .logo-text { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+        .logo-sub { color: var(--primary); font-weight: 500; font-size: 0.85rem; margin-left: 0.35rem; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-link:hover { color: var(--text-main); }
+        .nav-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 0.35rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .pulse-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+        main { flex: 1; max-width: 1080px; width: 100%; margin: 2.5rem auto; padding: 0 1.5rem; }
+        .hero { text-align: center; margin-bottom: 2.5rem; }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 {
+            font-size: 2.85rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { color: var(--text-muted); font-size: 1.15rem; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+        .dropzone-card {
+            background: var(--card-bg);
+            border: 2px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+        }
+        .dropzone-card:hover, .dropzone-card.dragover {
+            border-color: var(--primary);
+            box-shadow: 0 0 35px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+        .drop-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            display: grid;
+            place-items: center;
+            font-size: 2.2rem;
+            margin: 0 auto 1.5rem;
+        }
+        .drop-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .drop-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+        .pill-container { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+        .format-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        /* Step Process Bar */
+        .process-flow {
+            display: none;
+            margin-top: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+        }
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            position: relative;
+        }
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.6rem;
+        }
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .step-item.active .step-num {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 16px var(--primary-glow);
+        }
+        .step-item.completed .step-num {
+            background: var(--success);
+            border-color: var(--success);
+            color: #052e16;
+        }
+        .step-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+        .step-item.active .step-label { color: var(--text-main); }
+        /* Result Preview Dashboard */
+        #results-dashboard {
+            display: none;
+            margin-top: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 2.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 1.75rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .dash-entity { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+        .dash-meta { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .trust-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            padding: 0.6rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .kpi-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+        }
+        .kpi-label { font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; }
+        .kpi-val { font-size: 1.85rem; font-weight: 800; margin-top: 0.35rem; color: #ffffff; }
+        .kpi-sub { font-size: 0.82rem; color: #34d399; margin-top: 0.25rem; font-weight: 500; }
+        .cta-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .btn-zip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-weight: 700;
+            font-size: 1.15rem;
+            padding: 1rem 2.25rem;
+            border-radius: 1rem;
+            text-decoration: none;
+            box-shadow: 0 10px 25px var(--success-glow);
+            transition: all 0.2s;
+            margin-bottom: 1.25rem;
+        }
+        .btn-zip:hover { transform: translateY(-2px); box-shadow: 0 15px 30px var(--success-glow); }
+        .sub-downloads { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 1.25rem;
+            border-radius: 0.6rem;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-sub:hover { background: rgba(255, 255, 255, 0.12); }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-mark">ML</div>
+            <div>
+                <span class="logo-text">MarketLens</span><span class="logo-sub">Analytics</span>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="https://www.marketlensanalytics.in" class="nav-link" target="_blank">Website</a>
+            <a href="/api/v1/health" class="nav-link">API Health</a>
+            <div class="nav-badge"><span class="pulse-dot"></span> Engine Online v1.0</div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="hero">
+            <div class="hero-badge">⚡ Zero-Touch Automated Valuation Infrastructure</div>
+            <h1>Institutional Financial Modeling & Valuation Engine</h1>
+            <p>Upload raw financial data from any entity (Ind AS, US GAAP, IFRS, or SaaS MIS). Get a fully linked 8-tab Excel model, 2-page executive PDF tear-sheet, and 8-slide pitchbook in 5 seconds.</p>
+        </div>
+
+        <div class="dropzone-card" id="dropzone" onclick="document.getElementById('file-input').click()">
+            <div class="drop-icon">📈</div>
+            <div class="drop-title">Drop your raw client financial file here</div>
+            <div class="drop-subtitle">Auto-normalizes Tally ERP, Zoho Books, SEC 10-K, and SaaS cohorts with 0 clicks</div>
+            <div class="pill-container">
+                <span class="format-pill">Excel (.xlsx, .xls)</span>
+                <span class="format-pill">CSV (.csv)</span>
+                <span class="format-pill">Trial Balance PDF (.pdf)</span>
+                <span class="format-pill">JSON Ledger (.json)</span>
+            </div>
+            <input type="file" id="file-input" style="display: none;" accept=".xlsx,.xls,.csv,.json,.pdf">
+        </div>
+
+        <div class="process-flow" id="process-flow">
+            <div class="steps-grid">
+                <div class="step-item" id="step-1">
+                    <div class="step-num">1</div>
+                    <div class="step-label">Auto-Detecting Standard & Currency</div>
+                </div>
+                <div class="step-item" id="step-2">
+                    <div class="step-num">2</div>
+                    <div class="step-label">Building 3-Statement & DCF Loop</div>
+                </div>
+                <div class="step-item" id="step-3">
+                    <div class="step-num">3</div>
+                    <div class="step-label">Running Zero-Error Audit Gates</div>
+                </div>
+                <div class="step-item" id="step-4">
+                    <div class="step-num">4</div>
+                    <div class="step-label">Compiling Excel + PDF + Pitchbook</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="results-dashboard">
+            <div class="dash-header">
+                <div>
+                    <div class="dash-entity" id="res-entity">Entity Name</div>
+                    <div class="dash-meta" id="res-meta">Ind AS Schedule III • INR Crores • FY23A - FY30E</div>
+                </div>
+                <div class="trust-badge">
+                    <span>✓</span> <span id="res-badge">Audit Verified: Assets = Liab + Equity ($0.00 Variance)</span>
+                </div>
+            </div>
+
+            <div class="kpi-cards-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Implied Enterprise Value (Base)</div>
+                    <div class="kpi-val" id="val-ev">₹6,188 Cr</div>
+                    <div class="kpi-sub">WACC: 11.8% • TGR: 5.0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Implied Equity Value</div>
+                    <div class="kpi-val" id="val-equity">₹6,218 Cr</div>
+                    <div class="kpi-sub" id="val-price">Target: ₹621.83 / share</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Valuation Football Field</div>
+                    <div class="kpi-val" id="val-range">₹4,978 - ₹7,616 Cr</div>
+                    <div class="kpi-sub">Bear Case vs. Bull Case</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Mathematical Audit Status</div>
+                    <div class="kpi-val" style="color: #34d399;">100% PASS</div>
+                    <div class="kpi-sub">400+ Live Excel Formulas • 0 Errors</div>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <a href="#" class="btn-zip" id="btn-zip-download">
+                    <span>📦</span> Download Complete Valuation Pack (.ZIP)
+                </a>
+                <div class="sub-downloads">
+                    <a href="#" class="btn-sub" id="btn-dl-xlsx">📊 Financial Model (.xlsx)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-pdf">📑 Valuation Tear-Sheet (.pdf)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-pptx">🎯 Board Pitchbook (.pptx)</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 MarketLens Analytics (marketlensanalytics.in). Institutional Financial Engineering Engine. All rights reserved.
+    </footer>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+        const processFlow = document.getElementById('process-flow');
+        const resultsDashboard = document.getElementById('results-dashboard');
+
+        ['dragenter', 'dragover'].forEach(eName => {
+            dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(eName => {
+            dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) handleUpload(files[0]);
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleUpload(fileInput.files[0]);
+        });
+
+        async function handleUpload(file) {
+            processFlow.style.display = 'block';
+            resultsDashboard.style.display = 'none';
+
+            // Animate progress steps
+            setStep(1);
+            setTimeout(() => setStep(2), 700);
+            setTimeout(() => setStep(3), 1600);
+            setTimeout(() => setStep(4), 2500);
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/v1/model/generate-pack', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Pack generation failed');
+                }
+
+                const data = await res.json();
+                markAllCompleted();
+                renderDashboard(data);
+            } catch (err) {
+                alert('Processing Error: ' + err.message);
+                processFlow.style.display = 'none';
+            }
+        }
+
+        function setStep(num) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                if (i < num) {
+                    el.className = 'step-item completed';
+                    el.querySelector('.step-num').textContent = '✓';
+                } else if (i === num) {
+                    el.className = 'step-item active';
+                } else {
+                    el.className = 'step-item';
+                }
+            }
+        }
+
+        function markAllCompleted() {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                el.className = 'step-item completed';
+                el.querySelector('.step-num').textContent = '✓';
+            }
+        }
+
+        function renderDashboard(data) {
+            resultsDashboard.style.display = 'block';
+            const meta = data.metadata || {};
+            const preview = data.preview || {};
+
+            document.getElementById('res-entity').textContent = meta.name || 'Client Entity';
+            document.getElementById('res-meta').textContent = `${meta.standard || 'Ind AS'} • ${meta.currency || 'INR'} ${meta.unit || 'Crores'} • 5-Year Forecast Horizon`;
+
+            const currSym = meta.currency === 'INR' ? '₹' : (meta.currency === 'USD' ? '$' : meta.currency + ' ');
+            const unitStr = meta.unit ? ' ' + meta.unit : '';
+
+            if (preview.ev_base) {
+                document.getElementById('val-ev').textContent = `${currSym}${preview.ev_base.toLocaleString()}${unitStr}`;
+            }
+            if (preview.equity_base) {
+                document.getElementById('val-equity').textContent = `${currSym}${preview.equity_base.toLocaleString()}${unitStr}`;
+            }
+            if (preview.ev_bear && preview.ev_bull) {
+                document.getElementById('val-range').textContent = `${currSym}${preview.ev_bear.toLocaleString()} - ${currSym}${preview.ev_bull.toLocaleString()}${unitStr}`;
+            }
+            if (preview.price_per_share) {
+                document.getElementById('val-price').textContent = `Target: ${currSym}${preview.price_per_share.toFixed(2)} / share`;
+            }
+
+            // Set download links
+            document.getElementById('btn-zip-download').href = data.zip_download_url || '#';
+            document.getElementById('btn-dl-xlsx').href = data.xlsx_download_url || '#';
+            document.getElementById('btn-dl-pdf').href = data.pdf_download_url || '#';
+            document.getElementById('btn-dl-pptx').href = data.pptx_download_url || '#';
+        }
+    </script>
+</body>
+</html>

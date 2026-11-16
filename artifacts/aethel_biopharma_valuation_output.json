@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "name": "Aethel BioPharma Global Corp",
+    "ticker": "ABIO",
+    "industry": "Specialty Pharmaceuticals & Oncology Therapeutics",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"]
+  },
+  "valuation": {
+    "fair_value_per_share": 138.54,
+    "current_market_price": 75.0,
+    "projected_upside_pct": 84.72,
+    "exit_multiple_fair_value": 164.20,
+    "exit_multiple_upside_pct": 118.93,
+    "enterprise_value": 5431.60,
+    "equity_value": 5541.60,
+    "wacc": 0.09086,
+    "cost_of_equity": 0.09525,
+    "after_tax_cost_of_debt": 0.05135,
+    "debt_weight": 0.10,
+    "equity_weight": 0.90,
+    "sum_pv_fcff": 1051.20,
+    "terminal_value_gordon": 6769.45,
+    "pv_terminal_value": 4380.40,
+    "terminal_growth_rate": 0.030,
+    "shares_outstanding": 40.0,
+    "net_debt_fy25": -110.0
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "balance_check_max_discrepancy": 0.0,
+    "all_identities_verified": true
+  }
+}

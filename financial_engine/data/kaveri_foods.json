@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "name": "Kaveri Foods Ltd",
+    "ticker": "KAVERI",
+    "industry": "Packaged Foods & Consumer Staples",
+    "currency": "INR",
+    "currency_unit": "INR crore",
+    "shares_unit": "crore",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "Indian packaged-foods company 3-statement model & DCF benchmark"
+  },
+  "historicals": {
+    "revenue": [1000.0, 1120.0, 1243.2],
+    "cogs": [585.0, 649.6, 716.1],
+    "employee_costs": [100.0, 109.8, 120.6],
+    "other_expenses": [122.0, 134.4, 147.9],
+    "depreciation": [38.0, 40.0, 43.0],
+    "interest": [28.4, 25.7, 23.0],
+    "tax": [31.9, 40.4, 48.5],
+    "dividends": [23.7, 30.0, 36.0],
+    "cash": [222.8, 239.8, 269.5],
+    "receivables": [123.3, 138.1, 153.3],
+    "inventory": [80.1, 89.0, 98.1],
+    "net_fixed_assets": [400.0, 430.0, 465.0],
+    "payables": [96.2, 106.8, 117.7],
+    "debt": [300.0, 270.0, 240.0],
+    "share_capital": [50.0, 50.0, 50.0],
+    "retained_earnings": [380.0, 470.1, 578.2]
+  },
+  "assumptions": {
+    "revenue_growth": [0.12, 0.11, 0.10, 0.09, 0.08],
+    "cogs_pct_revenue": null,
+    "employee_pct_revenue": [0.097, 0.097, 0.097, 0.097, 0.097],
+    "other_opex_pct_revenue": [0.119, 0.119, 0.119, 0.119, 0.119],
+    "receivable_days": [45.0, 45.0, 45.0, 45.0, 45.0],
+    "inventory_days": [50.0, 50.0, 50.0, 50.0, 50.0],
+    "payable_days": [60.0, 60.0, 60.0, 60.0, 60.0],
+    "capex_pct_revenue": [0.05, 0.05, 0.05, 0.05, 0.05],
+    "depreciation_pct_opening_nb": [0.10, 0.10, 0.10, 0.10, 0.10],
+    "interest_rate": [0.09, 0.09, 0.09, 0.09, 0.09],
+    "debt_repayment": [30.0, 30.0, 30.0, 30.0, 30.0],
+    "tax_rate": [0.2517, 0.2517, 0.2517, 0.2517, 0.2517],
+    "dividend_payout": [0.25, 0.25, 0.25, 0.25, 0.25]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.065,
+    "beta": 0.90,
+    "equity_risk_premium": 0.070,
+    "pretax_cost_of_debt": 0.090,
+    "debt_weight": 0.20,
+    "terminal_growth_rate": 0.050,
+    "shares_outstanding": 10.0,
+    "exit_multiple_ev_ebitda": 8.0,
+    "current_market_price": 210.0
+  }
+}
