@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import os
+import threading
+from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import HTTPException
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from .database import Job, Subscription, User, utc_now
+
+_reservation_lock = threading.Lock()
+
+
+def plan_catalog() -> dict[str, dict[str, object]]:
+    return {
+        "free": {
+            "name": "Free",
+            "price_paise": 0,
+            "monthly_valuations": int(os.environ.get("FREE_MONTHLY_VALUATIONS", "1")),
+            "razorpay_plan_env": None,
+        },
+        "pro": {
+            "name": "Pro",
+            "price_paise": int(os.environ.get("PRO_PRICE_PAISE", "149900")),
+            "monthly_valuations": int(os.environ.get("PRO_MONTHLY_VALUATIONS", "20")),
+            "razorpay_plan_env": "RAZORPAY_PLAN_ID_PRO",
+        },
+        "business": {
+            "name": "Business",
+            "price_paise": int(os.environ.get("BUSINESS_PRICE_PAISE", "499900")),
+            "monthly_valuations": int(os.environ.get("BUSINESS_MONTHLY_VALUATIONS", "100")),
+            "razorpay_plan_env": "RAZORPAY_PLAN_ID_BUSINESS",
+        },
+    }
+
+
+def _subscription_is_current(subscription: Subscription | None) -> bool:
+    if subscription is None:
+        return False
+    status_is_current = subscription.status in {"active", "trialing"}
+    cancellation_is_pending = subscription.cancel_at_period_end and subscription.status == "cancelled"
+    if not status_is_current and not cancellation_is_pending:
+        return False
+    end = subscription.current_period_end
+    if end is None:
+        return False
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    return end > datetime.now(timezone.utc)
+
+
+def effective_plan(db: Session, user_id: str) -> tuple[str, Subscription | None]:
+    subscription = db.get(Subscription, user_id)
+    if _subscription_is_current(subscription):
+        return subscription.plan_key, subscription
+    return "free", subscription
+
+
+def monthly_usage(db: Session, user_id: str) -> int:
+    now = utc_now()
+    period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return int(
+        db.scalar(
+            select(func.count(Job.id)).where(
+                Job.user_id == user_id,
+                Job.created_at >= period_start,
+                Job.status.in_(("pending", "running", "succeeded")),
+            )
+        )
+        or 0
+    )
+
+
+def account_summary(db: Session, user: User) -> dict[str, object]:
+    plan_key, subscription = effective_plan(db, user.id)
+    plan = plan_catalog().get(plan_key, plan_catalog()["free"])
+    used = monthly_usage(db, user.id)
+    return {
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "email_verified": user.email_verified,
+        },
+        "plan": {
+            "key": plan_key,
+            "name": plan["name"],
+            "monthly_valuations": plan["monthly_valuations"],
+            "used_this_month": used,
+            "remaining_this_month": max(0, int(plan["monthly_valuations"]) - used),
+        },
+        "subscription": (
+            {
+                "status": subscription.status,
+                "cancel_at_period_end": subscription.cancel_at_period_end,
+                "current_period_end": (
+                    subscription.current_period_end.isoformat()
+                    if subscription.current_period_end
+                    else None
+                ),
+            }
+            if subscription
+            else None
+        ),
+    }
+
+
+def reserve_job(db: Session, user: User, kind: str, workspace_path: Path) -> Job:
+    with _reservation_lock:
+        locked_user = db.scalar(select(User).where(User.id == user.id).with_for_update())
+        if locked_user is None:
+            raise HTTPException(status_code=401, detail="Your account is no longer available.")
+
+        plan_key, _ = effective_plan(db, user.id)
+        catalog = plan_catalog()
+        plan = catalog.get(plan_key, catalog["free"])
+        limit = int(plan["monthly_valuations"])
+        used = monthly_usage(db, user.id)
+        if used >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail=f"You have used your {limit} valuation(s) for this month. Upgrade your plan to continue.",
+            )
+
+        job = Job(
+            id=str(uuid4()),
+            user_id=user.id,
+            kind=kind,
+            status="pending",
+            workspace_path=str(workspace_path.resolve()),
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        return job

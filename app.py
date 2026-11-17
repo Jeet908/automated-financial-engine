@@ -1,182 +1,160 @@
-"""
-app.py — Production FastAPI Server for Automated Financial Modeling & Valuation Portal.
-Serves interactive web portal, live web scraping endpoints, and client pack downloads.
-"""
-
 from __future__ import annotations
 
+import html
+import logging
 import os
-import shutil
 from pathlib import Path
-from typing import Optional
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
-PROJECT_ROOT = Path(__file__).resolve().parent
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
-from discover_and_run import run_discovery_pipeline
-from src.cli import process_file
+from src.portal import auth, billing, jobs
+from src.portal.database import database_ready, init_database
+from src.portal.mailer import email_delivery_configured
+from src.portal.security import SESSION_COOKIE, load_session_secret
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+logger = logging.getLogger(__name__)
+is_production = os.environ.get("APP_ENV") == "production" or bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 
 app = FastAPI(
-    title="Automated Financial Modeling & Valuation Engine",
-    description="100% Zero-Touch Corporate 3-Statement Modeling, Multi-Method DCF, and Executive Pack Generator",
-    version="1.0.0",
+    title="MarketLens Analytics",
+    description="Financial modeling, company valuation, and subscription management.",
+    version="2.0.0",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
 )
 
-# Ensure folders exist
-for folder in ["artifacts", "client_inbox", "client_outbox", "inputs"]:
-    (PROJECT_ROOT / folder).mkdir(parents=True, exist_ok=True)
+allowed_hosts = [
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS",
+        "localhost,127.0.0.1,testserver,*.up.railway.app",
+    ).split(",")
+    if host.strip()
+]
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=load_session_secret(),
+    session_cookie=SESSION_COOKIE,
+    max_age=60 * 60 * 24 * 14,
+    same_site="lax",
+    https_only=is_production,
+)
 
-# Mount static asset folders
-app.mount("/artifacts", StaticFiles(directory=str(PROJECT_ROOT / "artifacts"), html=True), name="artifacts")
-app.mount("/client_outbox", StaticFiles(directory=str(PROJECT_ROOT / "client_outbox")), name="client_outbox")
-app.mount("/client_inbox", StaticFiles(directory=str(PROJECT_ROOT / "client_inbox")), name="client_inbox")
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; "
+        "style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com; "
+        "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
+        "img-src 'self' data: https://*.razorpay.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+    )
+    if request.url.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
-class LiveScrapeRequest(BaseModel):
-    domain: Optional[str] = "Any Random Domain"
-    market: Optional[str] = "random"
+app.include_router(auth.router)
+app.include_router(billing.router)
+app.include_router(jobs.router)
 
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_portal():
     portal_html = PROJECT_ROOT / "src" / "portal" / "index.html"
     if not portal_html.is_file():
-        raise HTTPException(status_code=500, detail="Portal entry page is missing from the deployment image")
+        raise HTTPException(status_code=500, detail="Portal entry page is missing from the deployment image.")
     return portal_html.read_text(encoding="utf-8")
 
 
 @app.get("/api/v1/health")
 async def health_check():
+    try:
+        database_ready()
+    except Exception:
+        logger.exception("SaaS database health check failed.")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "service": "MarketLens Analytics"},
+        )
     return {
         "status": "online",
-        "service": "MarketLens Financial Modeling & Valuation",
+        "service": "MarketLens Analytics",
         "domains_supported": list(DOMAIN_CATALOG.keys()),
+        "features": {
+            "database": True,
+            "email_verification": email_delivery_configured(),
+            "google_sign_in": bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET")),
+            "razorpay": bool(
+                os.environ.get("RAZORPAY_KEY_ID")
+                and os.environ.get("RAZORPAY_KEY_SECRET")
+                and os.environ.get("RAZORPAY_WEBHOOK_SECRET")
+                and os.environ.get("RAZORPAY_PLAN_ID_PRO")
+                and os.environ.get("RAZORPAY_PLAN_ID_BUSINESS")
+            ),
+            "storage_backend": "postgresql" if os.environ.get("DATABASE_URL") else "sqlite",
+        },
     }
 
 
-@app.post("/api/v1/model/generate-pack")
-async def generate_pack(file: UploadFile = File(...)):
-    """Receives an uploaded client financial file and compiles the 3-deliverable pack."""
-    inbox_dir = PROJECT_ROOT / "client_inbox"
-    outbox_dir = PROJECT_ROOT / "client_outbox"
-
-    temp_path = inbox_dir / file.filename
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    try:
-        pack_res = process_file(file_path=str(temp_path), output_dir=str(outbox_dir))
-        
-        # Derive relative URLs
-        clean_name = temp_path.stem
-        return {
-            "status": "success",
-            "metadata": {"name": clean_name},
-            "zip_download_url": f"/client_outbox/{Path(pack_res['zip_path']).name}",
-            "xlsx_download_url": f"/client_outbox/{Path(pack_res['xlsx_path']).name}",
-            "pdf_download_url": f"/client_outbox/{Path(pack_res['pdf_path']).name}",
-            "pptx_download_url": f"/client_outbox/{Path(pack_res['pptx_path']).name}",
-            "preview": {
-                "ev_base": pack_res.get("ev_base", 2516.4),
-                "equity_base": pack_res.get("equity_base", 2545.9),
-                "price_per_share": pack_res.get("price_per_share", 252.0),
-                "ev_bear": pack_res.get("ev_bear", 1768.2),
-                "ev_bull": pack_res.get("ev_bull", 3240.0),
-            }
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
+def _legal_page(title: str, paragraphs: list[str]) -> str:
+    legal_name = html.escape(os.environ.get("PUBLIC_LEGAL_NAME", "MarketLens Analytics"))
+    contact = html.escape(os.environ.get("PUBLIC_SUPPORT_EMAIL", "Support contact not configured"))
+    contact_markup = f'<a href="mailto:{contact}">{contact}</a>' if "@" in contact else contact
+    content = "".join(f"<p>{html.escape(paragraph)}</p>" for paragraph in paragraphs)
+    return (
+        "<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' "
+        "content='width=device-width, initial-scale=1'><title>"
+        f"{html.escape(title)} | MarketLens</title><body style='max-width:760px;margin:4rem auto;"
+        "padding:0 1.25rem;font:16px/1.6 system-ui;color:#17212b'>"
+        f"<p><a href='/'>MarketLens</a></p><h1>{html.escape(title)}</h1>"
+        f"<p>Service operator: {legal_name}. Contact: {contact_markup}.</p>"
+        f"{content}</body></html>"
+    )
 
 
-@app.post("/api/v1/model/live-scrape")
-async def live_scrape(req: LiveScrapeRequest):
-    """
-    Discovers, scrapes, models, stress-tests, and packages a real-world company
-    based on the requested industry domain.
-    """
-    try:
-        res = run_discovery_pipeline(domain=req.domain, market=req.market or "random", quiet=True)
-        comp = res["company"]
-        model = res["engine_a_model"]
-        pack = res["engine_b_pack"]
-        ticker_slug = res["ticker_slug"]
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_of_service():
+    return _legal_page(
+        "Terms of Service",
+        [
+            "MarketLens provides financial modeling tools and automated analysis for informational purposes only. It is not investment, legal, tax, or accounting advice, and it does not recommend buying or selling securities.",
+            "Market data and uploaded financial information may be incomplete, delayed, incorrectly classified, or otherwise inaccurate. You are responsible for reviewing source data, assumptions, calculations, and outputs before relying on them.",
+            "Paid subscriptions renew according to the plan and payment-provider terms shown at checkout. You may request cancellation from your account; access remains subject to the paid period and plan limits shown in the service.",
+            "Before accepting paid customers, the operator must complete the business identity, governing-law, tax, refund, complaint, liability, and consumer-rights terms applicable to its markets.",
+        ],
+    )
 
-        dashboard_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_dashboard.html"
-        memo_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_investment_memo.md"
-        audit_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_audit_certificate.json"
 
-        zip_name = Path(pack.get("zip_path", "")).name if pack.get("zip_path") else ""
-        xlsx_name = Path(pack.get("xlsx_path", "")).name if pack.get("xlsx_path") else ""
-        pdf_name = Path(pack.get("pdf_path", "")).name if pack.get("pdf_path") else ""
-        pptx_name = Path(pack.get("pptx_path", "")).name if pack.get("pptx_path") else ""
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_notice():
+    return _legal_page(
+        "Privacy Notice",
+        [
+            "MarketLens stores account details, subscription state, usage records, uploaded financial files, and generated reports to operate the service. These materials are private to the account that created them.",
+            "Payment details are handled by the selected payment provider; MarketLens does not request or store card numbers or payment credentials.",
+            "Before public launch, the operator must publish its retention period, deletion process, subprocessors, international-transfer terms, and jurisdiction-specific privacy disclosures.",
+        ],
+    )
 
-        curr_p = comp["current_market_price"]
-        fair_p = model.value_per_share
-        upside = ((fair_p / curr_p) - 1.0) * 100.0 if curr_p > 0 else 0.0
 
-        return {
-            "status": "success",
-            "company": {
-                "name": comp["name"],
-                "ticker": comp["ticker"],
-                "exchange": comp["exchange"],
-                "industry": comp["industry"],
-                "currency": comp["currency"],
-                "current_market_price": curr_p,
-                "shares_outstanding": comp.get("shares_outstanding", 10.0),
-                "market_cap": round(comp.get("market_cap", comp.get("shares_outstanding", 10.0) * curr_p), 2),
-                "beta": comp.get("beta", 1.0),
-                "fair_value_per_share": round(fair_p, 2),
-                "upside_pct": round(upside, 2),
-                "wacc": round(model.wacc * 100.0, 2),
-                "enterprise_value": round(model.enterprise_value, 2),
-                "equity_value": round(model.equity_value, 2),
-            },
-            "urls": {
-                "dashboard_html": dashboard_rel_url,
-                "investment_memo_md": memo_rel_url,
-                "audit_certificate_json": audit_rel_url,
-                "zip_pack": f"/client_outbox/{ticker_slug}_live/{zip_name}" if zip_name else "",
-                "xlsx_model": f"/client_outbox/{ticker_slug}_live/{xlsx_name}" if xlsx_name else "",
-                "pdf_tearsheet": f"/client_outbox/{ticker_slug}_live/{pdf_name}" if pdf_name else "",
-                "pptx_pitchbook": f"/client_outbox/{ticker_slug}_live/{pptx_name}" if pptx_name else "",
-            },
-            "accounting_audit": {
-                "overall_status": model.audit_certificate.overall_status,
-                "is_valid": model.audit_certificate.is_valid,
-                "max_discrepancy": max(
-                    (check.max_discrepancy for check in model.audit_certificate.checks),
-                    default=0.0,
-                ),
-                "checks": [
-                    {
-                        "name": check.name,
-                        "passed": check.passed,
-                        "max_discrepancy": check.max_discrepancy,
-                    }
-                    for check in model.audit_certificate.checks
-                ],
-            },
-            "monte_carlo": {
-                "iterations": model.monte_carlo.iterations,
-                "median_price": model.monte_carlo.median_price,
-                "prob_undervalued": model.monte_carlo.prob_undervalued,
-            },
-        }
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Scraper & Valuation Error: {str(e)}")
+init_database()
 
 
 if __name__ == "__main__":
-    import uvicorn
-    import os
     port = int(os.environ.get("PORT", 8000))
-    print(f"[*] Starting MarketLens Financial Engine Portal on http://0.0.0.0:{port} ...")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+    print(f"[*] Starting MarketLens Analytics on 0.0.0.0:{port}")
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False, proxy_headers=True)

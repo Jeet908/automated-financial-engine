@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "name": "Salesforce, Inc.",
+    "ticker": "CRM",
+    "industry": "Software - Application",
+    "currency": "USD",
+    "currency_unit": "USD billion",
+    "shares_unit": "billion",
+    "historical_years": [
+      "FY23A",
+      "FY24A",
+      "FY25A",
+      "FY26A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Live Yahoo Finance annual statements and quote for Salesforce, Inc. (NYQ); other assets and liabilities are aggregated to fit the engine's simplified schema."
+  },
+  "historicals": {
+    "revenue": [
+      31.352,
+      34.857,
+      37.895,
+      41.525
+    ],
+    "cogs": [
+      8.36,
+      8.541,
+      8.643,
+      9.27
+    ],
+    "employee_costs": [
+      1.256,
+      1.062,
+      0.0,
+      0.0
+    ],
+    "other_expenses": [
+      20.16,
+      19.413,
+      20.913,
+      21.74
+    ],
+    "depreciation": [
+      0.916,
+      0.891,
+      0.901,
+      0.995
+    ],
+    "interest": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "tax": [
+      0.452,
+      0.814,
+      1.241,
+      2.063
+    ],
+    "dividends": [
+      0.0,
+      0.0,
+      1.537,
+      1.587
+    ],
+    "cash": [
+      7.016,
+      8.472,
+      8.848,
+      7.327
+    ],
+    "receivables": [
+      10.755,
+      11.414,
+      11.945,
+      14.339
+    ],
+    "inventory": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "net_fixed_assets": [
+      81.078,
+      79.937,
+      82.13499999999999,
+      90.63900000000001
+    ],
+    "payables": [
+      26.402,
+      27.589,
+      30.363,
+      35.987
+    ],
+    "debt": [
+      14.088,
+      12.588,
+      11.392,
+      17.176
+    ],
+    "share_capital": [
+      0.001,
+      0.001,
+      0.001,
+      0.001
+    ],
+    "retained_earnings": [
+      58.358000000000004,
+      59.644999999999996,
+      61.172000000000004,
+      59.14100000000001
+    ],
+    "reported_net_ppe": [
+      6.592,
+      6.055,
+      5.393,
+      5.123
+    ],
+    "reported_accounts_payable": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "total_assets": [
+      98.849,
+      99.823,
+      102.928,
+      112.305
+    ],
+    "total_liabilities": [
+      40.49,
+      40.177,
+      41.755,
+      53.163
+    ],
+    "total_equity": [
+      58.359,
+      59.646,
+      61.173,
+      59.142
+    ],
+    "capex": [
+      0.798,
+      0.736,
+      0.658,
+      0.594
+    ],
+    "operating_cash_flow": [
+      7.111,
+      10.234,
+      13.092,
+      14.996
+    ],
+    "investing_cash_flow": [
+      -1.989,
+      -1.327,
+      -3.163,
+      -8.59
+    ],
+    "financing_cash_flow": [
+      -3.562,
+      -7.477,
+      -9.429,
+      -8.079
+    ],
+    "reported_net_income": [
+      0.208,
+      4.136,
+      6.197,
+      7.457
+    ]
+  },
+  "assumptions": {
+    "revenue_growth": [
+      0.0933,
+      0.0865,
+      0.0786,
+      0.0707,
+      0.0639
+    ],
+    "cogs_pct_revenue": null,
+    "employee_pct_revenue": [
+      0.0159,
+      0.0159,
+      0.0159,
+      0.0159,
+      0.0159
+    ],
+    "other_opex_pct_revenue": [
+      0.5646,
+      0.5646,
+      0.5646,
+      0.5646,
+      0.5646
+    ],
+    "receivable_days": [
+      121.4,
+      121.4,
+      121.4,
+      121.4,
+      121.4
+    ],
+    "inventory_days": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "payable_days": [
+      1261.7,
+      1261.7,
+      1261.7,
+      1261.7,
+      1261.7
+    ],
+    "capex_pct_revenue": [
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02
+    ],
+    "depreciation_pct_opening_nb": [
+      0.0121,
+      0.0121,
+      0.0121,
+      0.0121,
+      0.0121
+    ],
+    "interest_rate": [
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02
+    ],
+    "debt_repayment": [
+      3.44,
+      3.44,
+      3.44,
+      3.44,
+      3.44
+    ],
+    "tax_rate": [
+      0.2167,
+      0.2167,
+      0.2167,
+      0.2167,
+      0.2167
+    ],
+    "dividend_payout": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.044,
+    "beta": 1.233,
+    "equity_risk_premium": 0.055,
+    "pretax_cost_of_debt": 0.085,
+    "debt_weight": 0.08742821679994527,
+    "terminal_growth_rate": 0.035,
+    "shares_outstanding": 0.823,
+    "exit_multiple_ev_ebitda": 20.0,
+    "current_market_price": 217.84
+  }
+}

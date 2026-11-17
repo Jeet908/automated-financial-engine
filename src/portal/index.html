@@ -20,6 +20,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
         body {
             background-color: var(--bg-dark);
@@ -871,6 +872,232 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        .account-card,
+        .plans-card {
+            background: #fff;
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+        }
+
+        .account-card h2,
+        .plans-card h2 {
+            color: #17212b;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-card p,
+        .plans-card p {
+            color: #667085;
+            line-height: 1.55;
+        }
+
+        .account-actions,
+        .account-status-row,
+        .plan-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .account-actions button,
+        .auth-form button,
+        .plan-actions button,
+        .secondary-button {
+            border: 1px solid #d0d5dd;
+            border-radius: 0.55rem;
+            padding: 0.65rem 1rem;
+            background: #fff;
+            color: #17212b;
+            font: inherit;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .account-actions .primary-button,
+        .auth-form .primary-button,
+        .plan-actions .primary-button {
+            background: #1769aa;
+            border-color: #1769aa;
+            color: #fff;
+        }
+
+        .account-actions button:disabled,
+        .auth-form button:disabled,
+        .plan-actions button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .auth-panel {
+            border-top: 1px solid #eaecf0;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-tabs button[aria-pressed="true"] {
+            background: #eef6fc;
+            border-color: #84b5d8;
+            color: #155e91;
+        }
+
+        .auth-form {
+            display: grid;
+            gap: 0.8rem;
+            max-width: 430px;
+        }
+
+        .auth-form label {
+            display: grid;
+            gap: 0.35rem;
+            color: #344054;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .auth-form input {
+            width: 100%;
+            border: 1px solid #d0d5dd;
+            border-radius: 0.5rem;
+            padding: 0.7rem 0.75rem;
+            color: #17212b;
+            font: inherit;
+        }
+
+        .auth-form input:focus {
+            outline: 2px solid #84b5d8;
+            outline-offset: 1px;
+        }
+
+        .terms-check {
+            display: flex !important;
+            grid-template-columns: auto 1fr;
+            align-items: flex-start;
+            gap: 0.55rem !important;
+            font-weight: 400 !important;
+        }
+
+        .terms-check input {
+            width: auto;
+            margin-top: 0.25rem;
+        }
+
+        .auth-feedback {
+            min-height: 1.25rem;
+            color: #155e91;
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+        }
+
+        .auth-feedback.error {
+            color: #b42318;
+        }
+
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.1rem;
+        }
+
+        .plan-card {
+            border: 1px solid #e4e7ec;
+            border-radius: 0.8rem;
+            padding: 1rem;
+        }
+
+        .plan-card.current {
+            border-color: #1769aa;
+            box-shadow: inset 0 0 0 1px #1769aa;
+        }
+
+        .plan-price {
+            color: #17212b;
+            font-size: 1.55rem;
+            font-weight: 750;
+            margin: 0.5rem 0;
+        }
+
+        .plan-note {
+            font-size: 0.83rem;
+            min-height: 2.5rem;
+        }
+
+        .account-usage {
+            color: #344054;
+            font-weight: 600;
+        }
+
+        .job-history {
+            border-top: 1px solid #eaecf0;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+        }
+
+        .job-history h3 {
+            color: #17212b;
+            font-size: 1rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .job-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            border-top: 1px solid #f0f2f5;
+            padding: 0.7rem 0;
+            color: #475467;
+            font-size: 0.88rem;
+        }
+
+        .job-row a {
+            color: #1769aa;
+        }
+
+        .legal-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .legal-links a {
+            color: #1769aa;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .locked-note {
+            color: #667085;
+            font-size: 0.86rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 700px) {
+            .plan-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .account-card,
+            .plans-card {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -885,6 +1112,8 @@
             <a href="https://github.com/Jeet908/automated-financial-engine" class="nav-link" target="_blank" rel="noopener noreferrer">Repository</a>
             <a href="/api/v1/health" class="nav-link">Service health</a>
             <div class="nav-badge"><span class="pulse-dot"></span> Valuation engine</div>
+            <button class="secondary-button" id="nav-auth-button" type="button" onclick="showAuthPanel()">Create account / Sign in</button>
+            <span id="nav-account-label" class="nav-link" hidden></span>
         </div>
     </nav>
 
@@ -895,7 +1124,87 @@
             <p>Build structured valuation scenarios from public company data or client financial files, then review the assumptions, accounting checks, and supporting reports.</p>
         </div>
 
-        <!-- ⚡ LIVE RANDOM SCRAPER CONTROL BAR -->
+        <section class="account-card" aria-labelledby="account-heading">
+            <div id="guest-view">
+                <h2 id="account-heading">Start with one free valuation each month.</h2>
+                <p>Create an account to run a listed-company valuation or upload your own financial file. Reports are private to your account.</p>
+                <div class="account-actions">
+                    <button class="primary-button" type="button" onclick="showAuthPanel('register')">Create free account</button>
+                    <button type="button" onclick="showAuthPanel('login')">Sign in</button>
+                </div>
+            </div>
+            <div id="account-view" hidden>
+                <h2 id="account-welcome">Your MarketLens account</h2>
+                <p id="account-usage" class="account-usage"></p>
+                <p id="account-subscription" class="locked-note"></p>
+                <div class="account-actions">
+                    <button class="secondary-button" type="button" onclick="logout()">Sign out</button>
+                    <button class="secondary-button" id="cancel-subscription" type="button" onclick="cancelSubscription()" hidden>Cancel renewal</button>
+                </div>
+                <div class="job-history">
+                    <h3>Recent analyses</h3>
+                    <div id="job-history-list" aria-live="polite"></div>
+                </div>
+            </div>
+            <div id="auth-panel" class="auth-panel" hidden>
+                <div class="auth-tabs" role="group" aria-label="Account action">
+                    <button type="button" id="register-tab" aria-pressed="true" onclick="setAuthMode('register')">Create account</button>
+                    <button type="button" id="login-tab" aria-pressed="false" onclick="setAuthMode('login')">Sign in</button>
+                </div>
+                <form id="credentials-form" class="auth-form">
+                    <label>Email
+                        <input id="auth-email" type="email" autocomplete="email" maxlength="320" required>
+                    </label>
+                    <label>Password
+                        <input id="auth-password" type="password" autocomplete="new-password" minlength="12" maxlength="256" required>
+                    </label>
+                    <label id="terms-label" class="terms-check">
+                        <input id="terms-accepted" type="checkbox" required>
+                        <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms</a> and have read the <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a>.</span>
+                    </label>
+                    <button class="primary-button" id="credentials-submit" type="submit">Create account</button>
+                    <button class="secondary-button" id="forgot-password-button" type="button" onclick="showPasswordRecovery()" hidden>Forgot password?</button>
+                </form>
+                <div class="account-actions">
+                    <a class="secondary-button" id="google-signin" href="/api/v1/auth/google/start">Continue with Google</a>
+                </div>
+                <label class="terms-check">
+                    <input id="google-terms-accepted" type="checkbox">
+                    <span>By continuing with Google, I agree to the <a href="/terms" target="_blank" rel="noopener">Terms</a> and have read the <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a>.</span>
+                </label>
+                <form id="recovery-form" class="auth-form" hidden>
+                    <label>Email
+                        <input id="recovery-email" type="email" autocomplete="email" required>
+                    </label>
+                    <button class="primary-button" type="submit">Send password reset link</button>
+                </form>
+                <form id="verification-resend-form" class="auth-form" hidden>
+                    <label>Email
+                        <input id="verification-email" type="email" autocomplete="email" required>
+                    </label>
+                    <button class="primary-button" type="submit">Resend verification email</button>
+                </form>
+                <form id="reset-form" class="auth-form" hidden>
+                    <label>New password
+                        <input id="reset-password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required>
+                    </label>
+                    <button class="primary-button" type="submit">Reset password</button>
+                </form>
+                <p class="auth-feedback" id="auth-feedback" role="status" aria-live="polite"></p>
+            </div>
+            <div class="legal-links">
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+            </div>
+        </section>
+
+        <section class="plans-card" aria-labelledby="plans-heading">
+            <h2 id="plans-heading">Plans for individual analysis and teams</h2>
+            <p>Monthly valuation limits apply to live-company analysis and uploaded-file packs combined.</p>
+            <div id="plan-grid" class="plan-grid" aria-live="polite"></div>
+            <p class="locked-note" id="billing-note">Subscription checkout is provided by Razorpay. Prices are monthly and shown in INR.</p>
+        </section>
+
         <div class="live-control-card">
             <div class="live-bar-header">
                 <div class="live-bar-title">
@@ -1016,7 +1325,7 @@
     </main>
 
     <footer>
-        MarketLens Analytics &middot; Financial modeling and valuation
+        MarketLens Analytics &middot; Informational modeling tools, not investment advice.
     </footer>
 
     <script>
@@ -1026,98 +1335,449 @@
         const resultsDashboard = document.getElementById('results-dashboard');
         const errorMessage = document.getElementById('error-message');
         const liveButton = document.getElementById('btn-live-scrape');
+        let csrfToken = null;
+        let currentAccount = null;
+        let authMode = 'register';
+        let resetToken = null;
+        let analysisBusy = false;
+        let systemFeatures = {};
 
-        ['dragenter', 'dragover'].forEach(eName => {
-            dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
-        });
-        ['dragleave', 'drop'].forEach(eName => {
-            dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
-        });
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                ...options,
+                headers: { ...(options.headers || {}) }
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.detail || data.message || `Request failed (${response.status}).`);
+            return data;
+        }
 
-        dropzone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files.length) handleUpload(files[0]);
-        });
+        function csrfHeaders(extra = {}) {
+            return { ...extra, ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}) };
+        }
 
-        dropzone.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                fileInput.click();
+        function setAuthFeedback(message, isError = false) {
+            const feedback = document.getElementById('auth-feedback');
+            feedback.textContent = message;
+            feedback.classList.toggle('error', isError);
+        }
+
+        function showAuthPanel(mode = 'register') {
+            document.getElementById('auth-panel').hidden = false;
+            setAuthMode(mode);
+            document.getElementById('auth-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode === 'login' ? 'login' : 'register';
+            const isLogin = authMode === 'login';
+            document.getElementById('register-tab').setAttribute('aria-pressed', String(!isLogin));
+            document.getElementById('login-tab').setAttribute('aria-pressed', String(isLogin));
+            document.getElementById('terms-label').hidden = isLogin;
+            document.getElementById('terms-accepted').disabled = isLogin;
+            document.getElementById('terms-accepted').required = !isLogin;
+            document.getElementById('auth-password').autocomplete = isLogin ? 'current-password' : 'new-password';
+            document.getElementById('credentials-submit').textContent = isLogin ? 'Sign in' : 'Create account';
+            document.getElementById('forgot-password-button').hidden = !isLogin;
+            document.getElementById('credentials-form').hidden = false;
+            document.getElementById('recovery-form').hidden = true;
+            document.getElementById('verification-resend-form').hidden = true;
+            document.getElementById('reset-form').hidden = true;
+            document.getElementById('google-terms-accepted').checked = false;
+            setAuthFeedback('');
+        }
+
+        function setAccess(account) {
+            const user = account && account.user;
+            const isVerified = Boolean(user && user.email_verified);
+            document.getElementById('guest-view').hidden = Boolean(user);
+            document.getElementById('account-view').hidden = !user;
+            document.getElementById('nav-auth-button').hidden = Boolean(user);
+            const navLabel = document.getElementById('nav-account-label');
+            navLabel.hidden = !user;
+            navLabel.textContent = user ? user.email : '';
+
+            if (user) {
+                const plan = account.plan || {};
+                document.getElementById('account-welcome').textContent = `Welcome, ${user.email}`;
+                document.getElementById('account-usage').textContent =
+                    `${plan.name || 'Free'} plan · ${plan.used_this_month || 0} of ${plan.monthly_valuations || 1} valuations used this month`;
+                const subscription = account.subscription;
+                document.getElementById('account-subscription').textContent =
+                    subscription && subscription.cancel_at_period_end
+                        ? `Renewal cancelled. Access remains active until ${subscription.current_period_end || 'the billing period ends'}.`
+                        : (plan.key === 'free' ? 'Upgrade any time; manage your subscription here.' : 'Your subscription is active.');
+                document.getElementById('cancel-subscription').hidden =
+                    !(subscription && ['active', 'trialing', 'authenticated'].includes(subscription.status) && !subscription.cancel_at_period_end);
+                refreshJobHistory();
+            } else {
+                document.getElementById('job-history-list').replaceChildren();
             }
-        });
 
-        dropzone.addEventListener('click', (e) => {
-            if (e.target !== fileInput) fileInput.click();
-        });
+            const limitReached = Boolean(account && account.plan && account.plan.remaining_this_month <= 0);
+            const locked = !isVerified || limitReached || analysisBusy;
+            document.getElementById('domain-selector').disabled = locked;
+            liveButton.disabled = locked;
+            fileInput.disabled = locked;
+            dropzone.setAttribute('aria-disabled', String(locked));
+            dropzone.classList.toggle('locked', locked);
+            if (user && limitReached) {
+                document.getElementById('progress-message').textContent = 'Monthly quota reached. Upgrade your plan to run another valuation.';
+            }
 
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length) handleUpload(fileInput.files[0]);
-        });
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.toggle('current', Boolean(account && card.dataset.planKey === account.plan.key));
+            });
+        }
+
+        async function refreshAccount() {
+            try {
+                const account = await apiRequest('/api/v1/auth/me');
+                currentAccount = account.user ? account : null;
+                csrfToken = account.csrf_token || null;
+                setAccess(currentAccount);
+                renderPlans();
+            } catch {
+                currentAccount = null;
+                csrfToken = null;
+                setAccess(null);
+            }
+        }
+
+        async function refreshFeatures() {
+            try {
+                const health = await apiRequest('/api/v1/health');
+                systemFeatures = health.features || {};
+                const google = document.getElementById('google-signin');
+                if (!systemFeatures.google_sign_in) {
+                    google.setAttribute('aria-disabled', 'true');
+                    google.title = 'Google sign-in is being configured.';
+                }
+                if (!systemFeatures.email_verification) {
+                    document.getElementById('billing-note').textContent =
+                        'Account verification email is being configured. Subscription checkout is provided by Razorpay after setup.';
+                }
+                if (!systemFeatures.razorpay) {
+                    document.getElementById('billing-note').textContent =
+                        'Paid checkout is disabled until Razorpay credentials, monthly plans, and the webhook are configured.';
+                }
+            } catch {
+                systemFeatures = {};
+            }
+        }
+
+        async function refreshPlans() {
+            try {
+                const response = await apiRequest('/api/v1/billing/plans');
+                window.marketLensPlans = response.plans || [];
+                renderPlans();
+            } catch {
+                document.getElementById('plan-grid').textContent = 'Plans are temporarily unavailable.';
+            }
+        }
+
+        async function refreshJobHistory() {
+            if (!currentAccount) return;
+            try {
+                const response = await apiRequest('/api/v1/jobs?limit=20');
+                const list = document.getElementById('job-history-list');
+                list.replaceChildren();
+                if (!response.jobs.length) {
+                    list.textContent = 'Your completed and in-progress valuations will appear here.';
+                    return;
+                }
+                response.jobs.forEach(job => {
+                    const row = document.createElement('div');
+                    row.className = 'job-row';
+                    const label = document.createElement('span');
+                    const title = job.company || (job.kind === 'live_scrape' ? 'Live company valuation' : 'Uploaded-file pack');
+                    label.textContent = `${title} · ${job.status} · ${new Date(job.created_at).toLocaleDateString()}`;
+                    row.appendChild(label);
+                    if (job.files && job.files.zip_pack) {
+                        const link = document.createElement('a');
+                        link.href = job.files.zip_pack;
+                        link.textContent = 'Download pack';
+                        link.setAttribute('rel', 'noopener');
+                        row.appendChild(link);
+                    }
+                    list.appendChild(row);
+                });
+            } catch {
+                document.getElementById('job-history-list').textContent = 'Analysis history is temporarily unavailable.';
+            }
+        }
+
+        function renderPlans() {
+            const plans = window.marketLensPlans || [];
+            const grid = document.getElementById('plan-grid');
+            grid.replaceChildren();
+            plans.forEach(plan => {
+                const card = document.createElement('article');
+                card.className = 'plan-card';
+                card.dataset.planKey = plan.key;
+                const heading = document.createElement('h3');
+                heading.textContent = plan.name;
+                const price = document.createElement('div');
+                price.className = 'plan-price';
+                price.textContent = plan.price_paise === 0
+                    ? 'Free'
+                    : `${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(plan.price_paise / 100)} / month`;
+                const note = document.createElement('p');
+                note.className = 'plan-note';
+                note.textContent = `${plan.monthly_valuations} valuation${plan.monthly_valuations === 1 ? '' : 's'} per month`;
+                const actions = document.createElement('div');
+                actions.className = 'plan-actions';
+                const button = document.createElement('button');
+                button.className = plan.key === 'free' ? 'secondary-button' : 'primary-button';
+                const activePlan = currentAccount && currentAccount.plan && currentAccount.plan.key === plan.key;
+                button.textContent = activePlan ? 'Current plan' : (plan.key === 'free' ? 'Get started' : `Choose ${plan.name}`);
+                button.disabled = Boolean(activePlan || (plan.key !== 'free' && !plan.checkout_available));
+                button.addEventListener('click', () => {
+                    if (plan.key === 'free') showAuthPanel('register');
+                    else startCheckout(plan.key);
+                });
+                actions.appendChild(button);
+                if (plan.key !== 'free' && !plan.checkout_available) {
+                    const setup = document.createElement('p');
+                    setup.className = 'locked-note';
+                    setup.textContent = 'Checkout setup is in progress.';
+                    actions.appendChild(setup);
+                }
+                card.append(heading, price, note, actions);
+                grid.appendChild(card);
+            });
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.toggle('current', Boolean(currentAccount && card.dataset.planKey === currentAccount.plan.key));
+            });
+        }
+
+        async function startCheckout(planKey) {
+            if (!currentAccount) {
+                showAuthPanel('register');
+                return;
+            }
+            try {
+                const data = await apiRequest('/api/v1/billing/checkout', {
+                    method: 'POST',
+                    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ plan_key: planKey })
+                });
+                if (!window.Razorpay) {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                        script.onload = resolve;
+                        script.onerror = () => reject(new Error('Could not load the secure payment checkout.'));
+                        document.head.appendChild(script);
+                    });
+                }
+                const checkout = new Razorpay({
+                    key: data.key_id,
+                    subscription_id: data.subscription_id,
+                    name: data.name,
+                    description: data.description,
+                    prefill: { email: data.email },
+                    theme: { color: '#1769aa' },
+                    handler: async payment => {
+                        try {
+                            await apiRequest('/api/v1/billing/verify', {
+                                method: 'POST',
+                                headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                                body: JSON.stringify({
+                                    razorpay_subscription_id: payment.razorpay_subscription_id,
+                                    razorpay_payment_id: payment.razorpay_payment_id,
+                                    razorpay_signature: payment.razorpay_signature
+                                })
+                            });
+                            setAuthFeedback('Payment received. Subscription status is syncing.');
+                            await refreshAccount();
+                        } catch (error) {
+                            showError(error.message);
+                        }
+                    }
+                });
+                checkout.on('payment.failed', event => showError(event.error.description || 'Payment was not completed.'));
+                checkout.open();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function cancelSubscription() {
+            if (!confirm('Schedule cancellation at the end of the current billing period?')) return;
+            try {
+                const response = await apiRequest('/api/v1/billing/cancel', {
+                    method: 'POST',
+                    headers: csrfHeaders()
+                });
+                setAuthFeedback(response.message);
+                await refreshAccount();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function logout() {
+            try {
+                await apiRequest('/api/v1/auth/logout', { method: 'POST', headers: csrfHeaders() });
+            } catch (error) {
+                showError(error.message);
+                return;
+            }
+            {
+                currentAccount = null;
+                csrfToken = null;
+                setAccess(null);
+                showAuthPanel('login');
+            }
+        }
+
+        function showPasswordRecovery() {
+            document.getElementById('credentials-form').hidden = true;
+            document.getElementById('recovery-form').hidden = false;
+            document.getElementById('verification-resend-form').hidden = true;
+            document.getElementById('reset-form').hidden = true;
+            setAuthFeedback('Enter your account email and we will send a reset link.');
+        }
+
+        async function submitCredentials(event) {
+            event.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            try {
+                if (authMode === 'register') {
+                    await apiRequest('/api/v1/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            password,
+                            accepted_terms: document.getElementById('terms-accepted').checked
+                        })
+                    });
+                    setAuthFeedback('Account created. Check your email to verify the address, then sign in.');
+                    setAuthMode('login');
+                } else {
+                    const account = await apiRequest('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    currentAccount = account;
+                    csrfToken = account.csrf_token;
+                    document.getElementById('auth-panel').hidden = true;
+                    setAccess(currentAccount);
+                    renderPlans();
+                }
+            } catch (error) {
+                setAuthFeedback(error.message, true);
+                if (error.message.toLowerCase().includes('verify your email')) {
+                    document.getElementById('verification-email').value = email;
+                    document.getElementById('credentials-form').hidden = true;
+                    document.getElementById('verification-resend-form').hidden = false;
+                }
+            }
+        }
+
+        async function handleAccountLinks() {
+            const params = new URLSearchParams(window.location.search);
+            const verificationToken = params.get('verify_email');
+            const incomingResetToken = params.get('reset_password');
+            if (verificationToken) {
+                history.replaceState(null, '', window.location.pathname);
+                showAuthPanel('login');
+                try {
+                    const result = await apiRequest('/api/v1/auth/verify-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: verificationToken })
+                    });
+                    setAuthFeedback(result.message);
+                } catch (error) {
+                    setAuthFeedback(error.message, true);
+                }
+            }
+            if (incomingResetToken) {
+                history.replaceState(null, '', window.location.pathname);
+                resetToken = incomingResetToken;
+                document.getElementById('auth-panel').hidden = false;
+                document.getElementById('credentials-form').hidden = true;
+                document.getElementById('recovery-form').hidden = true;
+                document.getElementById('verification-resend-form').hidden = true;
+                document.getElementById('reset-form').hidden = false;
+                setAuthFeedback('Choose a new password for your account.');
+            }
+        }
+
+        async function apiJobResult(jobId) {
+            for (let attempt = 0; attempt < 180; attempt++) {
+                await new Promise(resolve => setTimeout(resolve, 2500));
+                const update = await apiRequest(`/api/v1/jobs/${encodeURIComponent(jobId)}`);
+                if (update.status === 'succeeded') return update.result;
+                if (update.status === 'failed') throw new Error(update.error || 'Valuation failed.');
+                document.getElementById('progress-message').textContent =
+                    'Analysis is running securely in your account. This may take a few minutes.';
+            }
+            throw new Error('The valuation is taking longer than expected. Check your account again shortly.');
+        }
 
         async function triggerLiveScrape() {
             const domain = document.getElementById('domain-selector').value;
             clearError();
-            liveButton.disabled = true;
+            analysisBusy = true;
+            setAccess(currentAccount);
             processFlow.style.display = 'block';
             resultsDashboard.style.display = 'none';
-
-            document.getElementById('step-label-1').textContent = 'Discovering a company in ' + domain;
-            document.getElementById('progress-message').textContent = 'Collecting public data and building the valuation. This may take a few minutes.';
+            document.getElementById('step-label-1').textContent = `Discovering a company in ${domain}`;
+            document.getElementById('progress-message').textContent = 'Submitting a private valuation job.';
             setStep(1);
-
             try {
-                const res = await fetch('/api/v1/model/live-scrape', {
+                const job = await apiRequest('/api/v1/model/live-scrape', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain: domain, market: 'random' })
+                    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ domain, market: 'random' })
                 });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Live scraping failed');
-                }
-
-                const data = await res.json();
+                const result = await apiJobResult(job.job_id);
                 markAllCompleted();
-                renderLiveDashboard(data);
-            } catch (err) {
-                showError('Live valuation failed: ' + err.message);
+                renderLiveDashboard(result);
+                await refreshAccount();
+            } catch (error) {
+                showError(`Live valuation failed: ${error.message}`);
                 processFlow.style.display = 'none';
             } finally {
-                liveButton.disabled = false;
+                analysisBusy = false;
+                setAccess(currentAccount);
             }
         }
 
         async function handleUpload(file) {
             clearError();
+            analysisBusy = true;
+            setAccess(currentAccount);
             processFlow.style.display = 'block';
             resultsDashboard.style.display = 'none';
-
-            document.getElementById('step-label-1').textContent = 'Auto-Detecting Accounting Standard';
-            document.getElementById('progress-message').textContent = 'Processing the file and preparing the valuation pack. This may take a few minutes.';
+            document.getElementById('step-label-1').textContent = 'Validating and storing the file privately';
+            document.getElementById('progress-message').textContent = 'Submitting a private valuation job.';
             setStep(1);
-
             const formData = new FormData();
             formData.append('file', file);
-
             try {
-                const res = await fetch('/api/v1/model/generate-pack', {
+                const job = await apiRequest('/api/v1/model/generate-pack', {
                     method: 'POST',
+                    headers: csrfHeaders(),
                     body: formData
                 });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Pack generation failed');
-                }
-
-                const data = await res.json();
+                const result = await apiJobResult(job.job_id);
                 markAllCompleted();
-                renderUploadDashboard(data);
-            } catch (err) {
-                showError('File processing failed: ' + err.message);
+                renderUploadDashboard(result);
+                await refreshAccount();
+            } catch (error) {
+                showError(`File processing failed: ${error.message}`);
                 processFlow.style.display = 'none';
             } finally {
+                analysisBusy = false;
+                setAccess(currentAccount);
                 fileInput.value = '';
             }
         }
@@ -1134,109 +1794,188 @@
 
         function setStep(num) {
             for (let i = 1; i <= 4; i++) {
-                const el = document.getElementById('step-' + i);
-                el.querySelector('.step-num').textContent = i;
-                if (i < num) {
-                    el.className = 'step-item completed';
-                    el.querySelector('.step-num').textContent = '✓';
-                } else if (i === num) {
-                    el.className = 'step-item active';
-                } else {
-                    el.className = 'step-item';
-                }
+                const item = document.getElementById(`step-${i}`);
+                item.className = i < num ? 'step-item completed' : (i === num ? 'step-item active' : 'step-item');
+                item.querySelector('.step-num').textContent = i < num ? '✓' : String(i);
             }
         }
 
         function markAllCompleted() {
             for (let i = 1; i <= 4; i++) {
-                const el = document.getElementById('step-' + i);
-                el.className = 'step-item completed';
-                el.querySelector('.step-num').textContent = '✓';
+                const item = document.getElementById(`step-${i}`);
+                item.className = 'step-item completed';
+                item.querySelector('.step-num').textContent = '✓';
             }
             document.getElementById('progress-message').textContent = 'Analysis complete.';
         }
 
+        function setFileLink(id, url) {
+            const link = document.getElementById(id);
+            link.href = url || '#';
+            link.hidden = !url;
+        }
+
         function renderLiveDashboard(data) {
             resultsDashboard.style.display = 'block';
-            const c = data.company || {};
-            const urls = data.urls || {};
+            const company = data.company || {};
+            const files = data.files || {};
             const audit = data.accounting_audit || {};
-            const trustBadge = document.getElementById('res-trust-badge');
+            const monteCarlo = data.monte_carlo || {};
+            const symbol = company.currency === 'INR' ? '₹' : (company.currency === 'USD' ? '$' : `${company.currency || ''} `);
+            const unit = company.currency === 'INR' ? 'Cr' : 'B';
+            const value = Number(company.fair_value_per_share || 0);
+            const market = Number(company.current_market_price || 0);
+            const upside = Number(company.upside_pct || 0);
 
-            const currSym = c.currency === 'INR' ? '₹' : (c.currency === 'USD' ? '$' : c.currency + ' ');
-            const unit = c.currency === 'INR' ? 'Cr' : 'B';
-
-            document.getElementById('res-entity').textContent = `${c.name} (${c.ticker})`;
-            document.getElementById('res-meta').textContent = `${c.industry} • ${c.exchange} Listed • ${c.currency} (${unit}) • 5-Year Projections`;
-
-            document.getElementById('val-fair-price').textContent = `${currSym}${c.fair_value_per_share.toFixed(2)}`;
-            const sign = c.upside_pct >= 0 ? '+' : '';
-            document.getElementById('val-market-comparison').textContent = `Market Price: ${currSym}${c.current_market_price.toFixed(2)} (${sign}${c.upside_pct}% Upside)`;
-
-            document.getElementById('val-ev').textContent = `${currSym}${c.enterprise_value.toLocaleString()} ${unit}`;
-            document.getElementById('val-wacc-tgr').textContent = `WACC: ${c.wacc}% • 10k Monte Carlo Simulated`;
-
-            document.getElementById('val-equity').textContent = `${currSym}${c.equity_value.toLocaleString()} ${unit}`;
+            document.getElementById('res-entity').textContent = `${company.name || 'Company'} (${company.ticker || ''})`;
+            document.getElementById('res-meta').textContent =
+                `${company.industry || 'Public company'} · ${company.exchange || ''} · ${company.currency || ''} · Model output`;
+            document.getElementById('val-fair-price').textContent = `${symbol}${value.toFixed(2)}`;
+            document.getElementById('val-market-comparison').textContent =
+                `Market Price: ${symbol}${market.toFixed(2)} (${upside >= 0 ? '+' : ''}${upside.toFixed(2)}% modeled upside)`;
+            document.getElementById('val-ev').textContent = `${symbol}${Number(company.enterprise_value || 0).toLocaleString()} ${unit}`;
+            document.getElementById('val-wacc-tgr').textContent = `WACC: ${Number(company.wacc || 0).toFixed(2)}% · ${monteCarlo.iterations || 0} Monte Carlo iterations`;
+            document.getElementById('val-equity').textContent = `${symbol}${Number(company.equity_value || 0).toLocaleString()} ${unit}`;
             document.getElementById('val-net-debt').textContent = 'Enterprise-to-equity bridge included';
             document.getElementById('val-audit-result').textContent = audit.is_valid ? 'PASS' : 'REVIEW';
             document.getElementById('val-audit-status').textContent =
-                `Audit max discrepancy: ${(audit.max_discrepancy || 0).toExponential(2)}`;
+                `Audit max discrepancy: ${Number(audit.max_discrepancy || 0).toExponential(2)}`;
             document.getElementById('val-mc-undervalued').textContent =
-                `Monte Carlo probability undervalued: ${data.monte_carlo.prob_undervalued.toFixed(1)}%`;
+                `Monte Carlo probability undervalued: ${Number(monteCarlo.prob_undervalued || 0).toFixed(1)}%`;
             document.getElementById('res-badge').textContent = audit.is_valid
                 ? 'Accounting checks passed'
                 : 'Accounting checks require review';
-            trustBadge.classList.toggle('review', !audit.is_valid);
-            trustBadge.querySelector('span').textContent = audit.is_valid ? '✓' : '!';
+            const badge = document.getElementById('res-trust-badge');
+            badge.classList.toggle('review', !audit.is_valid);
+            badge.querySelector('span').textContent = audit.is_valid ? '✓' : '!';
 
-            // Action buttons
-            document.getElementById('btn-zip-download').href = urls.zip_pack || '#';
-            document.getElementById('btn-open-dashboard').href = urls.dashboard_html || '#';
-            document.getElementById('btn-dl-xlsx').href = urls.xlsx_model || '#';
-            document.getElementById('btn-dl-pdf').href = urls.pdf_tearsheet || '#';
-            document.getElementById('btn-dl-pptx').href = urls.pptx_pitchbook || '#';
-            document.getElementById('btn-dl-memo').href = urls.investment_memo_md || '#';
-            document.getElementById('btn-dl-audit').href = urls.audit_certificate_json || '#';
-            document.getElementById('btn-open-dashboard').style.display = '';
-            document.getElementById('btn-dl-memo').style.display = '';
-            document.getElementById('btn-dl-audit').style.display = '';
-
+            setFileLink('btn-zip-download', files.zip_pack);
+            setFileLink('btn-open-dashboard', files.dashboard_html);
+            setFileLink('btn-dl-xlsx', files.xlsx_model);
+            setFileLink('btn-dl-pdf', files.pdf_tearsheet);
+            setFileLink('btn-dl-pptx', files.pptx_pitchbook);
+            setFileLink('btn-dl-memo', files.investment_memo_md);
+            setFileLink('btn-dl-audit', files.audit_certificate_json);
             resultsDashboard.scrollIntoView({ behavior: 'smooth' });
         }
 
         function renderUploadDashboard(data) {
             resultsDashboard.style.display = 'block';
-            const meta = data.metadata || {};
-            const preview = data.preview || {};
-
-            document.getElementById('res-entity').textContent = meta.name || 'Client Entity';
-            document.getElementById('res-meta').textContent = `Uploaded File Normalization • 5-Year Forecast Horizon`;
-
-            document.getElementById('val-fair-price').textContent =
-                Number(preview.price_per_share || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
-            document.getElementById('val-market-comparison').textContent = `Calibrated Base Case`;
-
-            document.getElementById('val-ev').textContent = Number(preview.ev_base || 0).toLocaleString();
-            document.getElementById('val-equity').textContent = Number(preview.equity_base || 0).toLocaleString();
-            document.getElementById('val-wacc-tgr').textContent = 'Upload workflow valuation';
-            document.getElementById('val-net-debt').textContent = 'Values shown in uploaded file units';
-            document.getElementById('val-audit-result').textContent = 'See report';
-            document.getElementById('val-audit-status').textContent = 'A separate audit result is not returned for uploaded files';
-            document.getElementById('val-mc-undervalued').textContent = 'Monte Carlo results are not available for this workflow';
+            const company = data.company || {};
+            const files = data.files || {};
+            document.getElementById('res-entity').textContent = company.name || 'Client financial file';
+            document.getElementById('res-meta').textContent = 'Private client-file valuation pack';
+            document.getElementById('val-fair-price').textContent = 'See report';
+            document.getElementById('val-market-comparison').textContent = 'Values are reported in the uploaded file units';
+            document.getElementById('val-ev').textContent = 'See workbook';
+            document.getElementById('val-wacc-tgr').textContent = 'Assumptions are documented in the generated workbook';
+            document.getElementById('val-equity').textContent = 'See workbook';
+            document.getElementById('val-net-debt').textContent = 'No market quote is assumed for uploaded files';
+            document.getElementById('val-audit-result').textContent = 'See workbook';
+            document.getElementById('val-audit-status').textContent = 'This workflow does not return the live-engine audit certificate';
+            document.getElementById('val-mc-undervalued').textContent = 'Monte Carlo statistics are not included in this pack';
             document.getElementById('res-badge').textContent = 'Pack generated';
             document.getElementById('res-trust-badge').classList.remove('review');
             document.getElementById('res-trust-badge').querySelector('span').textContent = '✓';
-            document.getElementById('btn-zip-download').href = data.zip_download_url || '#';
-            document.getElementById('btn-dl-xlsx').href = data.xlsx_download_url || '#';
-            document.getElementById('btn-dl-pdf').href = data.pdf_download_url || '#';
-            document.getElementById('btn-dl-pptx').href = data.pptx_download_url || '#';
-            document.getElementById('btn-open-dashboard').style.display = 'none';
-            document.getElementById('btn-dl-memo').style.display = 'none';
-            document.getElementById('btn-dl-audit').style.display = 'none';
-            document.getElementById('btn-zip-download').style.display = data.zip_download_url ? '' : 'none';
-
+            setFileLink('btn-zip-download', files.zip_pack);
+            setFileLink('btn-open-dashboard', null);
+            setFileLink('btn-dl-xlsx', files.xlsx_model);
+            setFileLink('btn-dl-pdf', files.pdf_tearsheet);
+            setFileLink('btn-dl-pptx', files.pptx_pitchbook);
+            setFileLink('btn-dl-memo', null);
+            setFileLink('btn-dl-audit', null);
             resultsDashboard.scrollIntoView({ behavior: 'smooth' });
         }
+
+        ['dragenter', 'dragover'].forEach(name => {
+            dropzone.addEventListener(name, event => {
+                event.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            dropzone.addEventListener(name, event => {
+                event.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+        });
+        dropzone.addEventListener('drop', event => {
+            if (event.dataTransfer.files.length) handleUpload(event.dataTransfer.files[0]);
+        });
+        dropzone.addEventListener('keydown', event => {
+            if ((event.key === 'Enter' || event.key === ' ') && !fileInput.disabled) {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
+        dropzone.addEventListener('click', event => {
+            if (event.target !== fileInput && !fileInput.disabled) fileInput.click();
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleUpload(fileInput.files[0]);
+        });
+        document.getElementById('credentials-form').addEventListener('submit', submitCredentials);
+        document.getElementById('google-signin').addEventListener('click', event => {
+            if (!systemFeatures.google_sign_in) {
+                event.preventDefault();
+                setAuthFeedback('Google sign-in is being configured.', true);
+                return;
+            }
+            if (!document.getElementById('google-terms-accepted').checked) {
+                event.preventDefault();
+                setAuthFeedback('Accept the Terms and Privacy Notice before continuing with Google.', true);
+                return;
+            }
+            event.currentTarget.href = '/api/v1/auth/google/start?terms_accepted=true';
+        });
+        document.getElementById('recovery-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            try {
+                const result = await apiRequest('/api/v1/auth/password/forgot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: document.getElementById('recovery-email').value })
+                });
+                document.getElementById('verification-resend-form').addEventListener('submit', async event => {
+                    event.preventDefault();
+                    try {
+                        const result = await apiRequest('/api/v1/auth/verification/resend', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: document.getElementById('verification-email').value })
+                        });
+                        setAuthFeedback(result.message);
+                    } catch (error) {
+                        setAuthFeedback(error.message, true);
+                    }
+                });
+                setAuthFeedback(result.message);
+            } catch (error) {
+                setAuthFeedback(error.message, true);
+            }
+        });
+        document.getElementById('reset-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            try {
+                const result = await apiRequest('/api/v1/auth/password/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: resetToken,
+                        password: document.getElementById('reset-password').value
+                    })
+                });
+                resetToken = null;
+                setAuthMode('login');
+                setAuthFeedback(result.message);
+            } catch (error) {
+                setAuthFeedback(error.message, true);
+            }
+        });
+
+        setAuthMode('register');
+        setAccess(null);
+        Promise.all([refreshFeatures(), refreshPlans(), refreshAccount(), handleAccountLinks()]);
     </script>
 </body>
 </html>

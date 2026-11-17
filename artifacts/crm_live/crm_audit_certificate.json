@@ -1,0 +1,59 @@
+{
+  "overall_status": "FAILED",
+  "is_valid": false,
+  "checks": [
+    {
+      "name": "Balance Sheet Balance Identity",
+      "passed": false,
+      "max_discrepancy": 0.023999999999972488,
+      "tolerance": 0.0001,
+      "details": "Max difference 0.023999999999972488 across 9 periods"
+    },
+    {
+      "name": "Cash Flow Roll-Forward Identity",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max cash roll error 0.0"
+    },
+    {
+      "name": "Retained Earnings Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max retained earnings discrepancy 0.0"
+    },
+    {
+      "name": "Fixed Assets Net Block Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max fixed assets roll error 0.0"
+    },
+    {
+      "name": "Debt Amortization Roll-Forward",
+      "passed": false,
+      "max_discrepancy": 0.02400000000000002,
+      "tolerance": 0.0001,
+      "details": "Max debt roll discrepancy 0.02400000000000002"
+    },
+    {
+      "name": "Working Capital Change Reconciliation",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max NWC change discrepancy 0.0"
+    }
+  ],
+  "model_metadata": {
+    "name": "Salesforce, Inc.",
+    "ticker": "CRM",
+    "currency": "USD"
+  },
+  "valuation_summary": {
+    "enterprise_value": 109.91574648380285,
+    "equity_value": 100.06674648380285,
+    "value_per_share": 121.58778430595729,
+    "wacc": 0.10786022832716287
+  }
+}

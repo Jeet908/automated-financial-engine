@@ -28,6 +28,7 @@ def run_discovery_pipeline(
     market: str = "random",
     mc_iterations: int = 10000,
     quiet: bool = False,
+    workspace_root: str | Path | None = None,
 ) -> dict:
     """
     Executes the entire end-to-end zero-touch pipeline:
@@ -49,9 +50,10 @@ def run_discovery_pipeline(
     if not quiet:
         print(f"[*] Step 1: Querying sector indices for domain: '{domain or 'Random Auto-Select'}'...")
 
+    workspace = Path(workspace_root).resolve() if workspace_root else PROJECT_ROOT
     scraper = LiveWebScraper(
-        output_inbox=str(PROJECT_ROOT / "client_inbox"),
-        output_inputs=str(PROJECT_ROOT / "inputs"),
+        output_inbox=str(workspace / "client_inbox"),
+        output_inputs=str(workspace / "inputs"),
     )
     company_data, xlsx_inbox_path, json_config_path = scraper.discover_and_extract(
         domain=domain,
@@ -70,7 +72,7 @@ def run_discovery_pipeline(
     # -------------------------------------------------------------
     # Step 2: Trigger Engine A (Financial Engine Suite)
     # -------------------------------------------------------------
-    artifacts_dir = PROJECT_ROOT / "artifacts" / f"{ticker_slug}_live"
+    artifacts_dir = workspace / "artifacts" / f"{ticker_slug}_live"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     if not quiet:
@@ -99,7 +101,7 @@ def run_discovery_pipeline(
     # -------------------------------------------------------------
     # Step 3: Trigger Engine B (Client Executive Pack)
     # -------------------------------------------------------------
-    outbox_dir = PROJECT_ROOT / "client_outbox" / f"{ticker_slug}_live"
+    outbox_dir = workspace / "client_outbox" / f"{ticker_slug}_live"
     outbox_dir.mkdir(parents=True, exist_ok=True)
 
     if not quiet:

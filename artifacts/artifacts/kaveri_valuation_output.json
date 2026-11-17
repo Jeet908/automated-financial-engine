@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "name": "Kaveri Foods Ltd",
+    "ticker": "KAVERI",
+    "industry": "Packaged Foods & Consumer Staples",
+    "currency": "INR",
+    "currency_unit": "INR crore",
+    "shares_unit": "crore",
+    "historical_years": [
+      "FY23A",
+      "FY24A",
+      "FY25A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Indian packaged-foods company 3-statement model & DCF benchmark"
+  },
+  "valuation": {
+    "fair_value_per_share": 251.64354849904944,
+    "enterprise_value": 2486.9354849904944,
+    "equity_value": 2516.4354849904944,
+    "wacc": 0.11586940000000001,
+    "sum_pv_fcff": 609.0755124272117,
+    "terminal_value": 3248.852886747601,
+    "pv_terminal_value": 1877.8599725632828
+  },
+  "comps": {
+    "implied_price_per_share": 1104.8108695652177,
+    "median_ev_ebitda": 42.608695652173914
+  },
+  "lbo": {
+    "moic": 2.7303118080095454,
+    "irr": 0.22248193310635922
+  },
+  "monte_carlo": {
+    "mean_price": 256.57989058064936,
+    "median_price": 254.14259293600315,
+    "pct_5_var": 203.56779531273548,
+    "pct_95": 323.4691770847313,
+    "prob_undervalued": 92.80000000000001
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true
+  }
+}

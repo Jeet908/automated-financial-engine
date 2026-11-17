@@ -110,9 +110,7 @@ Start the browser portal with `py -m uvicorn app:app --host 127.0.0.1 --port 800
 
 ### Deploy on Railway
 
-Create a Railway service from this GitHub repository on the `main` branch. The repository's `railway.json` and `Dockerfile` configure the Python 3.11 image, start command (`python app.py`), and `/api/v1/health` deployment check; Railway supplies the listening `PORT`. After the container passes its health check, generate a public domain in the service's **Settings → Networking** section.
-
-Generated reports are written to the container filesystem (`artifacts/` and `client_outbox/`). Treat those files as temporary across redeploys until persistent storage is configured; the service currently does not upload them to external object storage.
+The portal supports account registration, verified email and Google sign-in, private reports, Free/Pro/Business usage limits, and Razorpay recurring billing. Production setup is not complete until persistent storage, transactional email, OAuth credentials, Razorpay plans/webhooks, and legal operator details are configured. Follow [the subscription launch checklist](docs/SAAS_LAUNCH.md) before accepting customer uploads or payments.
 
 ---
 

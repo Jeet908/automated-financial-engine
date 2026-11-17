@@ -5,7 +5,8 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PORT=8000
+    PORT=8000 \
+    MARKETLENS_DATA_DIR=/data
 
 WORKDIR /app
 
@@ -27,7 +28,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create required workspace directories
-RUN mkdir -p /app/client_inbox /app/client_outbox /app/outputs /app/artifacts /app/inputs
+RUN mkdir -p /app/client_inbox /app/client_outbox /app/outputs /app/artifacts /app/inputs /data
 
 # Expose API port
 EXPOSE 8000

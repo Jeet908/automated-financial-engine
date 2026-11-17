@@ -1,0 +1,59 @@
+{
+  "overall_status": "PASSED",
+  "is_valid": true,
+  "checks": [
+    {
+      "name": "Balance Sheet Balance Identity",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max difference 0.0 across 9 periods"
+    },
+    {
+      "name": "Cash Flow Roll-Forward Identity",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max cash roll error 0.0"
+    },
+    {
+      "name": "Retained Earnings Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max retained earnings discrepancy 0.0"
+    },
+    {
+      "name": "Fixed Assets Net Block Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max fixed assets roll error 0.0"
+    },
+    {
+      "name": "Debt Amortization Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max debt roll discrepancy 0.0"
+    },
+    {
+      "name": "Working Capital Change Reconciliation",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Max NWC change discrepancy 0.0"
+    }
+  ],
+  "model_metadata": {
+    "name": "Tata Consumer Products Limited",
+    "ticker": "TATACONSUM",
+    "currency": "INR"
+  },
+  "valuation_summary": {
+    "enterprise_value": 81741.97038441924,
+    "equity_value": 81969.03038441925,
+    "value_per_share": 828.2221741105739,
+    "wacc": 0.08917535944155842
+  }
+}
