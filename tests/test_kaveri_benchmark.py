@@ -108,7 +108,8 @@ def test_kaveri_foods_benchmark_values():
     # PV of Terminal Value (Step 11.8)
     assert round(dcf.pv_terminal_value_gordon, 1) == 1877.9
     # Enterprise Value (Step 11.9)
-    assert round(dcf.enterprise_value, 1) == 2516.4
+    assert round(dcf.enterprise_value, 1) == 2486.9
+    assert round(dcf.equity_value, 1) == 2516.4
     # Value per share (Step 11.10)
     assert round(dcf.value_per_share) == 252
 

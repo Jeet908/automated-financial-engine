@@ -4,6 +4,24 @@ Unit and integration tests for strict accounting identities across all templates
 
 import pytest
 from financial_engine.engine import FinancialEngine
+from financial_engine.core.accounting import AccountingVerifier
+
+
+def test_audit_reports_tiny_float_residue_as_zero_but_keeps_real_mismatches():
+    verifier = AccountingVerifier()
+    rounded = verifier.verify_all({
+        "bs_total_assets": [100.0],
+        "bs_total_liab_equity": [100.0 + 5e-11],
+    })
+    material = verifier.verify_all({
+        "bs_total_assets": [100.0],
+        "bs_total_liab_equity": [100.001],
+    })
+
+    assert rounded.checks[0].max_discrepancy == 0.0
+    assert rounded.checks[0].passed
+    assert material.checks[0].max_discrepancy == pytest.approx(0.001)
+    assert not material.checks[0].passed
 
 
 def test_kaveri_foods_accounting_identities():

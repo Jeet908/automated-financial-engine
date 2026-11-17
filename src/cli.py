@@ -98,7 +98,7 @@ def process_file(
     else:
         print(f"[+] Workbook verified: {check_result.total_formulas_scanned} formulas checked, 0 errors.")
 
-    print(f"[✓] Successfully generated valuation pack for {path.name}:")
+    print(f"[OK] Successfully generated valuation pack for {path.name}:")
     print(f"    - Excel Model: {pack_res['xlsx_path']}")
     print(f"    - PDF Tear-Sheet: {pack_res['pdf_path']}")
     print(f"    - PowerPoint: {pack_res['pptx_path']}")
@@ -200,10 +200,10 @@ def main():
             except Exception as e:
                 print(f"[!] Error processing {f.name}: {e}")
 
-        print(f"\n[✓] Batch complete: {success_count}/{len(files)} packs compiled successfully in '{output_dir}'.")
+        print(f"\n[OK] Batch complete: {success_count}/{len(files)} packs compiled successfully in '{output_dir}'.")
     else:
         pack_res = process_file(str(input_path), output_dir=output_dir, scenarios=args.scenarios, n_years=args.n_years)
-        print(f"\n[✓] Successfully compiled financial valuation pack: {pack_res['zip_path']}")
+        print(f"\n[OK] Successfully compiled financial valuation pack: {pack_res['zip_path']}")
 
 
 if __name__ == "__main__":

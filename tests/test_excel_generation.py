@@ -5,7 +5,7 @@ Tests for institutional Excel workbook builder and live formulas.
 import os
 from pathlib import Path
 from financial_engine.excel.builder import InstitutionalExcelBuilder, OPENPYXL_AVAILABLE
-from financial_engine.core.types import ModelConfiguration
+from financial_engine.core.config import ModelConfiguration
 
 try:
     import openpyxl

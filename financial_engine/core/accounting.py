@@ -3,6 +3,7 @@ Accounting identity verifier and model audit certificate generator.
 """
 
 from dataclasses import dataclass, field
+import math
 from typing import List, Dict, Any
 from financial_engine.core.exceptions import AccountingIdentityViolation
 
@@ -31,7 +32,7 @@ class AuditCertificate:
             "-" * 60,
         ]
         for c in self.checks:
-            mark = "✓ [PASS]" if c.passed else "✗ [FAIL]"
+            mark = "[PASS]" if c.passed else "[FAIL]"
             lines.append(f"{mark} {c.name:<35} Max Err: {c.max_discrepancy:.6e} (Tol: {c.tolerance:.6e})")
             if not c.passed:
                 lines.append(f"     Details: {c.details}")
@@ -45,13 +46,19 @@ class AccountingVerifier:
     def __init__(self, tolerance: float = 1e-4):
         self.tolerance = tolerance
 
+    @staticmethod
+    def _error(value: float) -> float:
+        """Treat sub-picounit floating-point residue as exact arithmetic zero."""
+        error = abs(value)
+        return 0.0 if math.isclose(error, 0.0, rel_tol=0.0, abs_tol=1e-10) else error
+
     def verify_all(self, model_data: Dict[str, Any]) -> AuditCertificate:
         checks: List[AuditCheckItem] = []
 
         # 1. Balance Sheet Identity: Total Assets == Total Liabilities + Equity
         assets = model_data.get("bs_total_assets", [])
         liab_equity = model_data.get("bs_total_liab_equity", [])
-        bs_diffs = [abs(a - le) for a, le in zip(assets, liab_equity)]
+        bs_diffs = [self._error(a - le) for a, le in zip(assets, liab_equity)]
         max_bs_err = max(bs_diffs) if bs_diffs else 0.0
         bs_pass = max_bs_err <= self.tolerance
         checks.append(AuditCheckItem(
@@ -69,7 +76,7 @@ class AccountingVerifier:
         cf_diffs = []
         for i in range(len(net_cf)):
             expected_close = opening_cash[i] + net_cf[i]
-            cf_diffs.append(abs(closing_cash[i] - expected_close))
+            cf_diffs.append(self._error(closing_cash[i] - expected_close))
         max_cf_err = max(cf_diffs) if cf_diffs else 0.0
         cf_pass = max_cf_err <= self.tolerance
         checks.append(AuditCheckItem(
@@ -88,7 +95,7 @@ class AccountingVerifier:
         re_diffs = []
         for i in range(len(re_close)):
             expected_re = re_open[i] + pat[i] - dividends[i]
-            re_diffs.append(abs(re_close[i] - expected_re))
+            re_diffs.append(self._error(re_close[i] - expected_re))
         max_re_err = max(re_diffs) if re_diffs else 0.0
         re_pass = max_re_err <= self.tolerance
         checks.append(AuditCheckItem(
@@ -107,7 +114,7 @@ class AccountingVerifier:
         fa_diffs = []
         for i in range(len(nb_close)):
             expected_nb = nb_open[i] + capex[i] - depr[i]
-            fa_diffs.append(abs(nb_close[i] - expected_nb))
+            fa_diffs.append(self._error(nb_close[i] - expected_nb))
         max_fa_err = max(fa_diffs) if fa_diffs else 0.0
         fa_pass = max_fa_err <= self.tolerance
         checks.append(AuditCheckItem(
@@ -125,7 +132,7 @@ class AccountingVerifier:
         debt_diffs = []
         for i in range(len(debt_close)):
             expected_debt = debt_open[i] - repayment[i]
-            debt_diffs.append(abs(debt_close[i] - expected_debt))
+            debt_diffs.append(self._error(debt_close[i] - expected_debt))
         max_debt_err = max(debt_diffs) if debt_diffs else 0.0
         debt_pass = max_debt_err <= self.tolerance
         checks.append(AuditCheckItem(
@@ -143,7 +150,7 @@ class AccountingVerifier:
         # delta_nwc is defined for indices 1 to len(nwc)-1
         for i in range(1, len(nwc)):
             if i - 1 < len(delta_nwc):
-                diff = abs((nwc[i] - nwc[i - 1]) - delta_nwc[i - 1])
+                diff = self._error((nwc[i] - nwc[i - 1]) - delta_nwc[i - 1])
                 nwc_diffs.append(diff)
         max_nwc_err = max(nwc_diffs) if nwc_diffs else 0.0
         nwc_pass = max_nwc_err <= self.tolerance

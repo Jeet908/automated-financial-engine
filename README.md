@@ -55,7 +55,7 @@ The engine is benchmarked and verified against the canonical 89-step quantitativ
 | **Balance Sheet Discrepancy (All Years)** | **0.00 Cr** | **0.00 Cr** | ✅ **PERFECT BALANCE** |
 | **WACC (Discount Rate)** | **11.6%** (11.5869%) | **11.6%** | ✅ **VERIFIED** |
 | **PV of Terminal Value** | 1,877.9 Cr | 1,877.9 Cr | ✅ **VERIFIED** |
-| **Enterprise Value** | 2,516.4 Cr | 2,516.4 Cr | ✅ **VERIFIED** |
+| **Enterprise Value** | 2,486.9 Cr | 2,486.9 Cr | ✅ **VERIFIED** |
 | **Fair Value Per Share** | **Rs 252** | **Rs 252** | ✅ **VERIFIED** |
 | **Sensitivity Center Cell (F44)** | **Rs 252** | **Rs 252** | ✅ **VERIFIED** |
 | **Sensitivity Corner Cell (D42)** | **Rs 307** | **Rs 307** | ✅ **VERIFIED** |
@@ -94,6 +94,19 @@ python -m financial_engine --company kaveri_foods --mc-iterations 25000
 # Run in headless/quiet mode for automation scripts
 python -m financial_engine --company industrial_corp --quiet
 ```
+
+### Live company discovery and portal
+
+The live runner selects a listed ticker from the configured sector universe, retrieves its current quote and overlapping annual statements from Yahoo Finance, and writes the scraped workbook and engine config before running both valuation pipelines:
+
+```bash
+python discover_and_run.py
+python discover_and_run.py --domain "Indian FMCG & Consumer" --market india
+```
+
+The live universe includes Indian IT/defence and consumer companies, US semiconductors, SaaS, healthcare, and clean energy. At least four common annual periods across the income statement, balance sheet, and cash flow statement are required. The engine's simplified balance-sheet schema aggregates non-cash/non-receivable/non-inventory assets and non-debt liabilities; the scraped workbook labels those mappings and also includes reported values.
+
+Start the browser portal with `py -m uvicorn app:app --host 127.0.0.1 --port 8000`. Its `POST /api/v1/model/live-scrape` endpoint accepts `{"domain":"Any Random Domain","market":"random"}`; `POST /api/v1/model/generate-pack` accepts an uploaded client workbook. Use the portal's live-company selector or visit `http://127.0.0.1:8000`.
 
 ---
 
@@ -203,12 +216,12 @@ FINANCIAL MODEL ACCOUNTING INTEGRITY AUDIT CERTIFICATE
 ============================================================
 Overall Status: PASSED
 ------------------------------------------------------------
-✓ [PASS] Balance Sheet Balance Identity      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
-✓ [PASS] Cash Flow Roll-Forward Identity     Max Err: 0.000000e+00 (Tol: 1.000000e-04)
-✓ [PASS] Retained Earnings Roll-Forward      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
-✓ [PASS] Fixed Assets Net Block Roll-Forward Max Err: 0.000000e+00 (Tol: 1.000000e-04)
-✓ [PASS] Debt Amortization Roll-Forward      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
-✓ [PASS] Working Capital Change Reconciliation Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Balance Sheet Balance Identity      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Cash Flow Roll-Forward Identity     Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Retained Earnings Roll-Forward      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Fixed Assets Net Block Roll-Forward Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Debt Amortization Roll-Forward      Max Err: 0.000000e+00 (Tol: 1.000000e-04)
+[PASS] Working Capital Change Reconciliation Max Err: 0.000000e+00 (Tol: 1.000000e-04)
 ============================================================
 ```
 

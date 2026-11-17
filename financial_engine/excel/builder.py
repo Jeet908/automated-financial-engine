@@ -15,7 +15,7 @@ try:
 except ImportError:
     OPENPYXL_AVAILABLE = False
 
-from financial_engine.core.types import ModelConfiguration
+from financial_engine.core.config import ModelConfiguration
 from financial_engine.excel.styles import (
     COLOR_NAVY_HEADER,
     COLOR_HEADER_TEXT,

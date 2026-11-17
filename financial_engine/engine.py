@@ -8,10 +8,9 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 
 from financial_engine.core.types import (
-    ModelConfiguration,
-    CompanyMetadata,
     ScenarioType,
 )
+from financial_engine.core.config import ModelConfiguration
 from financial_engine.core.accounting import AccountingVerifier, AuditCertificate
 from financial_engine.schedules.working_capital import (
     WorkingCapitalSchedule,
@@ -124,7 +123,12 @@ class FinancialEngine:
         config = ModelConfiguration.from_json_file(json_path)
         return cls(config)
 
-    def solve(self, run_mc: bool = True, mc_iterations: int = 10000) -> FinancialModel:
+    def solve(
+        self,
+        run_mc: bool = True,
+        mc_iterations: int = 10000,
+        run_scenarios: bool = True,
+    ) -> FinancialModel:
         """
         Solves the complete 3-statement model, supporting schedules,
         valuation, and simulation pipeline with zero human intervention.
@@ -307,51 +311,58 @@ class FinancialEngine:
         )
 
         # 15. Run Scenario Manager
-        scenario_configs = create_scenario_configurations(cfg)
-        scenario_outcomes: List[ScenarioOutcome] = []
-        weights = {ScenarioType.BULL: 0.25, ScenarioType.BASE: 0.50, ScenarioType.BEAR: 0.25}
+        if run_scenarios:
+            scenario_configs = create_scenario_configurations(cfg)
+            scenario_outcomes: List[ScenarioOutcome] = []
+            weights = {ScenarioType.BULL: 0.25, ScenarioType.BASE: 0.50, ScenarioType.BEAR: 0.25}
 
-        for sc_type, sc_cfg in scenario_configs.items():
-            if sc_type == ScenarioType.BASE:
-                scenario_outcomes.append(ScenarioOutcome(
-                    scenario_type=sc_type,
-                    probability=weights[sc_type],
-                    enterprise_value=dcf_res.enterprise_value,
-                    equity_value=dcf_res.equity_value,
-                    value_per_share=dcf_res.value_per_share,
-                    revenue_cagr=(proj_rev[-1] / hist.revenue[-1]) ** (1.0 / n_proj) - 1.0,
-                    terminal_ebitda=proj_ebitda[-1],
-                    wacc=dcf_res.wacc,
-                ))
-            else:
-                # Solve sub-model for Bull / Bear
-                sub_engine = FinancialEngine(sc_cfg)
-                sub_model = sub_engine.solve(run_mc=False)
-                sub_rev = sub_model.income_statement.revenue[-n_proj:]
-                scenario_outcomes.append(ScenarioOutcome(
-                    scenario_type=sc_type,
-                    probability=weights[sc_type],
-                    enterprise_value=sub_model.enterprise_value,
-                    equity_value=sub_model.equity_value,
-                    value_per_share=sub_model.value_per_share,
-                    revenue_cagr=(sub_rev[-1] / hist.revenue[-1]) ** (1.0 / n_proj) - 1.0,
-                    terminal_ebitda=sub_model.income_statement.ebitda[-1],
-                    wacc=sub_model.wacc,
-                ))
+            for sc_type, sc_cfg in scenario_configs.items():
+                if sc_type == ScenarioType.BASE:
+                    scenario_outcomes.append(ScenarioOutcome(
+                        scenario_type=sc_type,
+                        probability=weights[sc_type],
+                        enterprise_value=dcf_res.enterprise_value,
+                        equity_value=dcf_res.equity_value,
+                        value_per_share=dcf_res.value_per_share,
+                        revenue_cagr=(proj_rev[-1] / hist.revenue[-1]) ** (1.0 / n_proj) - 1.0,
+                        terminal_ebitda=proj_ebitda[-1],
+                        wacc=dcf_res.wacc,
+                    ))
+                else:
+                    sub_engine = FinancialEngine(sc_cfg)
+                    sub_model = sub_engine.solve(run_mc=False, run_scenarios=False)
+                    sub_rev = sub_model.income_statement.revenue[-n_proj:]
+                    scenario_outcomes.append(ScenarioOutcome(
+                        scenario_type=sc_type,
+                        probability=weights[sc_type],
+                        enterprise_value=sub_model.enterprise_value,
+                        equity_value=sub_model.equity_value,
+                        value_per_share=sub_model.value_per_share,
+                        revenue_cagr=(sub_rev[-1] / hist.revenue[-1]) ** (1.0 / n_proj) - 1.0,
+                        terminal_ebitda=sub_model.income_statement.ebitda[-1],
+                        wacc=sub_model.wacc,
+                    ))
 
-        expected_share_price = sum(sc.probability * sc.value_per_share for sc in scenario_outcomes)
-        bull_sc = next(sc for sc in scenario_outcomes if sc.scenario_type == ScenarioType.BULL)
-        bear_sc = next(sc for sc in scenario_outcomes if sc.scenario_type == ScenarioType.BEAR)
-        base_val = dcf_res.value_per_share
-        bull_up = ((bull_sc.value_per_share / base_val) - 1.0) * 100.0 if base_val > 0 else 0.0
-        bear_down = ((bear_sc.value_per_share / base_val) - 1.0) * 100.0 if base_val > 0 else 0.0
+            expected_share_price = sum(sc.probability * sc.value_per_share for sc in scenario_outcomes)
+            bull_sc = next(sc for sc in scenario_outcomes if sc.scenario_type == ScenarioType.BULL)
+            bear_sc = next(sc for sc in scenario_outcomes if sc.scenario_type == ScenarioType.BEAR)
+            base_val = dcf_res.value_per_share
+            bull_up = ((bull_sc.value_per_share / base_val) - 1.0) * 100.0 if base_val > 0 else 0.0
+            bear_down = ((bear_sc.value_per_share / base_val) - 1.0) * 100.0 if base_val > 0 else 0.0
 
-        scenario_summary = ScenarioSummary(
-            scenarios=scenario_outcomes,
-            expected_value_per_share=expected_share_price,
-            bull_upside_pct=bull_up,
-            bear_downside_pct=bear_down,
-        )
+            scenario_summary = ScenarioSummary(
+                scenarios=scenario_outcomes,
+                expected_value_per_share=expected_share_price,
+                bull_upside_pct=bull_up,
+                bear_downside_pct=bear_down,
+            )
+        else:
+            scenario_summary = ScenarioSummary(
+                scenarios=[],
+                expected_value_per_share=dcf_res.value_per_share,
+                bull_upside_pct=0.0,
+                bear_downside_pct=0.0,
+            )
 
         # 16. Run Monte Carlo Simulation
         if run_mc:

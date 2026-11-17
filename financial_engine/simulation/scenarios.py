@@ -4,7 +4,8 @@ Scenario Manager: Bull, Base, and Bear case projections and probability weightin
 
 from dataclasses import dataclass
 from typing import Dict, Any, List
-from financial_engine.core.types import ScenarioType, ModelConfiguration
+from financial_engine.core.types import ScenarioType
+from financial_engine.core.config import ModelConfiguration
 
 
 @dataclass

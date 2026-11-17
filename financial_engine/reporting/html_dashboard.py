@@ -35,6 +35,58 @@ class HTMLDashboardGenerator:
         # Years
         all_years = meta.historical_years + meta.projection_years
 
+        histogram_bins = mc.histogram_bins
+        histogram_counts = mc.histogram_counts
+        histogram_min = histogram_bins[0] if histogram_bins else mc.min_price
+        histogram_max = histogram_bins[-1] if histogram_bins else mc.max_price
+        histogram_range = max(histogram_max - histogram_min, 1e-12)
+        max_count = max(histogram_counts, default=0) or 1
+        chart_left, chart_top, chart_width, chart_height = 54, 16, 650, 170
+        bin_width = chart_width / max(len(histogram_counts), 1)
+        bars = "".join(
+            f'<rect x="{chart_left + i * bin_width + 1:.1f}" '
+            f'y="{chart_top + chart_height - count / max_count * chart_height:.1f}" '
+            f'width="{max(1.0, bin_width - 2):.1f}" '
+            f'height="{count / max_count * chart_height:.1f}" rx="2" '
+            f'fill="#38bdf8"><title>{meta.currency.value} '
+            f'{histogram_bins[i]:.2f} to {histogram_bins[i + 1]:.2f}: '
+            f'{count:,} simulations</title></rect>'
+            for i, count in enumerate(histogram_counts)
+            if i + 1 < len(histogram_bins)
+        )
+        median_x = chart_left + (mc.median_price - histogram_min) / histogram_range * chart_width
+        market_marker = ""
+        if histogram_min <= curr_price <= histogram_max:
+            market_x = chart_left + (curr_price - histogram_min) / histogram_range * chart_width
+            market_marker = (
+                f'<line x1="{market_x:.1f}" x2="{market_x:.1f}" y1="{chart_top}" '
+                f'y2="{chart_top + chart_height}" stroke="#f87171" stroke-dasharray="4 4"/>'
+            )
+        mc_histogram_svg = f"""
+        <svg class="svg-chart" viewBox="0 0 720 240" role="img"
+             aria-label="Monte Carlo distribution of simulated share prices">
+          <title>Monte Carlo Price Distribution ({mc.iterations:,} simulations)</title>
+          <line x1="{chart_left}" x2="{chart_left + chart_width}" y1="{chart_top + chart_height}"
+                y2="{chart_top + chart_height}" stroke="#64748b"/>
+          <line x1="{chart_left}" x2="{chart_left}" y1="{chart_top}"
+                y2="{chart_top + chart_height}" stroke="#64748b"/>
+          <text x="4" y="{chart_top + 5}" fill="#94a3b8" font-size="11">{max(histogram_counts, default=0):,}</text>
+          <text x="34" y="{chart_top + chart_height}" fill="#94a3b8" font-size="11">0</text>
+          {bars}
+          <line x1="{median_x:.1f}" x2="{median_x:.1f}" y1="{chart_top}"
+                y2="{chart_top + chart_height}" stroke="#34d399" stroke-dasharray="4 4"/>
+          {market_marker}
+          <text x="{chart_left}" y="210" fill="#94a3b8" font-size="11" text-anchor="start">
+            {meta.currency.value} {histogram_min:.1f}</text>
+          <text x="{chart_left + chart_width}" y="210" fill="#94a3b8" font-size="11" text-anchor="end">
+            {meta.currency.value} {histogram_max:.1f}</text>
+          <text x="358" y="230" fill="#94a3b8" font-size="11" text-anchor="middle">
+            Implied share price ({meta.currency.value})</text>
+          <text x="{chart_left + chart_width - 130}" y="14" fill="#34d399" font-size="11">
+            Median {meta.currency.value} {mc.median_price:.1f}</text>
+          {f'<text x="{chart_left + chart_width - 130}" y="29" fill="#f87171" font-size="11">Market {meta.currency.value} {curr_price:.1f}</text>' if market_marker else ''}
+        </svg>"""
+
         # Prepare JSON data for interactive frontend
         frontend_data = {
             "years": all_years,
@@ -167,7 +219,7 @@ tr.highlight-row td {{ background: rgba(56, 189, 248, 0.08); font-weight: 600; }
     <div class="kpi-card">
       <div class="kpi-label">Equity Value</div>
       <div class="kpi-value">{dcf.equity_value:,.1f}</div>
-      <div class="kpi-sub" style="color: var(--text-muted);">{meta.shares_outstanding:.1f} {meta.shares_unit} shares</div>
+      <div class="kpi-sub" style="color: var(--text-muted);">{dcf.shares_outstanding:.1f} {meta.shares_unit} shares</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">WACC (Discount Rate)</div>
@@ -532,6 +584,11 @@ tr.highlight-row td {{ background: rgba(56, 189, 248, 0.08); font-weight: 600; }
           </tbody>
         </table>
       </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title">Monte Carlo Price Distribution ({mc.iterations:,} simulations)</div>
+      {mc_histogram_svg}
     </div>
 
     <!-- Scenario Comparison Table -->

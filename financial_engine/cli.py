@@ -9,8 +9,6 @@ import argparse
 from pathlib import Path
 import json
 
-from financial_engine.core.types import ModelConfiguration
-from financial_engine.core.config import ModelConfiguration as ConfigLoader
 from financial_engine.engine import FinancialEngine, FinancialModel
 from financial_engine.excel.builder import InstitutionalExcelBuilder, OPENPYXL_AVAILABLE
 from financial_engine.reporting.html_dashboard import HTMLDashboardGenerator
@@ -66,7 +64,7 @@ def run_pipeline(
         if not cert.is_valid:
             print("[!] WARNING: One or more accounting identities failed!")
         else:
-            print("[✓] ALL ACCOUNTING IDENTITIES STRICTLY VERIFIED (Zero plug error).")
+            print("[OK] ALL ACCOUNTING IDENTITIES STRICTLY VERIFIED (Zero plug error).")
 
     # 4. Display Key Results
     dcf = model.dcf_result
@@ -167,7 +165,7 @@ def run_pipeline(
             print(f"[+] Saved audit certificate JSON:        {audit_file}")
 
     if not quiet:
-        print("\n[✓] Pipeline execution finished with 100% success.\n")
+        print("\n[OK] Pipeline execution finished with 100% success.\n")
 
     return model
 
