@@ -31,5 +31,5 @@ RUN mkdir -p /app/client_inbox /app/client_outbox /app/outputs
 # Expose API port
 EXPOSE 8000
 
-# Default command: launch FastAPI server via uvicorn
-CMD ["uvicorn", "src.ingestion.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command: launch FastAPI server via uvicorn binding dynamically to Railway's $PORT or 8000
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
