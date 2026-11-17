@@ -32,6 +32,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from src.ingestion.ingester import UniversalIngester
 from src.engine.orchestrator import ModelOrchestrator
@@ -48,6 +50,20 @@ app = FastAPI(
     version="1.0.0",
     description="Zero-touch ingestion, 3-statement forecast, DCF valuation, and Executive Pack compiler.",
 )
+
+# Ensure directories exist
+for folder in ["artifacts", "client_inbox", "client_outbox", "inputs", "outputs"]:
+    (PROJECT_ROOT / folder).mkdir(parents=True, exist_ok=True)
+
+# Mount static asset folders
+app.mount("/artifacts", StaticFiles(directory=str(PROJECT_ROOT / "artifacts"), html=True), name="artifacts")
+app.mount("/client_outbox", StaticFiles(directory=str(PROJECT_ROOT / "client_outbox")), name="client_outbox")
+app.mount("/client_inbox", StaticFiles(directory=str(PROJECT_ROOT / "client_inbox")), name="client_inbox")
+
+
+class LiveScrapeRequest(BaseModel):
+    domain: Optional[str] = "Any Random Domain"
+    market: Optional[str] = "random"
 
 _ingester = UniversalIngester()
 _orchestrator = ModelOrchestrator()
@@ -514,3 +530,95 @@ async def download_model(filename: str):
         filename=safe_filename,
         media_type=media_type,
     )
+
+
+# ---------------------------------------------------------------------------
+# Live Web Scraping & Random Valuation Route
+# ---------------------------------------------------------------------------
+@app.post("/api/v1/model/live-scrape", tags=["Scraper"])
+async def live_scrape(req: LiveScrapeRequest):
+    """
+    Discovers, scrapes, models, stress-tests, and packages a real-world company
+    based on the requested industry domain.
+    """
+    try:
+        from discover_and_run import run_discovery_pipeline
+        res = run_discovery_pipeline(domain=req.domain, market=req.market or "random", quiet=True)
+        comp = res["company"]
+        model = res["engine_a_model"]
+        pack = res["engine_b_pack"]
+        ticker_slug = res["ticker_slug"]
+
+        dashboard_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_dashboard.html"
+        memo_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_investment_memo.md"
+        audit_rel_url = f"/artifacts/{ticker_slug}_live/{ticker_slug}_audit_certificate.json"
+
+        zip_name = Path(pack.get("zip_path", "")).name if pack.get("zip_path") else ""
+        xlsx_name = Path(pack.get("xlsx_path", "")).name if pack.get("xlsx_path") else ""
+        pdf_name = Path(pack.get("pdf_path", "")).name if pack.get("pdf_path") else ""
+        pptx_name = Path(pack.get("pptx_path", "")).name if pack.get("pptx_path") else ""
+
+        curr_p = comp["current_market_price"]
+        fair_p = model.value_per_share
+        upside = ((fair_p / curr_p) - 1.0) * 100.0 if curr_p > 0 else 0.0
+
+        return {
+            "status": "success",
+            "company": {
+                "name": comp["name"],
+                "ticker": comp["ticker"],
+                "exchange": comp["exchange"],
+                "industry": comp["industry"],
+                "currency": comp["currency"],
+                "current_market_price": curr_p,
+                "shares_outstanding": comp.get("shares_outstanding", 10.0),
+                "market_cap": round(comp.get("market_cap", comp.get("shares_outstanding", 10.0) * curr_p), 2),
+                "beta": comp.get("beta", 1.0),
+                "fair_value_per_share": round(fair_p, 2),
+                "upside_pct": round(upside, 2),
+                "wacc": round(model.wacc * 100.0, 2),
+                "enterprise_value": round(model.enterprise_value, 2),
+                "equity_value": round(model.equity_value, 2),
+            },
+            "urls": {
+                "dashboard_html": dashboard_rel_url,
+                "investment_memo_md": memo_rel_url,
+                "audit_certificate_json": audit_rel_url,
+                "zip_pack": f"/client_outbox/{ticker_slug}_live/{zip_name}" if zip_name else "",
+                "xlsx_model": f"/client_outbox/{ticker_slug}_live/{xlsx_name}" if xlsx_name else "",
+                "pdf_tearsheet": f"/client_outbox/{ticker_slug}_live/{pdf_name}" if pdf_name else "",
+                "pptx_pitchbook": f"/client_outbox/{ticker_slug}_live/{pptx_name}" if pptx_name else "",
+            },
+            "accounting_audit": {
+                "overall_status": model.audit_certificate.overall_status,
+                "is_valid": model.audit_certificate.is_valid,
+                "max_discrepancy": max(
+                    (check.max_discrepancy for check in model.audit_certificate.checks),
+                    default=0.0,
+                ),
+                "checks": [
+                    {
+                        "name": check.name,
+                        "passed": check.passed,
+                        "max_discrepancy": check.max_discrepancy,
+                    }
+                    for check in model.audit_certificate.checks
+                ],
+            },
+            "monte_carlo": {
+                "iterations": model.monte_carlo.iterations,
+                "median_price": model.monte_carlo.median_price,
+                "prob_undervalued": model.monte_carlo.prob_undervalued,
+            },
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Scraper & Valuation Error: {str(e)}")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    print(f"[*] Starting MarketLens Financial Engine on http://0.0.0.0:{port} ...")
+    uvicorn.run("src.ingestion.api:app", host="0.0.0.0", port=port, reload=False)
