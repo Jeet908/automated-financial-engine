@@ -32,6 +32,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install openpyxl
 
+      - name: Smoke-test web application startup
+        run: |
+          python -c "from fastapi.testclient import TestClient; from app import app; from discover_and_run import run_discovery_pipeline; response = TestClient(app).get('/api/v1/health'); assert response.status_code == 200 and response.json()['status'] == 'online'"
+
       - name: Execute Automated Financial Modeling & Valuation Engine
         run: |
           python run_engine.py
