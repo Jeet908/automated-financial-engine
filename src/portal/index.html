@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarketLens Analytics | Financial Modeling & Valuation Engine Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#f4f6f8">
+    <title>MarketLens Analytics | Financial Modeling & Valuation</title>
     <style>
         :root {
             --bg-dark: #090d16;
@@ -379,6 +377,500 @@
             font-size: 0.85rem;
             border-top: 1px solid var(--card-border);
         }
+
+        :root {
+            color-scheme: light;
+            --bg-dark: #f4f6f8;
+            --card-bg: #ffffff;
+            --card-border: #e3e8ee;
+            --primary: #28547a;
+            --primary-glow: rgba(40, 84, 122, 0.12);
+            --accent: #287c78;
+            --accent-glow: rgba(40, 124, 120, 0.12);
+            --success: #24745b;
+            --success-glow: rgba(36, 116, 91, 0.12);
+            --warning: #a86616;
+            --text-main: #192b3d;
+            --text-muted: #637386;
+        }
+
+        * {
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            padding: 0.9rem max(1.25rem, calc((100% - 1120px) / 2));
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 7px;
+            background: var(--primary);
+            box-shadow: none;
+            font-size: 1rem;
+        }
+
+        .logo-text {
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        .logo-sub {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .nav-links {
+            gap: 1.25rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-badge {
+            padding: 0.35rem 0.7rem;
+            border: 1px solid #cfe4dc;
+            border-radius: 5px;
+            background: #f0f8f4;
+            color: #23654f;
+            font-size: 0.75rem;
+        }
+
+        .pulse-dot {
+            box-shadow: none;
+        }
+
+        main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 1.5rem 2rem;
+        }
+
+        .hero {
+            margin: 3.25rem 0 2rem;
+            text-align: left;
+        }
+
+        .hero-badge {
+            margin-bottom: 0.9rem;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin-bottom: 0.7rem;
+            background: none;
+            color: var(--text-main);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -0.035em;
+            -webkit-text-fill-color: currentColor;
+        }
+
+        .hero p {
+            max-width: 690px;
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .live-control-card,
+        .dropzone-card,
+        .process-flow,
+        #results-dashboard {
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            background: var(--card-bg);
+            box-shadow: 0 3px 12px rgba(27, 45, 64, 0.04);
+            backdrop-filter: none;
+        }
+
+        .live-control-card {
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding: 1.35rem 1.5rem;
+        }
+
+        .live-bar-title {
+            color: var(--text-main);
+            font-size: 1.05rem;
+            font-weight: 650;
+        }
+
+        .live-bar-title > span:first-child {
+            display: none;
+        }
+
+        .live-bar-badge {
+            border: 1px solid #d5e5e3;
+            border-radius: 5px;
+            background: #f2f8f7;
+            color: #286d69;
+            font-size: 0.72rem;
+        }
+
+        .live-bar-controls {
+            gap: 0.75rem;
+        }
+
+        .live-select {
+            min-width: 220px;
+            border: 1px solid #ccd5de;
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .live-select:focus,
+        .btn-live-scrape:focus-visible,
+        .btn-sub:focus-visible,
+        .btn-zip:focus-visible,
+        .btn-dash:focus-visible,
+        .dropzone-card:focus-visible {
+            outline: 3px solid rgba(40, 84, 122, 0.2);
+            outline-offset: 2px;
+        }
+
+        .btn-live-scrape,
+        .btn-dash,
+        .btn-zip {
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background: var(--primary);
+            box-shadow: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .btn-live-scrape {
+            padding: 0.78rem 1rem;
+        }
+
+        .btn-live-scrape:hover,
+        .btn-dash:hover,
+        .btn-zip:hover {
+            transform: translateY(-1px);
+            background: #1e4568;
+            box-shadow: none;
+        }
+
+        .btn-live-scrape:disabled {
+            cursor: wait;
+            opacity: 0.65;
+            transform: none;
+        }
+
+        .dropzone-card {
+            display: block;
+            width: 100%;
+            padding: 1.55rem;
+            border: 1px dashed #b9c5d0;
+            color: var(--text-main);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropzone-card:hover,
+        .dropzone-card.dragover {
+            border-color: var(--primary);
+            background: #fbfcfd;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .drop-icon {
+            display: none;
+        }
+
+        .drop-title {
+            margin-bottom: 0.3rem;
+            font-size: 0.98rem;
+            font-weight: 650;
+        }
+
+        .drop-subtitle {
+            margin-bottom: 0.85rem;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+        }
+
+        .pill-container {
+            justify-content: flex-start;
+            gap: 0.45rem;
+        }
+
+        .format-pill,
+        .btn-sub {
+            border: 1px solid var(--card-border);
+            border-radius: 5px;
+            background: #f8fafb;
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 550;
+        }
+
+        .process-flow {
+            margin-top: 1.25rem;
+            padding: 1.2rem;
+        }
+
+        .steps-grid {
+            gap: 0.75rem;
+        }
+
+        .step-item {
+            flex-direction: row;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .step-num {
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            border-color: var(--card-border);
+            background: #f7f9fb;
+            color: var(--text-muted);
+        }
+
+        .step-item.active .step-num {
+            border-color: var(--primary);
+            background: var(--primary);
+            box-shadow: none;
+        }
+
+        .step-item.completed .step-num {
+            border-color: var(--success);
+            background: #eaf5ef;
+            color: var(--success);
+        }
+
+        .step-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .step-item.active .step-label {
+            color: var(--text-main);
+        }
+
+        .error-message {
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            border: 1px solid #f0c9c5;
+            border-radius: 6px;
+            background: #fff7f6;
+            color: #8e3028;
+            font-size: 0.88rem;
+        }
+
+        #results-dashboard {
+            margin-top: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 3px 12px rgba(27, 45, 64, 0.04);
+        }
+
+        .dash-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom-color: var(--card-border);
+        }
+
+        .dash-entity {
+            color: var(--text-main);
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .dash-meta {
+            color: var(--text-muted);
+            font-size: 0.84rem;
+        }
+
+        .trust-badge {
+            border: 1px solid #cfe4dc;
+            border-radius: 5px;
+            background: #f0f8f4;
+            color: #23654f;
+            font-size: 0.78rem;
+        }
+
+        .trust-badge.review {
+            border-color: #ead9bd;
+            background: #fbf6ed;
+            color: #865a1d;
+        }
+
+        .kpi-cards-grid {
+            gap: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .kpi-card {
+            border: 1px solid var(--card-border);
+            border-radius: 7px;
+            background: #fff;
+            padding: 1rem;
+        }
+
+        .kpi-label {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+        }
+
+        .kpi-val {
+            color: var(--text-main);
+            font-size: 1.55rem;
+            font-weight: 700;
+        }
+
+        .kpi-sub {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .cta-section {
+            border: 1px solid var(--card-border);
+            border-radius: 7px;
+            background: #f8fafb;
+            padding: 1.25rem;
+        }
+
+        .btn-zip {
+            border-color: var(--success);
+            background: var(--success);
+            font-size: 0.92rem;
+            padding: 0.8rem 1.1rem;
+        }
+
+        .btn-zip:hover {
+            background: #1d5e49;
+        }
+
+        .btn-dash {
+            margin-left: 0.35rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .sub-downloads {
+            gap: 0.5rem;
+        }
+
+        .btn-sub {
+            padding: 0.55rem 0.75rem;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .btn-sub:hover {
+            background: #eef2f5;
+        }
+
+        footer {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            border-top: 1px solid var(--card-border);
+            background: #fff;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 700px) {
+            nav {
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.8rem 1rem;
+            }
+
+            .nav-links {
+                justify-content: flex-end;
+                gap: 0.7rem;
+                flex-wrap: wrap;
+            }
+
+            .nav-link {
+                font-size: 0.78rem;
+            }
+
+            .nav-badge {
+                display: none;
+            }
+
+            main {
+                padding: 0 1rem 1.5rem;
+            }
+
+            .hero {
+                margin-top: 2rem;
+            }
+
+            .live-control-card {
+                padding: 1rem;
+            }
+
+            .live-bar-controls {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .live-select,
+            .btn-live-scrape {
+                width: 100%;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .step-item {
+                align-items: flex-start;
+            }
+
+            #results-dashboard {
+                padding: 1rem;
+            }
+
+            .dash-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -390,79 +882,82 @@
             </div>
         </a>
         <div class="nav-links">
-            <a href="https://github.com/Jeet908/automated-financial-engine" class="nav-link" target="_blank">GitHub Repo</a>
-            <a href="/api/v1/health" class="nav-link">API Health</a>
-            <div class="nav-badge"><span class="pulse-dot"></span> Engine Online v1.0</div>
+            <a href="https://github.com/Jeet908/automated-financial-engine" class="nav-link" target="_blank" rel="noopener noreferrer">Repository</a>
+            <a href="/api/v1/health" class="nav-link">Service health</a>
+            <div class="nav-badge"><span class="pulse-dot"></span> Valuation engine</div>
         </div>
     </nav>
 
     <main>
         <div class="hero">
-            <div class="hero-badge">⚡ Zero-Touch Live Web Scraping & Multi-Method Valuation</div>
-            <h1>Automated Financial Modeling & Valuation Engine</h1>
-            <p>One-click autonomous web scraping across live real-world entities. Calibrates self-balancing 3-statement models, 10,000-path Monte Carlo simulations, and 3-deliverable executive packs in seconds.</p>
+            <div class="hero-badge">Financial analysis and valuation</div>
+            <h1>Make the numbers easier to act on.</h1>
+            <p>Build structured valuation scenarios from public company data or client financial files, then review the assumptions, accounting checks, and supporting reports.</p>
         </div>
 
         <!-- ⚡ LIVE RANDOM SCRAPER CONTROL BAR -->
         <div class="live-control-card">
             <div class="live-bar-header">
                 <div class="live-bar-title">
-                    <span>⚡</span> <span>Surprise Me: Scrape & Model a Random Live Company</span>
+                    <span>⚡</span> <span>Explore a listed company</span>
                 </div>
-                <div class="live-bar-badge">Zero-Touch Live Ingestion</div>
+                <div class="live-bar-badge">Public market data</div>
             </div>
+            <p class="drop-subtitle">Choose an industry to discover a company and run the live valuation workflow.</p>
             <div class="live-bar-controls">
-                <select id="domain-selector" class="live-select">
-                    <option value="Any Random Domain">🎲 Any Random Domain (Surprise Me)</option>
-                    <option value="Indian IT & Defence">🇮🇳 Indian IT & Defence Electronics (BEL, HAL, INFY)</option>
-                    <option value="US AI & Cloud Semiconductors">🇺🇸 US AI & Cloud Semiconductors (NVDA, AMD, AVGO)</option>
-                    <option value="Global FinTech & SaaS">🌐 Global FinTech & Cloud SaaS (CRM, NOW, INTU)</option>
-                    <option value="Indian FMCG & Consumer">🇮🇳 Indian FMCG & Consumer Staples (TATACONSUM, BRITANNIA)</option>
-                    <option value="Healthcare & BioPharma">🧬 Healthcare & BioPharma (LLY, JNJ, REGN)</option>
-                    <option value="Clean Energy & EV">⚡ Clean Energy & EV Infrastructure (TSLA, ENPH)</option>
+                <select id="domain-selector" class="live-select" aria-label="Select an industry">
+                    <option value="Any Random Domain">Any industry</option>
+                    <option value="Indian IT & Defence">Indian IT &amp; defence</option>
+                    <option value="US AI & Cloud Semiconductors">US AI &amp; semiconductors</option>
+                    <option value="Global FinTech & SaaS">Global fintech &amp; SaaS</option>
+                    <option value="Indian FMCG & Consumer">Indian consumer goods</option>
+                    <option value="Healthcare & BioPharma">Healthcare &amp; biopharma</option>
+                    <option value="Clean Energy & EV">Clean energy &amp; EV</option>
                 </select>
 
-                <button class="btn-live-scrape" id="btn-live-scrape" onclick="triggerLiveScrape()">
-                    <span>🚀</span> Scrape & Model Live Company
+                <button class="btn-live-scrape" id="btn-live-scrape" type="button" onclick="triggerLiveScrape()">
+                    Run live valuation
                 </button>
             </div>
         </div>
 
         <!-- Upload Dropzone -->
-        <div class="dropzone-card" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <div class="dropzone-card" id="dropzone" role="button" tabindex="0" aria-label="Choose or drop a client financial file">
             <div class="drop-icon">📈</div>
-            <div class="drop-title">Or drop your raw client financial file here</div>
-            <div class="drop-subtitle">Auto-normalizes Excel, CSV, Trial Balance PDF, and JSON Ledger files with 0 clicks</div>
+            <div class="drop-title">Analyze a client financial file</div>
+            <div class="drop-subtitle">Select a file or drag it here to generate a valuation pack.</div>
             <div class="pill-container">
-                <span class="format-pill">Excel (.xlsx, .xls)</span>
-                <span class="format-pill">CSV (.csv)</span>
-                <span class="format-pill">Trial Balance PDF (.pdf)</span>
-                <span class="format-pill">JSON Ledger (.json)</span>
+                <span class="format-pill">Excel</span>
+                <span class="format-pill">CSV</span>
+                <span class="format-pill">Trial balance PDF</span>
+                <span class="format-pill">JSON ledger</span>
             </div>
-            <input type="file" id="file-input" style="display: none;" accept=".xlsx,.xls,.csv,.json,.pdf">
+            <input type="file" id="file-input" style="display: none;" accept=".xlsx,.xls,.csv,.json,.pdf" aria-label="Select client financial file">
         </div>
 
         <!-- Progress Steps -->
-        <div class="process-flow" id="process-flow">
+        <div class="process-flow" id="process-flow" role="status" aria-live="polite">
             <div class="steps-grid">
                 <div class="step-item" id="step-1">
                     <div class="step-num">1</div>
-                    <div class="step-label" id="step-label-1">Scraping Multi-Year Filings from Web</div>
+                    <div class="step-label" id="step-label-1">Request received</div>
                 </div>
                 <div class="step-item" id="step-2">
                     <div class="step-num">2</div>
-                    <div class="step-label" id="step-label-2">Solving 3-Statement Model & DCF Loop</div>
+                    <div class="step-label" id="step-label-2">Financial data and assumptions</div>
                 </div>
                 <div class="step-item" id="step-3">
                     <div class="step-num">3</div>
-                    <div class="step-label" id="step-label-3">Enforcing 6 Accounting Invariants (0.00 Plug)</div>
+                    <div class="step-label" id="step-label-3">Valuation and accounting checks</div>
                 </div>
                 <div class="step-item" id="step-4">
                     <div class="step-num">4</div>
-                    <div class="step-label" id="step-label-4">Running 10k Monte Carlo & Compiling Pack</div>
+                    <div class="step-label" id="step-label-4">Reports and downloads</div>
                 </div>
             </div>
+            <p id="progress-message" class="drop-subtitle" aria-live="polite">Analysis in progress. This may take a few minutes.</p>
         </div>
+        <div class="error-message" id="error-message" role="alert" hidden></div>
 
         <!-- Results Dashboard -->
         <div id="results-dashboard">
@@ -471,8 +966,8 @@
                     <div class="dash-entity" id="res-entity">Entity Name</div>
                     <div class="dash-meta" id="res-meta">Sector • Currency • 5-Year Forecast Horizon</div>
                 </div>
-                <div class="trust-badge">
-                    <span>✓</span> <span id="res-badge">Audit Verified: Assets ≡ Liab + Equity (0.00 Variance)</span>
+                <div class="trust-badge" id="res-trust-badge">
+                    <span>✓</span> <span id="res-badge">Analysis complete</span>
                 </div>
             </div>
 
@@ -494,8 +989,8 @@
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-label">Mathematical Invariant Audit</div>
-                    <div class="kpi-val" style="color: #34d399;">100% PASS</div>
-                    <div class="kpi-sub" id="val-audit-status">All six accounting gates pass</div>
+                    <div class="kpi-val" id="val-audit-result">See report</div>
+                    <div class="kpi-sub" id="val-audit-status">Accounting checks are not returned for this workflow</div>
                     <div class="kpi-sub" id="val-mc-undervalued">Monte Carlo undervaluation probability</div>
                 </div>
             </div>
@@ -503,25 +998,25 @@
             <div class="cta-section">
                 <div style="margin-bottom: 1.25rem;">
                     <a href="#" class="btn-zip" id="btn-zip-download">
-                        <span>📦</span> Download Executive Pack (.ZIP)
+                        Download executive pack (.zip)
                     </a>
                     <a href="#" class="btn-dash" id="btn-open-dashboard" target="_blank">
-                        <span>📊</span> Open Interactive HTML5 Dashboard
+                        Open interactive dashboard
                     </a>
                 </div>
                 <div class="sub-downloads">
-                    <a href="#" class="btn-sub" id="btn-dl-xlsx">📊 Financial Model (.xlsx)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-pdf">📑 Valuation Tear-Sheet (.pdf)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-pptx">🎯 Board Pitchbook (.pptx)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-memo">📝 Investment Memo (.md)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-audit">📜 Audit Certificate (.json)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-xlsx">Financial model (.xlsx)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-pdf">Valuation report (.pdf)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-pptx">Presentation (.pptx)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-memo">Investment memo (.md)</a>
+                    <a href="#" class="btn-sub" id="btn-dl-audit">Audit certificate (.json)</a>
                 </div>
             </div>
         </div>
     </main>
 
     <footer>
-        &copy; 2026 MarketLens Analytics | Jeet908/automated-financial-engine. Institutional Financial Engineering Engine. All rights reserved.
+        MarketLens Analytics &middot; Financial modeling and valuation
     </footer>
 
     <script>
@@ -529,6 +1024,8 @@
         const fileInput = document.getElementById('file-input');
         const processFlow = document.getElementById('process-flow');
         const resultsDashboard = document.getElementById('results-dashboard');
+        const errorMessage = document.getElementById('error-message');
+        const liveButton = document.getElementById('btn-live-scrape');
 
         ['dragenter', 'dragover'].forEach(eName => {
             dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
@@ -542,24 +1039,31 @@
             if (files.length) handleUpload(files[0]);
         });
 
+        dropzone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        dropzone.addEventListener('click', (e) => {
+            if (e.target !== fileInput) fileInput.click();
+        });
+
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length) handleUpload(fileInput.files[0]);
         });
 
         async function triggerLiveScrape() {
             const domain = document.getElementById('domain-selector').value;
+            clearError();
+            liveButton.disabled = true;
             processFlow.style.display = 'block';
             resultsDashboard.style.display = 'none';
 
-            document.getElementById('step-label-1').textContent = 'Querying Sector Screener: ' + domain;
-            document.getElementById('step-label-2').textContent = 'Extracting 5-Yr Income, BS & CF Statements';
-            document.getElementById('step-label-3').textContent = 'Solving 3-Statement Model & Zero-Plug Check';
-            document.getElementById('step-label-4').textContent = 'Running 10k Monte Carlo & Compiling Pack';
-
+            document.getElementById('step-label-1').textContent = 'Discovering a company in ' + domain;
+            document.getElementById('progress-message').textContent = 'Collecting public data and building the valuation. This may take a few minutes.';
             setStep(1);
-            setTimeout(() => setStep(2), 600);
-            setTimeout(() => setStep(3), 1400);
-            setTimeout(() => setStep(4), 2200);
 
             try {
                 const res = await fetch('/api/v1/model/live-scrape', {
@@ -577,24 +1081,21 @@
                 markAllCompleted();
                 renderLiveDashboard(data);
             } catch (err) {
-                alert('Scraper Error: ' + err.message);
+                showError('Live valuation failed: ' + err.message);
                 processFlow.style.display = 'none';
+            } finally {
+                liveButton.disabled = false;
             }
         }
 
         async function handleUpload(file) {
+            clearError();
             processFlow.style.display = 'block';
             resultsDashboard.style.display = 'none';
 
             document.getElementById('step-label-1').textContent = 'Auto-Detecting Accounting Standard';
-            document.getElementById('step-label-2').textContent = 'Building 3-Statement & DCF Loop';
-            document.getElementById('step-label-3').textContent = 'Running Zero-Error Audit Gates';
-            document.getElementById('step-label-4').textContent = 'Compiling Excel + PDF + Pitchbook';
-
+            document.getElementById('progress-message').textContent = 'Processing the file and preparing the valuation pack. This may take a few minutes.';
             setStep(1);
-            setTimeout(() => setStep(2), 600);
-            setTimeout(() => setStep(3), 1400);
-            setTimeout(() => setStep(4), 2200);
 
             const formData = new FormData();
             formData.append('file', file);
@@ -614,14 +1115,27 @@
                 markAllCompleted();
                 renderUploadDashboard(data);
             } catch (err) {
-                alert('Processing Error: ' + err.message);
+                showError('File processing failed: ' + err.message);
                 processFlow.style.display = 'none';
+            } finally {
+                fileInput.value = '';
             }
+        }
+
+        function clearError() {
+            errorMessage.hidden = true;
+            errorMessage.textContent = '';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.hidden = false;
         }
 
         function setStep(num) {
             for (let i = 1; i <= 4; i++) {
                 const el = document.getElementById('step-' + i);
+                el.querySelector('.step-num').textContent = i;
                 if (i < num) {
                     el.className = 'step-item completed';
                     el.querySelector('.step-num').textContent = '✓';
@@ -639,12 +1153,15 @@
                 el.className = 'step-item completed';
                 el.querySelector('.step-num').textContent = '✓';
             }
+            document.getElementById('progress-message').textContent = 'Analysis complete.';
         }
 
         function renderLiveDashboard(data) {
             resultsDashboard.style.display = 'block';
             const c = data.company || {};
             const urls = data.urls || {};
+            const audit = data.accounting_audit || {};
+            const trustBadge = document.getElementById('res-trust-badge');
 
             const currSym = c.currency === 'INR' ? '₹' : (c.currency === 'USD' ? '$' : c.currency + ' ');
             const unit = c.currency === 'INR' ? 'Cr' : 'B';
@@ -660,11 +1177,17 @@
             document.getElementById('val-wacc-tgr').textContent = `WACC: ${c.wacc}% • 10k Monte Carlo Simulated`;
 
             document.getElementById('val-equity').textContent = `${currSym}${c.equity_value.toLocaleString()} ${unit}`;
-            document.getElementById('val-net-debt').textContent = `100% Zero-Plug Balanced`;
+            document.getElementById('val-net-debt').textContent = 'Enterprise-to-equity bridge included';
+            document.getElementById('val-audit-result').textContent = audit.is_valid ? 'PASS' : 'REVIEW';
             document.getElementById('val-audit-status').textContent =
-                `Audit max discrepancy: ${data.accounting_audit.max_discrepancy.toExponential(2)}`;
+                `Audit max discrepancy: ${(audit.max_discrepancy || 0).toExponential(2)}`;
             document.getElementById('val-mc-undervalued').textContent =
                 `Monte Carlo probability undervalued: ${data.monte_carlo.prob_undervalued.toFixed(1)}%`;
+            document.getElementById('res-badge').textContent = audit.is_valid
+                ? 'Accounting checks passed'
+                : 'Accounting checks require review';
+            trustBadge.classList.toggle('review', !audit.is_valid);
+            trustBadge.querySelector('span').textContent = audit.is_valid ? '✓' : '!';
 
             // Action buttons
             document.getElementById('btn-zip-download').href = urls.zip_pack || '#';
@@ -674,6 +1197,9 @@
             document.getElementById('btn-dl-pptx').href = urls.pptx_pitchbook || '#';
             document.getElementById('btn-dl-memo').href = urls.investment_memo_md || '#';
             document.getElementById('btn-dl-audit').href = urls.audit_certificate_json || '#';
+            document.getElementById('btn-open-dashboard').style.display = '';
+            document.getElementById('btn-dl-memo').style.display = '';
+            document.getElementById('btn-dl-audit').style.display = '';
 
             resultsDashboard.scrollIntoView({ behavior: 'smooth' });
         }
@@ -686,17 +1212,28 @@
             document.getElementById('res-entity').textContent = meta.name || 'Client Entity';
             document.getElementById('res-meta').textContent = `Uploaded File Normalization • 5-Year Forecast Horizon`;
 
-            document.getElementById('val-fair-price').textContent = `₹${(preview.price_per_share || 252).toFixed(2)}`;
+            document.getElementById('val-fair-price').textContent =
+                Number(preview.price_per_share || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
             document.getElementById('val-market-comparison').textContent = `Calibrated Base Case`;
 
-            document.getElementById('val-ev').textContent = `₹${(preview.ev_base || 2516).toLocaleString()} Cr`;
-            document.getElementById('val-equity').textContent = `₹${(preview.equity_base || 2545).toLocaleString()} Cr`;
-
+            document.getElementById('val-ev').textContent = Number(preview.ev_base || 0).toLocaleString();
+            document.getElementById('val-equity').textContent = Number(preview.equity_base || 0).toLocaleString();
+            document.getElementById('val-wacc-tgr').textContent = 'Upload workflow valuation';
+            document.getElementById('val-net-debt').textContent = 'Values shown in uploaded file units';
+            document.getElementById('val-audit-result').textContent = 'See report';
+            document.getElementById('val-audit-status').textContent = 'A separate audit result is not returned for uploaded files';
+            document.getElementById('val-mc-undervalued').textContent = 'Monte Carlo results are not available for this workflow';
+            document.getElementById('res-badge').textContent = 'Pack generated';
+            document.getElementById('res-trust-badge').classList.remove('review');
+            document.getElementById('res-trust-badge').querySelector('span').textContent = '✓';
             document.getElementById('btn-zip-download').href = data.zip_download_url || '#';
             document.getElementById('btn-dl-xlsx').href = data.xlsx_download_url || '#';
             document.getElementById('btn-dl-pdf').href = data.pdf_download_url || '#';
             document.getElementById('btn-dl-pptx').href = data.pptx_download_url || '#';
             document.getElementById('btn-open-dashboard').style.display = 'none';
+            document.getElementById('btn-dl-memo').style.display = 'none';
+            document.getElementById('btn-dl-audit').style.display = 'none';
+            document.getElementById('btn-zip-download').style.display = data.zip_download_url ? '' : 'none';
 
             resultsDashboard.scrollIntoView({ behavior: 'smooth' });
         }

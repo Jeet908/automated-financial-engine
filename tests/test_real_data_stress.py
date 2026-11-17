@@ -135,16 +135,28 @@ class TestRealDataGate3_FormulaIntegrity:
 class TestRealDataGate5_LiveAPI:
     def test_upload_and_download_real_quirky_files(self, tmp_path):
         proc = subprocess.Popen(
-            ["py", "-m", "uvicorn", "src.ingestion.api:app", "--host", "127.0.0.1", "--port", "8770"],
+            [sys.executable, "-m", "uvicorn", "src.ingestion.api:app", "--host", "127.0.0.1", "--port", "8770"],
             cwd=str(PROJECT_ROOT),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        time.sleep(4)
         try:
             client = httpx.Client(base_url="http://127.0.0.1:8770", timeout=30.0)
 
             # Check health
-            r = client.get("/api/v1/health")
+            deadline = time.monotonic() + 30
+            while True:
+                try:
+                    r = client.get("/api/v1/health", timeout=1.0)
+                    if r.status_code == 200:
+                        break
+                    raise AssertionError(f"Health check returned {r.status_code}: {r.text}")
+                except httpx.TransportError:
+                    if proc.poll() is not None:
+                        stderr = proc.stderr.read().decode("utf-8", errors="replace")
+                        raise RuntimeError(f"Uvicorn exited during startup: {stderr}") from None
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("Uvicorn did not become healthy within 30 seconds") from None
+                    time.sleep(0.5)
             assert r.status_code == 200
 
             # Upload quirky INFY

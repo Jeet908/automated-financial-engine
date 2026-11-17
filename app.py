@@ -45,18 +45,16 @@ class LiveScrapeRequest(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def serve_portal():
     portal_html = PROJECT_ROOT / "src" / "portal" / "index.html"
-    if portal_html.exists():
-        with open(portal_html, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>MarketLens Financial Modeling Portal</h1><p>index.html not found.</p>"
+    if not portal_html.is_file():
+        raise HTTPException(status_code=500, detail="Portal entry page is missing from the deployment image")
+    return portal_html.read_text(encoding="utf-8")
 
 
 @app.get("/api/v1/health")
 async def health_check():
     return {
         "status": "online",
-        "engine": "Automated Financial Modeling & Valuation Engine v1.0",
-        "accounting_invariants": "100% Verified (0.00 Plug Discrepancy)",
+        "service": "MarketLens Financial Modeling & Valuation",
         "domains_supported": list(DOMAIN_CATALOG.keys()),
     }
 

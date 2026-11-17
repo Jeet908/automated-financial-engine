@@ -108,6 +108,12 @@ The live universe includes Indian IT/defence and consumer companies, US semicond
 
 Start the browser portal with `py -m uvicorn app:app --host 127.0.0.1 --port 8000`. Its `POST /api/v1/model/live-scrape` endpoint accepts `{"domain":"Any Random Domain","market":"random"}`; `POST /api/v1/model/generate-pack` accepts an uploaded client workbook. Use the portal's live-company selector or visit `http://127.0.0.1:8000`.
 
+### Deploy on Railway
+
+Create a Railway service from this GitHub repository on the `main` branch. The repository's `railway.json` and `Dockerfile` configure the Python 3.11 image, start command (`python app.py`), and `/api/v1/health` deployment check; Railway supplies the listening `PORT`. After the container passes its health check, generate a public domain in the service's **Settings → Networking** section.
+
+Generated reports are written to the container filesystem (`artifacts/` and `client_outbox/`). Treat those files as temporary across redeploys until persistent storage is configured; the service currently does not upload them to external object storage.
+
 ---
 
 ## 5. Python SDK & API Usage

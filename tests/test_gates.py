@@ -94,28 +94,40 @@ class TestGate4_SyntheticStress:
 # ── GATE 5: Live API ─────────────────────────────────────────────────────────
 class TestGate5_LiveAPI:
     def test_api_full_e2e(self, tmp_path):
-        import httpx, subprocess, time, signal
+        import httpx, subprocess, time
         from src.exporters.formula_checker import FormulaChecker
 
         # Start FastAPI server on port 8765
         proc = subprocess.Popen(
-            ["py", "-m", "uvicorn", "src.ingestion.api:app", "--host", "127.0.0.1", "--port", "8765"],
+            [sys.executable, "-m", "uvicorn", "src.ingestion.api:app", "--host", "127.0.0.1", "--port", "8765"],
             cwd="C:/Users/HP/Downloads/Finance",
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        time.sleep(4)
         try:
             client = httpx.Client(base_url="http://127.0.0.1:8765", timeout=30.0)
 
             # 1. Health check
-            r_health = client.get("/api/v1/health")
+            deadline = time.monotonic() + 30
+            while True:
+                try:
+                    r_health = client.get("/api/v1/health", timeout=1.0)
+                    if r_health.status_code == 200:
+                        break
+                    raise AssertionError(f"Health check returned {r_health.status_code}: {r_health.text}")
+                except httpx.TransportError:
+                    if proc.poll() is not None:
+                        stderr = proc.stderr.read().decode("utf-8", errors="replace")
+                        raise RuntimeError(f"Uvicorn exited during startup: {stderr}") from None
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("Uvicorn did not become healthy within 30 seconds") from None
+                    time.sleep(0.5)
             assert r_health.status_code == 200
             assert r_health.json()["status"] == "ok"
 
             # 2. Web Dropzone UI check
             r_ui = client.get("/")
             assert r_ui.status_code == 200
-            assert "Financial Modeling & Valuation Engine" in r_ui.text
+            assert "Make the numbers easier to act on." in r_ui.text
 
             # 3. Upload all 3 fixtures via POST /api/v1/model/generate
             fixtures = ["ind_as_fixture.json", "startup_fixture.json", "gaap_fixture.json"]
