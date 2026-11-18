@@ -1,9 +1,9 @@
-name: Weekly Automated Financial Modeling & Valuation Pipeline
+name: Daily Automated Financial Modeling & Valuation Pipeline
 
 on:
   schedule:
-    # Runs every Sunday at 00:00 UTC (05:30 AM IST)
-    - cron: '0 0 * * 0'
+    # Runs every day at 00:00 UTC (05:30 AM IST)
+    - cron: '0 0 * * *'
   workflow_dispatch: # Allows manual one-click trigger from GitHub Actions UI
 
 permissions:
@@ -50,13 +50,13 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           # Stage artifacts and updated outputs
-          git add artifacts/
+          git add artifacts/ inputs/ client_outbox/
           
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes detected in model outputs."
           else
             TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-            git commit -m "chore(automated): weekly financial valuation update - ${TIMESTAMP} [skip ci]"
+            git commit -m "chore(automated): daily financial valuation update - ${TIMESTAMP} [skip ci]"
             git push origin main
           fi

@@ -32,6 +32,9 @@ from tests.test_advanced_metrics import (
     test_roic_and_eva_computation,
     test_dupont_5way_reconciliation,
     test_football_field_bands,
+    test_pain_points_diagnostic,
+    test_regional_accounting_rulebook,
+    test_saas_plan_catalog,
 )
 
 
@@ -51,6 +54,9 @@ def main():
         ("ROIC & Economic Value Added (EVA) Engine", test_roic_and_eva_computation),
         ("DuPont 5-Way ROE Decomposition Reconciliation", test_dupont_5way_reconciliation),
         ("Valuation Football Field Range Generator", test_football_field_bands),
+        ("C-Suite Operational Pain Points & Alpha Diagnostic", test_pain_points_diagnostic),
+        ("Regional Accounting Rulebook Jurisdiction Detector", test_regional_accounting_rulebook),
+        ("Multi-Currency SaaS Plan Catalog & 14-Day Trial", test_saas_plan_catalog),
     ]
 
     print("=" * 70)

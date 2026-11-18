@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database import EmailToken, FailedLoginAttempt, User, get_db, utc_now
+from .database import EmailToken, FailedLoginAttempt, Subscription, User, get_db, utc_now
 from .dependencies import get_current_user
 from .mailer import email_delivery_configured, send_email
 from .plans import account_summary
@@ -218,8 +218,20 @@ def verify_email(payload: TokenRequest, db: Session = Depends(get_db)) -> dict[s
         raise HTTPException(status_code=400, detail="This verification link is no longer valid.")
     user.email_verified = True
     token_row.used_at = utc_now()
+    existing_sub = db.get(Subscription, user.id)
+    if existing_sub is None:
+        db.add(
+            Subscription(
+                user_id=user.id,
+                provider="trial",
+                plan_key="free_trial",
+                status="trialing",
+                current_period_end=utc_now() + timedelta(days=14),
+                cancel_at_period_end=False,
+            )
+        )
     db.commit()
-    return {"status": "verified", "message": "Email verified. You can now sign in."}
+    return {"status": "verified", "message": "Email verified with 14-Day Free Trial activated. You can now sign in."}
 
 
 @router.post("/verification/resend", status_code=202)
@@ -378,7 +390,50 @@ async def google_callback(
         if user.terms_accepted_at is None:
             user.terms_accepted_at = utc_now()
             user.terms_version = os.environ.get("TERMS_VERSION", "2026-11")
+    db.flush()
+    existing_sub = db.get(Subscription, user.id)
+    if existing_sub is None:
+        db.add(
+            Subscription(
+                user_id=user.id,
+                provider="trial",
+                plan_key="free_trial",
+                status="trialing",
+                current_period_end=utc_now() + timedelta(days=14),
+                cancel_at_period_end=False,
+            )
+        )
     db.commit()
     response = RedirectResponse("/", status_code=303)
     establish_session(request, response, user.id, user.session_version)
     return response
+
+
+@router.post("/trial/activate")
+def activate_trial(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    check_csrf(request)
+    existing_sub = db.get(Subscription, user.id)
+    if existing_sub and existing_sub.status in ("active", "trialing") and existing_sub.plan_key != "free":
+        return {"status": "active", "message": f"Already active on {existing_sub.plan_key}."}
+    if existing_sub:
+        existing_sub.plan_key = "free_trial"
+        existing_sub.status = "trialing"
+        existing_sub.current_period_end = utc_now() + timedelta(days=14)
+        existing_sub.cancel_at_period_end = False
+    else:
+        db.add(
+            Subscription(
+                user_id=user.id,
+                provider="trial",
+                plan_key="free_trial",
+                status="trialing",
+                current_period_end=utc_now() + timedelta(days=14),
+                cancel_at_period_end=False,
+            )
+        )
+    db.commit()
+    return {"status": "trial_activated", "message": "14-Day Free Trial activated with full executive access!"}

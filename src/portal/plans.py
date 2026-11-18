@@ -16,24 +16,67 @@ _reservation_lock = threading.Lock()
 
 
 def plan_catalog() -> dict[str, dict[str, object]]:
+    """
+    Returns the full multi-currency SaaS plan catalog.
+    Prices are stored in INR paise for Razorpay; USD/EUR/GBP shown in UI only.
+    """
     return {
+        "free_trial": {
+            "name": "14-Day Free Trial",
+            "price_paise": 0,
+            "monthly_valuations": int(os.environ.get("TRIAL_MONTHLY_VALUATIONS", "5")),
+            "trial_days": 14,
+            "razorpay_plan_env": None,
+            "prices": {"USD": 0, "INR": 0, "EUR": 0, "GBP": 0},
+            "features": [
+                "5 full valuation & pain-point packs",
+                "Live web scraping across all domains",
+                "Excel + PDF + PPTX export",
+                "C-Suite Pain Point diagnostics",
+                "No credit card required",
+            ],
+        },
         "free": {
             "name": "Free",
             "price_paise": 0,
             "monthly_valuations": int(os.environ.get("FREE_MONTHLY_VALUATIONS", "1")),
+            "trial_days": 0,
             "razorpay_plan_env": None,
+            "prices": {"USD": 0, "INR": 0, "EUR": 0, "GBP": 0},
+            "features": [
+                "1 valuation per month",
+                "Basic financial modeling",
+            ],
         },
         "pro": {
-            "name": "Pro",
+            "name": "Pro Growth",
             "price_paise": int(os.environ.get("PRO_PRICE_PAISE", "149900")),
-            "monthly_valuations": int(os.environ.get("PRO_MONTHLY_VALUATIONS", "20")),
+            "monthly_valuations": int(os.environ.get("PRO_MONTHLY_VALUATIONS", "25")),
+            "trial_days": 0,
             "razorpay_plan_env": "RAZORPAY_PLAN_ID_PRO",
+            "prices": {"USD": 49, "INR": 1499, "EUR": 45, "GBP": 39},
+            "features": [
+                "25 valuations/month",
+                "Daily auto-scrape sync",
+                "Full Excel + PDF + PPTX exports",
+                "C-Suite Pain Point diagnostics",
+                "Priority support",
+            ],
         },
         "business": {
-            "name": "Business",
+            "name": "Enterprise Sovereign",
             "price_paise": int(os.environ.get("BUSINESS_PRICE_PAISE", "499900")),
-            "monthly_valuations": int(os.environ.get("BUSINESS_MONTHLY_VALUATIONS", "100")),
+            "monthly_valuations": int(os.environ.get("BUSINESS_MONTHLY_VALUATIONS", "999")),
+            "trial_days": 0,
             "razorpay_plan_env": "RAZORPAY_PLAN_ID_BUSINESS",
+            "prices": {"USD": 199, "INR": 4999, "EUR": 185, "GBP": 159},
+            "features": [
+                "Unlimited global entities",
+                "Daily ERP/EDGAR/MCA sync",
+                "Dedicated API webhooks",
+                "Multi-region accounting (US GAAP / Ind AS / IFRS / J-GAAP)",
+                "White-glove onboarding",
+            ],
         },
     }
 

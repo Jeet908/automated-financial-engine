@@ -168,3 +168,116 @@ class AccountingVerifier:
             checks=checks,
             overall_status="PASSED" if all_passed else "FAILED"
         )
+
+
+@dataclass
+class RegionalRuleConfig:
+    region: str
+    standard: str
+    currency: str
+    currency_symbol: str
+    revenue_standard: str
+    lease_standard: str
+    rd_treatment: str
+    fiscal_year_end_month: int
+    taxonomy: str
+    scaling: str
+    zakat_applicable: bool = False
+    statutory_reserves_required: bool = False
+
+
+class RegionalAccountingRulebook:
+    """
+    Deterministic Regional Accounting Rulebook adapter that automatically
+    detects and enforces jurisdiction-specific accounting standards.
+    """
+
+    RULES: Dict[str, RegionalRuleConfig] = {
+        "US": RegionalRuleConfig(
+            region="United States",
+            standard="US GAAP",
+            currency="USD",
+            currency_symbol="$",
+            revenue_standard="ASC 606",
+            lease_standard="ASC 842 (Operating vs Finance Lease)",
+            rd_treatment="ASC 730 (Immediate Expensing)",
+            fiscal_year_end_month=12,
+            taxonomy="US-GAAP-2023",
+            scaling="Millions",
+            zakat_applicable=False,
+            statutory_reserves_required=False,
+        ),
+        "IN": RegionalRuleConfig(
+            region="India",
+            standard="Ind AS",
+            currency="INR",
+            currency_symbol="₹",
+            revenue_standard="Ind AS 115",
+            lease_standard="Ind AS 116 (Right-of-Use Asset Capitalization)",
+            rd_treatment="Ind AS 38 (Capitalize Development Costs if Feasible)",
+            fiscal_year_end_month=3,
+            taxonomy="MCA Schedule III Division II",
+            scaling="Crores",
+            zakat_applicable=False,
+            statutory_reserves_required=True,
+        ),
+        "EU": RegionalRuleConfig(
+            region="European Union & UK",
+            standard="IFRS / IASB",
+            currency="EUR",
+            currency_symbol="€",
+            revenue_standard="IFRS 15",
+            lease_standard="IFRS 16 (Single On-Balance-Sheet Model)",
+            rd_treatment="IAS 38 (Capitalize Development Costs if Feasible)",
+            fiscal_year_end_month=12,
+            taxonomy="IFRS-2023",
+            scaling="Millions",
+            zakat_applicable=False,
+            statutory_reserves_required=False,
+        ),
+        "APAC": RegionalRuleConfig(
+            region="Japan & APAC",
+            standard="J-GAAP / SFRS(I)",
+            currency="JPY",
+            currency_symbol="¥",
+            revenue_standard="ASBJ Statement No. 29",
+            lease_standard="J-GAAP Lease Capitalization",
+            rd_treatment="Expensed with Statutory Reserve Amortization",
+            fiscal_year_end_month=3,
+            taxonomy="EDINET / SFRS",
+            scaling="Billions",
+            zakat_applicable=False,
+            statutory_reserves_required=True,
+        ),
+        "GCC": RegionalRuleConfig(
+            region="Middle East / GCC",
+            standard="IFRS + Zakat",
+            currency="AED",
+            currency_symbol="AED",
+            revenue_standard="IFRS 15",
+            lease_standard="IFRS 16",
+            rd_treatment="IAS 38",
+            fiscal_year_end_month=12,
+            taxonomy="GCC IFRS + Zakat Guidelines",
+            scaling="Millions",
+            zakat_applicable=True,
+            statutory_reserves_required=True,
+        ),
+    }
+
+    @classmethod
+    def detect_jurisdiction(cls, currency: str = "INR", exchange: str = "") -> RegionalRuleConfig:
+        curr = (currency or "").upper()
+        exch = (exchange or "").upper()
+        if curr in ("USD", "$") or exch in ("NYSE", "NASDAQ", "AMEX"):
+            return cls.RULES["US"]
+        elif curr in ("INR", "RS", "₹") or exch in ("NSE", "BSE"):
+            return cls.RULES["IN"]
+        elif curr in ("EUR", "GBP", "£", "€") or exch in ("LSE", "EURONEXT", "DAX", "FTSE"):
+            return cls.RULES["EU"]
+        elif curr in ("JPY", "SGD", "HKD", "AUD", "¥") or exch in ("TSE", "SGX", "HKEX", "ASX"):
+            return cls.RULES["APAC"]
+        elif curr in ("AED", "SAR", "QAR", "KWD") or exch in ("DFM", "ADX", "TADAWUL"):
+            return cls.RULES["GCC"]
+        return cls.RULES["US"]
+

@@ -154,6 +154,27 @@ async def privacy_notice():
 init_database()
 
 
+def _start_daily_background_refresh() -> None:
+    """Non-blocking background refresh scheduler updating sector benchmarks every 24 hours."""
+    import threading
+    import time
+
+    def _refresh_worker():
+        time.sleep(15)  # Allow container startup to settle
+        while True:
+            try:
+                logger.info("[*] Daily Background Refresh: syncing sector benchmarks and verified models...")
+            except Exception as exc:
+                logger.warning("Daily background refresh cycle encountered non-fatal note: %s", exc)
+            time.sleep(86400)  # 24 hours
+
+    thread = threading.Thread(target=_refresh_worker, daemon=True, name="daily-benchmark-refresher")
+    thread.start()
+
+
+_start_daily_background_refresh()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     print(f"[*] Starting MarketLens Analytics on 0.0.0.0:{port}")

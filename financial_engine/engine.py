@@ -98,6 +98,25 @@ class FinancialModel:
     def wacc(self) -> float:
         return self.dcf_result.wacc
 
+    @property
+    def pain_points(self) -> Dict[str, Any]:
+        from financial_engine.reporting.pain_points import diagnose
+        model_data = {
+            "revenue": self.income_statement.revenue,
+            "cogs": self.income_statement.cogs,
+            "ebitda": self.income_statement.ebitda,
+            "ebit": self.income_statement.ebit,
+            "sga": self.income_statement.sga,
+            "accounts_receivable": self.working_capital.receivables,
+            "inventory": self.working_capital.inventory,
+            "accounts_payable": self.working_capital.payables,
+            "total_debt": self.debt_schedule.closing_debt,
+            "total_equity": self.equity_schedule.closing_retained_earnings,
+            "tax_rate": self.config.assumptions.tax_rate,
+            "enterprise_value": self.enterprise_value,
+        }
+        return diagnose(model_data, wacc=self.wacc).to_dict()
+
 
 class FinancialEngine:
     """Production-ready Autonomous Financial Modeling & Valuation Engine."""

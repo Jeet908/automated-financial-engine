@@ -126,6 +126,7 @@ def _run_live_job(job_id: str, user_id: str, domain: str | None, market: str) ->
                     for check in model.audit_certificate.checks
                 ],
             },
+            "pain_points": getattr(model, "pain_points", None),
             "monte_carlo": {
                 "iterations": model.monte_carlo.iterations,
                 "median_price": model.monte_carlo.median_price,

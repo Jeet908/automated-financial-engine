@@ -84,6 +84,9 @@ def public_plans() -> dict[str, object]:
                 "name": plan["name"],
                 "price_paise": plan["price_paise"],
                 "currency": "INR",
+                "prices": plan.get("prices", {"USD": 0, "INR": 0, "EUR": 0, "GBP": 0}),
+                "trial_days": plan.get("trial_days", 0),
+                "features": plan.get("features", []),
                 "monthly_valuations": plan["monthly_valuations"],
                 "checkout_available": (
                     bool(
@@ -93,7 +96,7 @@ def public_plans() -> dict[str, object]:
                     )
                     and bool(env_name and os.environ.get(str(env_name)))
                 )
-                if key != "free"
+                if key not in ("free", "free_trial")
                 else True,
             }
         )
