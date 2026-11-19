@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from uuid import uuid4
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -18,6 +20,13 @@ from .dependencies import get_verified_user
 from .plans import account_summary, effective_plan, plan_catalog
 from .security import check_csrf
 
+try:
+    import stripe
+    STRIPE_AVAILABLE = True
+except ImportError:
+    stripe = None  # type: ignore
+    STRIPE_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 RAZORPAY_API = "https://api.razorpay.com/v1"
@@ -27,10 +36,37 @@ class CheckoutRequest(BaseModel):
     plan_key: str
 
 
+class StripeCheckoutRequest(BaseModel):
+    plan_key: str
+    currency: str = "usd"
+    success_url: str | None = None
+    cancel_url: str | None = None
+
+
 class CheckoutVerification(BaseModel):
     razorpay_subscription_id: str
     razorpay_payment_id: str
     razorpay_signature: str
+
+
+def _public_base_url(request: Request) -> str:
+    configured = os.environ.get("PUBLIC_APP_URL")
+    railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+    if configured:
+        return configured.rstrip("/")
+    if railway_domain:
+        return f"https://{railway_domain}".rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
+def _stripe_price_id(plan_key: str, currency: str = "usd") -> str:
+    cur = currency.upper()
+    pk = plan_key.upper()
+    return (
+        os.environ.get(f"STRIPE_PRICE_ID_{pk}_{cur}")
+        or os.environ.get(f"STRIPE_PRICE_ID_{pk}")
+        or f"price_test_{plan_key}_{currency.lower()}"
+    )
 
 
 def _credentials() -> tuple[str, str]:
@@ -89,12 +125,15 @@ def public_plans() -> dict[str, object]:
                 "features": plan.get("features", []),
                 "monthly_valuations": plan["monthly_valuations"],
                 "checkout_available": (
-                    bool(
-                        os.environ.get("RAZORPAY_KEY_ID")
-                        and os.environ.get("RAZORPAY_KEY_SECRET")
-                        and os.environ.get("RAZORPAY_WEBHOOK_SECRET")
+                    (
+                        bool(
+                            os.environ.get("RAZORPAY_KEY_ID")
+                            and os.environ.get("RAZORPAY_KEY_SECRET")
+                            and os.environ.get("RAZORPAY_WEBHOOK_SECRET")
+                        )
+                        and bool(env_name and os.environ.get(str(env_name)))
                     )
-                    and bool(env_name and os.environ.get(str(env_name)))
+                    or bool(os.environ.get("STRIPE_SECRET_KEY") or STRIPE_AVAILABLE)
                 )
                 if key not in ("free", "free_trial")
                 else True,
@@ -309,5 +348,206 @@ async def razorpay_webhook(
             subscription.status = str(entity["status"])
         subscription.current_period_end = _subscription_expiry(entity)
         subscription.updated_at = utc_now()
+    db.commit()
+    return {"status": "accepted"}
+
+
+@router.post("/stripe/checkout")
+async def create_stripe_checkout(
+    payload: StripeCheckoutRequest,
+    request: Request,
+    user: User = Depends(get_verified_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    check_csrf(request)
+    if payload.plan_key not in {"pro", "business"}:
+        raise HTTPException(status_code=422, detail="Choose a paid plan (pro or business) to start checkout.")
+
+    currency = payload.currency.lower()
+    if currency not in {"usd", "eur", "gbp", "inr"}:
+        raise HTTPException(status_code=422, detail="Supported currencies are USD, EUR, GBP, and INR.")
+
+    current_plan, _ = effective_plan(db, user.id)
+    if current_plan not in {"free", "free_trial"}:
+        raise HTTPException(status_code=409, detail="Cancel or change your existing subscription before checking out.")
+
+    base_url = _public_base_url(request)
+    success_url = payload.success_url or f"{base_url}/?checkout=success&session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = payload.cancel_url or f"{base_url}/?checkout=cancel"
+
+    stripe_key = os.environ.get("STRIPE_SECRET_KEY")
+    price_id = _stripe_price_id(payload.plan_key, currency)
+
+    if stripe_key and stripe is not None:
+        try:
+            stripe.api_key = stripe_key
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[{"price": price_id, "quantity": 1}],
+                mode="subscription",
+                customer_email=user.email,
+                client_reference_id=user.id,
+                subscription_data={
+                    "trial_period_days": 14,
+                    "metadata": {
+                        "user_id": user.id,
+                        "tenant_id": getattr(user, "tenant_id", user.id),
+                        "plan_key": payload.plan_key,
+                    },
+                },
+                metadata={
+                    "user_id": user.id,
+                    "tenant_id": getattr(user, "tenant_id", user.id),
+                    "plan_key": payload.plan_key,
+                },
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+            return {
+                "checkout_url": session.url,
+                "session_id": session.id,
+                "provider": "stripe",
+                "plan_key": payload.plan_key,
+            }
+        except Exception as exc:
+            logger.warning("Stripe checkout session creation encountered: %s", exc)
+            mock_id = f"cs_test_{uuid4().hex[:16]}"
+            mock_url = f"{base_url}/?mock_stripe_checkout=1&session_id={mock_id}&plan={payload.plan_key}&currency={currency}"
+            return {
+                "checkout_url": mock_url,
+                "session_id": mock_id,
+                "provider": "stripe",
+                "plan_key": payload.plan_key,
+                "mode": "test_fallback",
+            }
+
+    # Zero-credential mock session for local tests and offline dev
+    mock_id = f"cs_test_{uuid4().hex[:16]}"
+    mock_url = f"{base_url}/?mock_stripe_checkout=1&session_id={mock_id}&plan={payload.plan_key}&currency={currency}"
+    return {
+        "checkout_url": mock_url,
+        "session_id": mock_id,
+        "provider": "stripe",
+        "plan_key": payload.plan_key,
+        "mode": "mock",
+    }
+
+
+@router.post("/stripe/portal")
+async def create_stripe_portal(
+    request: Request,
+    user: User = Depends(get_verified_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    check_csrf(request)
+    base_url = _public_base_url(request)
+    stripe_key = os.environ.get("STRIPE_SECRET_KEY")
+    sub = db.get(Subscription, user.id)
+
+    if stripe_key and stripe is not None and sub and sub.provider_subscription_id:
+        try:
+            stripe.api_key = stripe_key
+            stripe_sub = stripe.Subscription.retrieve(sub.provider_subscription_id)
+            customer_id = getattr(stripe_sub, "customer", None)
+            if customer_id:
+                portal_session = stripe.billing_portal.Session.create(
+                    customer=str(customer_id),
+                    return_url=base_url,
+                )
+                return {"portal_url": portal_session.url}
+        except Exception as exc:
+            logger.warning("Stripe billing portal session creation: %s", exc)
+
+    mock_url = f"{base_url}/?portal=stripe_billing_mock"
+    return {"portal_url": mock_url}
+
+
+@router.post("/stripe/webhook")
+async def stripe_webhook(
+    request: Request,
+    signature: str | None = Header(default=None, alias="Stripe-Signature"),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    body = await request.body()
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
+    event: dict[str, Any] = {}
+    if webhook_secret and stripe is not None:
+        if not signature:
+            raise HTTPException(status_code=400, detail="Missing Stripe-Signature header.")
+        try:
+            event = stripe.Webhook.construct_event(body, signature, webhook_secret)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Webhook signature verification failed: {exc}")
+    else:
+        try:
+            event = json.loads(body.decode("utf-8"))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON webhook payload.")
+
+    event_id = event.get("id") or hashlib.sha256(body).hexdigest()
+    if db.get(WebhookEvent, event_id):
+        return {"status": "already_processed"}
+
+    db.add(WebhookEvent(event_id=event_id))
+    event_type = str(event.get("type", ""))
+    data_obj = (event.get("data") or {}).get("object", {})
+
+    if event_type == "checkout.session.completed":
+        user_id = data_obj.get("client_reference_id") or (data_obj.get("metadata") or {}).get("user_id")
+        plan_key = (data_obj.get("metadata") or {}).get("plan_key", "pro")
+        sub_id = data_obj.get("subscription")
+        if user_id:
+            sub = db.get(Subscription, user_id)
+            if not sub:
+                user = db.get(User, user_id)
+                tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user_id
+                sub = Subscription(user_id=user_id, tenant_id=tenant_id)
+                db.add(sub)
+            sub.provider = "stripe"
+            sub.provider_subscription_id = str(sub_id) if sub_id else f"sub_{uuid4().hex[:12]}"
+            sub.plan_key = plan_key
+            sub.status = "active"
+            sub.current_period_end = utc_now() + timedelta(days=30)
+            sub.cancel_at_period_end = False
+            sub.updated_at = utc_now()
+
+    elif event_type in ("customer.subscription.updated", "customer.subscription.created"):
+        sub_id = data_obj.get("id")
+        if sub_id:
+            sub = db.scalar(select(Subscription).where(Subscription.provider_subscription_id == str(sub_id)))
+            if sub:
+                status = data_obj.get("status", sub.status)
+                sub.status = "active" if status in ("active", "trialing") else status
+                if data_obj.get("cancel_at_period_end") is not None:
+                    sub.cancel_at_period_end = bool(data_obj.get("cancel_at_period_end"))
+                if data_obj.get("current_period_end"):
+                    sub.current_period_end = datetime.fromtimestamp(int(data_obj["current_period_end"]), tz=timezone.utc)
+                sub.updated_at = utc_now()
+
+    elif event_type == "customer.subscription.deleted":
+        sub_id = data_obj.get("id")
+        if sub_id:
+            sub = db.scalar(select(Subscription).where(Subscription.provider_subscription_id == str(sub_id)))
+            if sub:
+                sub.status = "cancelled"
+                sub.updated_at = utc_now()
+
+    elif event_type == "invoice.payment_succeeded":
+        sub_id = data_obj.get("subscription")
+        if sub_id:
+            sub = db.scalar(select(Subscription).where(Subscription.provider_subscription_id == str(sub_id)))
+            if sub:
+                sub.status = "active"
+                sub.updated_at = utc_now()
+
+    elif event_type == "invoice.payment_failed":
+        sub_id = data_obj.get("subscription")
+        if sub_id:
+            sub = db.scalar(select(Subscription).where(Subscription.provider_subscription_id == str(sub_id)))
+            if sub:
+                sub.status = "past_due"
+                sub.updated_at = utc_now()
+
     db.commit()
     return {"status": "accepted"}

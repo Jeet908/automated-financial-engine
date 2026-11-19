@@ -1575,8 +1575,28 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                 headers: { ...(options.headers || {}) }
             });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.detail || data.message || `Request failed (${response.status}).`);
+            if (!response.ok) {
+                if (response.status === 403 && (data.error === 'plan_upgrade_required' || (data.detail && data.detail.error === 'plan_upgrade_required'))) {
+                    const reqPlan = (data.detail && data.detail.required_plan) || data.required_plan || 'pro';
+                    openUpgradeModal(reqPlan);
+                }
+                const errDetail = typeof data.detail === 'object' ? data.detail.message : (data.detail || data.message || `Request failed (${response.status}).`);
+                const err = new Error(errDetail);
+                err.status = response.status;
+                err.data = data;
+                throw err;
+            }
             return data;
+        }
+
+        function openUpgradeModal(requiredPlan = 'pro') {
+            const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
+            if (plansSec) {
+                plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                plansSec.style.outline = '2px solid var(--accent-odd)';
+                setTimeout(() => { plansSec.style.outline = ''; }, 3000);
+            }
+            showError(`This feature requires a ${requiredPlan.toUpperCase()} subscription. Please upgrade below.`);
         }
 
         function csrfHeaders(extra = {}) {
@@ -1643,8 +1663,9 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                 document.getElementById('job-history-list').replaceChildren();
             }
 
+            const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
             const limitReached = Boolean(account && account.plan && account.plan.remaining_this_month <= 0);
-            const locked = !isVerified || limitReached || analysisBusy;
+            const locked = user ? (limitReached || analysisBusy) : (guestUsed || analysisBusy);
             document.getElementById('domain-selector').disabled = locked;
             liveButton.disabled = locked;
             fileInput.disabled = locked;
@@ -1652,6 +1673,8 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             dropzone.classList.toggle('locked', locked);
             if (user && limitReached) {
                 document.getElementById('progress-message').textContent = 'Monthly quota reached. Upgrade your plan to run another valuation.';
+            } else if (!user && guestUsed) {
+                document.getElementById('progress-message').textContent = '1-run guest preview completed. Sign in or start a 14-day free trial for full access.';
             }
 
             document.querySelectorAll('.plan-card').forEach(card => {
@@ -1848,6 +1871,20 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                 return;
             }
             try {
+                if (activeCurrency !== 'INR') {
+                    // Global rail: Stripe Checkout for USD, EUR, GBP
+                    const data = await apiRequest('/api/v1/billing/stripe/checkout', {
+                        method: 'POST',
+                        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                        body: JSON.stringify({ plan_key: planKey, currency: activeCurrency.toLowerCase() })
+                    });
+                    if (data.checkout_url) {
+                        window.location.href = data.checkout_url;
+                        return;
+                    }
+                }
+
+                // Indian rail: Razorpay Subscriptions for INR
                 const data = await apiRequest('/api/v1/billing/checkout', {
                     method: 'POST',
                     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
@@ -2026,11 +2063,18 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ domain, market: 'random' })
                 });
+                if (!currentAccount) {
+                    localStorage.setItem('marketlens_guest_run', '1');
+                    document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
+                }
                 const result = await apiJobResult(job.job_id);
                 markAllCompleted();
                 renderLiveDashboard(result);
                 await refreshAccount();
             } catch (error) {
+                if (!currentAccount && error.status === 401) {
+                    showAuthPanel('register');
+                }
                 showError(`Live valuation failed: ${error.message}`);
                 processFlow.style.display = 'none';
             } finally {
@@ -2056,11 +2100,18 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     headers: csrfHeaders(),
                     body: formData
                 });
+                if (!currentAccount) {
+                    localStorage.setItem('marketlens_guest_run', '1');
+                    document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
+                }
                 const result = await apiJobResult(job.job_id);
                 markAllCompleted();
                 renderUploadDashboard(result);
                 await refreshAccount();
             } catch (error) {
+                if (!currentAccount && error.status === 401) {
+                    showAuthPanel('register');
+                }
                 showError(`File processing failed: ${error.message}`);
                 processFlow.style.display = 'none';
             } finally {

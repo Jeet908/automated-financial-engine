@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
-from src.portal import api_keys, auth, billing, diagnostics_routes, erp_routes, jobs
+from src.portal import api_keys, auth, billing, diagnostics_routes, erp_routes, jobs, saml_sso
 from src.portal.database import database_ready, get_storage_backend, init_database
 from src.portal.mailer import email_delivery_configured
 from src.portal.security import SESSION_COOKIE, load_session_secret
@@ -60,10 +60,10 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; "
-        "style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com; "
-        "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
-        "img-src 'self' data: https://*.razorpay.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://js.stripe.com; "
+        "style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com https://api.stripe.com; "
+        "frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
+        "img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
     )
     if request.url.path.startswith("/api/"):
         response.headers.setdefault("Cache-Control", "no-store")
@@ -71,6 +71,7 @@ async def security_headers(request: Request, call_next):
 
 
 app.include_router(auth.router)
+app.include_router(saml_sso.router)
 app.include_router(billing.router)
 app.include_router(jobs.router)
 app.include_router(erp_routes.router)
@@ -111,6 +112,7 @@ async def health_check():
             "database": True,
             "email_verification": email_delivery_configured(),
             "google_sign_in": bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET")),
+            "stripe": bool(os.environ.get("STRIPE_SECRET_KEY") or getattr(billing, "STRIPE_AVAILABLE", False)),
             "razorpay": bool(
                 os.environ.get("RAZORPAY_KEY_ID")
                 and os.environ.get("RAZORPAY_KEY_SECRET")
@@ -118,6 +120,7 @@ async def health_check():
                 and os.environ.get("RAZORPAY_PLAN_ID_PRO")
                 and os.environ.get("RAZORPAY_PLAN_ID_BUSINESS")
             ),
+            "saml_sso": True,
             "storage_backend": get_storage_backend(),
             "redis": check_redis_connectivity(),
             "object_storage": check_object_storage_connectivity() if is_s3_configured() else "local",

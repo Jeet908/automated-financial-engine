@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 import threading
 import time
 from dataclasses import dataclass, field
@@ -59,11 +60,12 @@ def authenticate_request(
     request: Request,
     db: Session = Depends(get_db),
     required_scope: Optional[str] = None,
+    allow_guest: bool = False,
 ) -> AuthContext:
     """
     Dual-mode authentication dependency:
-    Accepts either an active API Key (X-API-Key / Authorization: Bearer ml_live_...)
-    or a verified browser session.
+    Accepts an active API Key (X-API-Key / Authorization: Bearer ml_live_...),
+    a verified browser session, or 1-run guest access if allow_guest=True.
     """
     raw_key = _extract_raw_api_key(request)
 
@@ -113,37 +115,101 @@ def authenticate_request(
 
     # Fallback to session cookie
     user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Sign in to continue or provide an X-API-Key.")
-    user = db.get(User, user_id)
-    if user is None or request.session.get("session_version") != user.session_version:
-        request.session.clear()
-        raise HTTPException(status_code=401, detail="Your session has expired. Sign in again.")
-    if not user.email_verified:
-        raise HTTPException(status_code=403, detail="Verify your email address before using valuations.")
+    if user_id:
+        user = db.get(User, user_id)
+        if user is not None:
+            if request.session.get("is_guest"):
+                tenant_id = user.id
+                setattr(user, "tenant_id", tenant_id)
+                setattr(user, "is_guest", True)
+                auth_ctx = AuthContext(
+                    user=user,
+                    tenant_id=tenant_id,
+                    auth_type="guest",
+                    api_key=None,
+                    scopes=["model:write", "model:read"],
+                )
+                setattr(request.state, "auth_context", auth_ctx)
+                setattr(request.state, "is_guest", True)
+                return auth_ctx
 
-    tenant_id = getattr(user, "org_id", None) or user.id
-    setattr(user, "tenant_id", tenant_id)
+            if request.session.get("session_version") != user.session_version:
+                request.session.clear()
+                raise HTTPException(status_code=401, detail="Your session has expired. Sign in again.")
+            if not user.email_verified:
+                raise HTTPException(status_code=403, detail="Verify your email address before using valuations.")
 
-    auth_ctx = AuthContext(
-        user=user,
-        tenant_id=tenant_id,
-        auth_type="session",
-        api_key=None,
-        scopes=["*"],
-    )
-    setattr(request.state, "auth_context", auth_ctx)
-    return auth_ctx
+            tenant_id = getattr(user, "org_id", None) or user.id
+            setattr(user, "tenant_id", tenant_id)
+
+            auth_ctx = AuthContext(
+                user=user,
+                tenant_id=tenant_id,
+                auth_type="session",
+                api_key=None,
+                scopes=["*"],
+            )
+            setattr(request.state, "auth_context", auth_ctx)
+            return auth_ctx
+
+    # Unauthenticated path: check for 1-run frictionless guest allowance
+    if allow_guest:
+        guest_run_used = (
+            request.cookies.get("marketlens_guest_run") == "1"
+            or bool(request.session.get("guest_run_used"))
+        )
+        if guest_run_used:
+            raise HTTPException(
+                status_code=401,
+                detail="Guest valuation limit reached (1 run). Sign up for a 14-day free trial or sign in to continue.",
+            )
+
+        # Synthesize persistent guest user for trial run
+        guest_id = request.cookies.get("marketlens_guest_id") or f"guest_{secrets.token_hex(8)}"
+        guest_user = db.get(User, guest_id)
+        if not guest_user:
+            guest_user = User(
+                id=guest_id,
+                email=f"{guest_id}@guest.marketlens.local",
+                org_id=guest_id,
+                email_verified=True,
+                terms_accepted_at=utc_now(),
+                session_version=1,
+            )
+            db.add(guest_user)
+            db.commit()
+            db.refresh(guest_user)
+
+        setattr(guest_user, "tenant_id", guest_id)
+        setattr(guest_user, "is_guest", True)
+        request.session["user_id"] = guest_id
+        request.session["session_version"] = guest_user.session_version
+        request.session["is_guest"] = True
+        if not request.session.get("csrf_token"):
+            request.session["csrf_token"] = secrets.token_urlsafe(32)
+
+        auth_ctx = AuthContext(
+            user=guest_user,
+            tenant_id=guest_id,
+            auth_type="guest",
+            api_key=None,
+            scopes=["model:write", "model:read"],
+        )
+        setattr(request.state, "auth_context", auth_ctx)
+        setattr(request.state, "is_guest", True)
+        return auth_ctx
+
+    raise HTTPException(status_code=401, detail="Sign in to continue or provide an X-API-Key.")
 
 
-def require_scope(scope: str) -> Callable:
+def require_scope(scope: str, allow_guest: bool = False) -> Callable:
     """Dependency factory that validates a required scope when using API keys."""
     def _scope_dependency(request: Request, db: Session = Depends(get_db)) -> AuthContext:
-        return authenticate_request(request, db=db, required_scope=scope)
+        return authenticate_request(request, db=db, required_scope=scope, allow_guest=allow_guest)
     return _scope_dependency
 
 
-require_model_write = require_scope("model:write")
+require_model_write = require_scope("model:write", allow_guest=True)
 require_diagnostics_read = require_scope("diagnostics:read")
 require_audit_read = require_scope("audit:read")
 

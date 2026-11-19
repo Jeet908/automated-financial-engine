@@ -65,6 +65,14 @@ from tests.test_alpha_and_vaas_api import (
     test_scoped_api_key_lifecycle_and_metering,
     test_api_keys_management_and_usage_endpoints,
 )
+from tests.test_billing_sso_and_gating import (
+    test_currency_routed_checkout_stripe_and_razorpay,
+    test_stripe_webhook_processing_and_idempotency,
+    test_enterprise_saml_sso_flow_and_provisioning,
+    test_frictionless_guest_1_valuation_and_401_limit,
+    test_tier_gating_feature_matrix_and_403_rejection,
+    test_health_endpoint_monetization_features,
+)
 
 
 def main():
@@ -107,6 +115,12 @@ def main():
         ("What-If Operational Alpha Simulation (0.00 Discrepancy)", test_diagnostics_what_if_and_invariants),
         ("Scoped API Key Vault, Rate-Limiting & Metered Events", test_scoped_api_key_lifecycle_and_metering),
         ("Metered VaaS Endpoints & Usage Quota Breakdown", test_api_keys_management_and_usage_endpoints),
+        ("Dual-Rail Stripe/Razorpay Checkout & Pricing Routing", test_currency_routed_checkout_stripe_and_razorpay),
+        ("Stripe Webhook Signature & Idempotent Processing", test_stripe_webhook_processing_and_idempotency),
+        ("Enterprise SAML 2.0 SP Metadata, Login & ACS Provisioning", test_enterprise_saml_sso_flow_and_provisioning),
+        ("Frictionless 1-Valuation Guest Preview & 401 Gating", test_frictionless_guest_1_valuation_and_401_limit),
+        ("Strict Plan Tier Gating (require_plan_feature) Matrix", test_tier_gating_feature_matrix_and_403_rejection),
+        ("Monetization & Identity Security Health Verification", test_health_endpoint_monetization_features),
     ]
 
     print("=" * 70)

@@ -21,7 +21,7 @@ from .database import (
     revoke_tenant_api_key,
 )
 from .dependencies import AuthContext, authenticate_request
-from .plans import account_summary
+from .plans import account_summary, require_plan_feature
 from .security import check_csrf
 
 router = APIRouter(prefix="/api/v1/keys", tags=["api_keys"])
@@ -46,6 +46,7 @@ def create_key(
     """
     if auth.auth_type == "session":
         check_csrf(request)
+    require_plan_feature("api_keys", db, auth.user)
     record, secret_key = create_api_key(
         session=db,
         tenant_id=auth.tenant_id,

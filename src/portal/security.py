@@ -60,9 +60,11 @@ def new_one_time_token() -> tuple[str, str]:
 
 
 def check_csrf(request: Request) -> None:
-    # Scoped API key requests are authenticated explicitly and do not require browser CSRF tokens
+    # Scoped API key requests and guest frictionless runs do not require browser CSRF tokens
     auth_header = request.headers.get("authorization", "")
     if request.headers.get("x-api-key") or auth_header.startswith("Bearer ml_live_"):
+        return
+    if getattr(request.state, "is_guest", False) or request.session.get("is_guest") or request.headers.get("x-guest-run") == "1":
         return
     session_token = request.session.get("csrf_token")
     cookie_token = request.cookies.get(CSRF_COOKIE)

@@ -29,6 +29,7 @@ from src.portal.database import (
     utc_now,
 )
 from src.portal.dependencies import get_verified_user
+from src.portal.plans import require_plan_feature
 from src.portal.security import check_csrf
 
 logger = logging.getLogger(__name__)
@@ -111,11 +112,13 @@ def connect_erp_provider(
     provider: str,
     request: Request,
     user: User = Depends(get_verified_user),
+    db: Session = Depends(get_db),
 ) -> Dict[str, str]:
     """
     Generates a secure OAuth 2.0 state and returns the consent URL
     for the selected read-only ERP connector.
     """
+    require_plan_feature("erp_sync", db, user)
     prov_key = provider.lower()
     adapter_cls = ERP_ADAPTERS.get(prov_key)
     if not adapter_cls:
@@ -205,6 +208,7 @@ def trigger_erp_sync(
     and board pack generation for the connected ERP.
     """
     check_csrf(request)
+    require_plan_feature("erp_sync", db, user)
     tenant_id = user.tenant_id
     conn = get_tenant_erp_connection(db, connection_id=connection_id, tenant_id=tenant_id)
     if not conn:
@@ -233,6 +237,7 @@ def disconnect_erp_provider(
     Revokes and permanently purges encrypted ERP tokens cleanly.
     """
     check_csrf(request)
+    require_plan_feature("erp_sync", db, user)
     tenant_id = user.tenant_id
     success = delete_tenant_erp_connection(db, connection_id=connection_id, tenant_id=tenant_id)
     if not success:

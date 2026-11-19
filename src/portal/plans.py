@@ -6,13 +6,77 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database import Job, Subscription, User, utc_now
+from .database import Job, Subscription, User, get_db, utc_now
 
 _reservation_lock = threading.Lock()
+
+FEATURE_TIERS: dict[str, str] = {
+    "standard_valuation": "free",
+    "basic_exports": "free",
+    "c_suite_pain_points": "free_trial",
+    "erp_sync": "pro",
+    "api_keys": "pro",
+    "zip_packs": "pro",
+    "top_quartile_diagnostics": "pro",
+    "white_label_export": "business",
+    "saml_sso": "business",
+    "unlimited_webhooks": "business",
+}
+
+PLAN_RANKS: dict[str, int] = {
+    "free": 0,
+    "free_trial": 1,
+    "pro": 2,
+    "business": 3,
+}
+
+
+def has_plan_feature(plan_key: str, feature_name: str) -> bool:
+    """Returns True if plan_key satisfies the tier requirement for feature_name."""
+    min_plan = FEATURE_TIERS.get(feature_name, "pro")
+    return PLAN_RANKS.get(plan_key, 0) >= PLAN_RANKS.get(min_plan, 2)
+
+
+def check_plan_feature(db: Session, user_id: str, feature_name: str) -> None:
+    """Raises HTTP 403 JSON detail if the user's plan does not have access to feature_name."""
+    plan_key, _ = effective_plan(db, user_id)
+    if not has_plan_feature(plan_key, feature_name):
+        required_plan = FEATURE_TIERS.get(feature_name, "pro")
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "plan_upgrade_required",
+                "feature": feature_name,
+                "required_plan": required_plan,
+                "message": f"Plan upgrade required. Feature '{feature_name}' requires a {required_plan.title()} subscription.",
+            },
+        )
+
+
+def require_plan_feature(feature_name: str, db: Session | None = None, user: User | None = None):
+    """
+    Tier-gating enforcer.
+    Usable directly as: require_plan_feature("erp_sync", db, user)
+    Or as a FastAPI route dependency: Depends(require_plan_feature("erp_sync"))
+    """
+    if db is not None and user is not None:
+        check_plan_feature(db, user.id, feature_name)
+        return None
+
+    def _dependency(
+        request: Request,
+        db_session: Session = Depends(get_db),
+    ) -> User:
+        from .dependencies import get_verified_user
+        user_obj = get_verified_user(request, db=db_session)
+        check_plan_feature(db_session, user_obj.id, feature_name)
+        return user_obj
+
+    return _dependency
 
 
 def plan_catalog() -> dict[str, dict[str, object]]:

@@ -207,6 +207,23 @@ def upgrade() -> None:
     op.create_index("ix_api_usage_events_api_key_id", "api_usage_events", ["api_key_id"])
     op.create_index("ix_api_usage_events_endpoint", "api_usage_events", ["endpoint"])
 
+    # SAML Provider Configs
+    op.create_table(
+        "saml_provider_configs",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("org_slug", sa.String(length=64), nullable=False),
+        sa.Column("tenant_id", sa.String(length=36), nullable=False),
+        sa.Column("idp_entity_id", sa.String(length=255), nullable=False),
+        sa.Column("idp_sso_url", sa.String(length=512), nullable=False),
+        sa.Column("idp_x509_cert_pem", sa.Text(), nullable=False),
+        sa.Column("allowed_email_domains", sa.String(length=512), nullable=True),
+        sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_saml_provider_configs_org_slug", "saml_provider_configs", ["org_slug"], unique=True)
+    op.create_index("ix_saml_provider_configs_tenant_id", "saml_provider_configs", ["tenant_id"])
+
     # PostgreSQL Row Level Security (RLS) enforcement
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":

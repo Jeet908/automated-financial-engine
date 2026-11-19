@@ -207,6 +207,21 @@ class APIUsageEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
 
 
+class SAMLProviderConfig(Base):
+    __tablename__ = "saml_provider_configs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    org_slug: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    idp_entity_id: Mapped[str] = mapped_column(String(255))
+    idp_sso_url: Mapped[str] = mapped_column(String(512))
+    idp_x509_cert_pem: Mapped[str] = mapped_column(Text)
+    allowed_email_domains: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
 class ERPConnection(Base):
     __tablename__ = "erp_connections"
 
@@ -614,6 +629,56 @@ def get_tenant_api_usage_summary(session, tenant_id: str) -> dict[str, Any]:
         "average_compute_ms": round(avg_latency, 2),
         "endpoint_breakdown": formatted_breakdown,
     }
+
+
+# ---------------------------------------------------------------------------
+# Enterprise SAML 2.0 SSO Query Helpers
+# ---------------------------------------------------------------------------
+def get_saml_config_by_org_slug(session, org_slug: str) -> SAMLProviderConfig | None:
+    """Lookup SAML IdP configuration by enterprise tenant organization slug."""
+    return (
+        session.query(SAMLProviderConfig)
+        .filter(SAMLProviderConfig.org_slug.ilike(org_slug.strip()), SAMLProviderConfig.enabled.is_(True))
+        .first()
+    )
+
+
+def save_saml_provider_config(
+    session,
+    tenant_id: str,
+    org_slug: str,
+    idp_entity_id: str,
+    idp_sso_url: str,
+    idp_x509_cert_pem: str,
+    allowed_email_domains: str | None = None,
+    enabled: bool = True,
+) -> SAMLProviderConfig:
+    """Upserts a SAML 2.0 IdP configuration."""
+    existing = session.query(SAMLProviderConfig).filter(SAMLProviderConfig.org_slug == org_slug.strip().lower()).first()
+    if existing:
+        existing.tenant_id = tenant_id
+        existing.idp_entity_id = idp_entity_id
+        existing.idp_sso_url = idp_sso_url
+        existing.idp_x509_cert_pem = idp_x509_cert_pem
+        existing.allowed_email_domains = allowed_email_domains
+        existing.enabled = enabled
+        existing.updated_at = utc_now()
+        session.commit()
+        return existing
+
+    record = SAMLProviderConfig(
+        tenant_id=tenant_id,
+        org_slug=org_slug.strip().lower(),
+        idp_entity_id=idp_entity_id,
+        idp_sso_url=idp_sso_url,
+        idp_x509_cert_pem=idp_x509_cert_pem,
+        allowed_email_domains=allowed_email_domains,
+        enabled=enabled,
+        created_at=utc_now(),
+    )
+    session.add(record)
+    session.commit()
+    return record
 
 
 def get_db():

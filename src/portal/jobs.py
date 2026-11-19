@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -33,7 +33,7 @@ from .database import (
     utc_now,
 )
 from .dependencies import AuthContext, get_verified_user, optional_audit_auth, require_model_write
-from .plans import account_summary, reserve_job
+from .plans import account_summary, require_plan_feature, reserve_job
 from .security import check_csrf
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,7 @@ def _run_upload_job_fallback(job_id: str, user_id: str, input_path: str) -> None
 def live_scrape(
     payload: LiveScrapeRequest,
     request: Request,
+    response: Response,
     background_tasks: BackgroundTasks,
     auth: AuthContext = Depends(require_model_write),
     db: Session = Depends(get_db),
@@ -104,6 +105,10 @@ def live_scrape(
     job_id = str(uuid4())
     workspace = _job_workspace(user.id, job_id)
     job = reserve_job(db, user, "live_scrape", workspace)
+    if auth.auth_type == "guest":
+        request.session["guest_run_used"] = True
+        response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
+        response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
     try:
         workspace.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -143,6 +148,7 @@ def live_scrape(
 @router.post("/model/generate-pack", status_code=202)
 async def generate_pack(
     request: Request,
+    response: Response,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     auth: AuthContext = Depends(require_model_write),
@@ -160,6 +166,10 @@ async def generate_pack(
     job = reserve_job(db, user, "file_upload", workspace)
     job.input_name = filename
     db.commit()
+    if auth.auth_type == "guest":
+        request.session["guest_run_used"] = True
+        response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
+        response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
     try:
         workspace.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -275,9 +285,15 @@ def list_jobs(
 def download_job_file(
     job_id: str,
     file_key: str,
+    request: Request,
     user=Depends(get_verified_user),
     db: Session = Depends(get_db),
 ):
+    if file_key == "zip_pack":
+        require_plan_feature("zip_packs", db, user)
+    if request.query_params.get("white_label") == "true":
+        require_plan_feature("white_label_export", db, user)
+
     tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
     job = get_tenant_job(db, job_id, tenant_id)
     if job is None or job.status != "succeeded":

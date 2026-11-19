@@ -11,6 +11,7 @@ uvicorn[standard]>=0.22.0
 python-multipart>=0.0.6
 httpx>=0.24.0
 cryptography>=41.0.0
+stripe>=5.0.0
 SQLAlchemy>=2.0.36
 psycopg2-binary>=2.9.9
 psycopg[binary]>=3.2.3
