@@ -1,15 +1,23 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, create_engine, event, text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from sqlalchemy.pool import StaticPool
+
+try:
+    from cryptography.fernet import Fernet
+    _FERNET_AVAILABLE = True
+except ImportError:
+    _FERNET_AVAILABLE = False
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.environ.get("MARKETLENS_DATA_DIR", PROJECT_ROOT / "data")).resolve()
@@ -118,6 +126,41 @@ class AuditLedgerEntry(Base):
     stage_2_coa_mapping_sha256: Mapped[str] = mapped_column(String(64))
     stage_3_model_solve_sha256: Mapped[str] = mapped_column(String(64))
     lineage_manifest_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class SectorBenchmark(Base):
+    __tablename__ = "sector_benchmarks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    region: Mapped[str] = mapped_column(String(32), index=True)
+    sector: Mapped[str] = mapped_column(String(64), index=True)
+    as_of_date: Mapped[str] = mapped_column(String(10), index=True)
+    median_ev_ebitda: Mapped[float] = mapped_column(Float, default=12.5)
+    median_ev_revenue: Mapped[float] = mapped_column(Float, default=3.2)
+    median_beta: Mapped[float] = mapped_column(Float, default=1.0)
+    risk_free_rate: Mapped[float] = mapped_column(Float, default=0.045)
+    equity_risk_premium: Mapped[float] = mapped_column(Float, default=0.055)
+    peer_tickers_json: Mapped[str] = mapped_column(Text, default="[]")
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class ERPConnection(Base):
+    __tablename__ = "erp_connections"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    provider: Mapped[str] = mapped_column(String(32), index=True)  # xero, quickbooks, zoho, netsuite, tally
+    org_name: Mapped[str] = mapped_column(String(255))
+    external_realm_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    encrypted_access_token: Mapped[str] = mapped_column(Text)
+    encrypted_refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scopes: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    sync_frequency: Mapped[str] = mapped_column(String(32), default="monthly")
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="connected", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
@@ -256,6 +299,124 @@ def find_audit_entry_by_hash(session, hash_str: str) -> AuditLedgerEntry | None:
         (AuditLedgerEntry.merkle_root_sha256 == clean_hash) |
         (AuditLedgerEntry.stage_1_raw_input_sha256 == clean_hash)
     ).first()
+
+
+# ---------------------------------------------------------------------------
+# Fernet Token Encryption at Rest
+# ---------------------------------------------------------------------------
+def _get_fernet() -> Fernet | None:
+    if not _FERNET_AVAILABLE:
+        return None
+    key_str = os.environ.get("TOKEN_ENCRYPTION_KEY")
+    if key_str:
+        try:
+            return Fernet(key_str.encode() if isinstance(key_str, str) else key_str)
+        except Exception:
+            pass
+    # Deterministic fallback key derived from SESSION_SECRET
+    seed = (os.environ.get("SESSION_SECRET") or "marketlens_default_token_encryption_key_32bytes").encode("utf-8")
+    derived = base64.urlsafe_b64encode(hashlib.sha256(seed).digest())
+    return Fernet(derived)
+
+
+def encrypt_token(raw_token: str | None) -> str:
+    """Encrypts an OAuth token at rest using Fernet symmetric encryption."""
+    if not raw_token:
+        return ""
+    fernet = _get_fernet()
+    if fernet is not None:
+        return fernet.encrypt(raw_token.encode("utf-8")).decode("utf-8")
+    # Base64 fallback if cryptography is unavailable
+    return "b64:" + base64.b64encode(raw_token.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_token(encrypted_token: str | None) -> str:
+    """Decrypts an OAuth token encrypted at rest."""
+    if not encrypted_token:
+        return ""
+    if encrypted_token.startswith("b64:"):
+        return base64.b64decode(encrypted_token[4:].encode("utf-8")).decode("utf-8")
+    fernet = _get_fernet()
+    if fernet is not None:
+        try:
+            return fernet.decrypt(encrypted_token.encode("utf-8")).decode("utf-8")
+        except Exception:
+            return ""
+    return encrypted_token
+
+
+# ---------------------------------------------------------------------------
+# SectorBenchmark & ERP Integration Query Helpers
+# ---------------------------------------------------------------------------
+def get_sector_benchmark(session, region: str, sector: str) -> SectorBenchmark | None:
+    """Fetch the freshest sector benchmark for a given region and sector."""
+    return (
+        session.query(SectorBenchmark)
+        .filter(
+            SectorBenchmark.region.ilike(region),
+            SectorBenchmark.sector.ilike(sector),
+        )
+        .order_by(SectorBenchmark.as_of_date.desc(), SectorBenchmark.updated_at.desc())
+        .first()
+    )
+
+
+def save_sector_benchmark(session, benchmark_data: dict) -> SectorBenchmark:
+    """Upserts or records a live sector benchmark entry."""
+    region = benchmark_data["region"].upper()
+    sector = benchmark_data["sector"]
+    as_of = benchmark_data.get("as_of_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+
+    existing = (
+        session.query(SectorBenchmark)
+        .filter(
+            SectorBenchmark.region == region,
+            SectorBenchmark.sector == sector,
+            SectorBenchmark.as_of_date == as_of,
+        )
+        .first()
+    )
+    if existing:
+        for k, v in benchmark_data.items():
+            if hasattr(existing, k) and k != "id":
+                setattr(existing, k, v)
+        existing.updated_at = utc_now()
+        session.commit()
+        return existing
+
+    record = SectorBenchmark(**benchmark_data)
+    session.add(record)
+    session.commit()
+    return record
+
+
+def list_tenant_erp_connections(session, tenant_id: str) -> list[ERPConnection]:
+    """Fetch all active and connected ERP integrations strictly for the tenant."""
+    return (
+        session.query(ERPConnection)
+        .filter(ERPConnection.tenant_id == tenant_id)
+        .order_by(ERPConnection.created_at.desc())
+        .all()
+    )
+
+
+def get_tenant_erp_connection(session, connection_id: str, tenant_id: str) -> ERPConnection | None:
+    """Fetch an ERP integration ensuring strict tenant row isolation."""
+    return (
+        session.query(ERPConnection)
+        .filter(ERPConnection.id == connection_id, ERPConnection.tenant_id == tenant_id)
+        .first()
+    )
+
+
+def delete_tenant_erp_connection(session, connection_id: str, tenant_id: str) -> bool:
+    """Revokes and purges an ERP connection cleanly under strict tenant isolation."""
+    conn = get_tenant_erp_connection(session, connection_id, tenant_id)
+    if not conn:
+        return False
+    session.delete(conn)
+    session.commit()
+    return True
 
 
 def get_db():

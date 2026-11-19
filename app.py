@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
-from src.portal import auth, billing, jobs
+from src.portal import auth, billing, erp_routes, jobs
 from src.portal.database import database_ready, get_storage_backend, init_database
 from src.portal.mailer import email_delivery_configured
 from src.portal.security import SESSION_COOKIE, load_session_secret
@@ -73,6 +73,7 @@ async def security_headers(request: Request, call_next):
 app.include_router(auth.router)
 app.include_router(billing.router)
 app.include_router(jobs.router)
+app.include_router(erp_routes.router)
 
 # OpenTelemetry FastAPI Auto-Instrumentation (safe no-op when package not installed)
 try:

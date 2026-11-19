@@ -21,16 +21,34 @@ class WACCResult:
     wacc: float
 
 
-def calculate_wacc(inputs: ValuationInputs, marginal_tax_rate: float) -> WACCResult:
+def calculate_wacc(
+    inputs: ValuationInputs,
+    marginal_tax_rate: float,
+    region: str | None = None,
+    sector: str | None = None,
+) -> WACCResult:
     """
     Computes Cost of Equity (CAPM), After-tax Cost of Debt, and WACC:
     Ke = Rf + Beta * ERP
     Kd_after = Kd * (1 - t)
     WACC = We * Ke + Wd * Kd_after
+    Optionally enriches baseline inputs from the live SectorBenchmark store.
     """
     rf = inputs.risk_free_rate
     beta = inputs.beta
     erp = inputs.equity_risk_premium
+
+    if region and sector and (rf <= 0 or erp <= 0):
+        try:
+            from src.mesh.regulatory_mesh import get_live_benchmark_multiples
+            bench = get_live_benchmark_multiples(region, sector)
+            if rf <= 0:
+                rf = bench.get("risk_free_rate", rf)
+            if erp <= 0:
+                erp = bench.get("equity_risk_premium", erp)
+        except Exception:
+            pass
+
     ke = rf + beta * erp
 
     kd_pre = inputs.pretax_cost_of_debt

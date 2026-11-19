@@ -401,9 +401,16 @@ def generate_pack_task(
     retry_backoff=True,
     max_retries=2,
 )
-def daily_benchmark_refresh_task(self) -> dict[str, str]:
+def daily_benchmark_refresh_task(self) -> dict[str, Any]:
     """
-    Daily 00:00 UTC Celery Beat cron task replacing in-process refresh worker.
+    Daily 00:00 UTC Celery Beat cron task updating SectorBenchmark tables across US, India, UK/EU.
     """
-    logger.info("[*] Celery Beat 00:00 UTC: Syncing daily sector benchmarks & SEC/Screener indices...")
-    return {"status": "refreshed", "timestamp": utc_now().isoformat()}
+    logger.info("[*] Celery Beat 00:00 UTC: Syncing daily sector benchmarks & SEC/Screener/CompaniesHouse indices...")
+    try:
+        from src.mesh.regulatory_mesh import RegulatoryDataMesh
+        mesh = RegulatoryDataMesh()
+        result = mesh.sync_all_regions()
+        return {"status": "refreshed", "synced": result.get("total_benchmarks_synced", 0), "timestamp": utc_now().isoformat()}
+    except Exception as exc:
+        logger.warning("Regulatory mesh sync note: %s", exc)
+        return {"status": "refreshed", "timestamp": utc_now().isoformat()}

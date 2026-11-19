@@ -35,12 +35,18 @@ if CELERY_AVAILABLE:
             "src.workers.tasks.live_scrape_task": {"queue": "valuation_heavy"},
             "src.workers.tasks.generate_pack_task": {"queue": "valuation_heavy"},
             "src.workers.tasks.daily_benchmark_refresh_task": {"queue": "scraper_daily"},
+            "src.workers.erp_sync_tasks.monthly_erp_board_pack_sync_task": {"queue": "valuation_heavy"},
         },
         beat_schedule={
             "daily-00-00-utc-scraper-refresh": {
                 "task": "src.workers.tasks.daily_benchmark_refresh_task",
                 "schedule": crontab(hour=0, minute=0),
                 "options": {"queue": "scraper_daily"},
+            },
+            "monthly-01-02-00-utc-board-pack-sync": {
+                "task": "src.workers.erp_sync_tasks.monthly_erp_board_pack_sync_task",
+                "schedule": crontab(day_of_month=1, hour=2, minute=0),
+                "options": {"queue": "valuation_heavy"},
             },
         },
     )

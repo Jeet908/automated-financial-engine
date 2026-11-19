@@ -257,3 +257,60 @@ def diagnose(model_data: Dict[str, Any], wacc: float = 0.10) -> PainPointReport:
     report.top_recommendation = f"Primary C-Suite Directive: Address {top}. Overall Health Score: {report.overall_health_score:.0f}/100."
 
     return report
+
+
+def diagnose_pain_points(model_or_data: Any, wacc: float = 0.10) -> List[Dict[str, Any]]:
+    """
+    Runs diagnostic and returns a ranked list of C-Suite pain point dictionaries
+    with keys: 'category', 'summary', 'growth_prescription', 'severity', 'metric_value'.
+    """
+    if isinstance(model_or_data, dict):
+        model_data = model_or_data
+    else:
+        model_data = {}
+        cfg = getattr(model_or_data, "config", None)
+        hist = getattr(cfg, "historicals", None)
+        if hist:
+            for k in (
+                "revenue", "cogs", "employee_costs", "other_expenses",
+                "depreciation", "interest", "tax", "cash", "receivables",
+                "inventory", "net_fixed_assets", "payables", "debt",
+                "share_capital", "retained_earnings"
+            ):
+                if hasattr(hist, k):
+                    model_data[k] = getattr(hist, k)
+        dcf_res = getattr(model_or_data, "dcf_result", None)
+        if dcf_res:
+            wacc = getattr(dcf_res, "wacc", wacc)
+            model_data["enterprise_value"] = getattr(dcf_res, "enterprise_value", 0.0)
+
+    report = diagnose(model_data, wacc=wacc)
+
+    items = [
+        {
+            "category": "Working Capital & CCC",
+            "summary": f"Cash Conversion Cycle is {report.ccc.ccc:.1f} days with {report.ccc.cash_trapped_cr:,.1f} trapped in working capital.",
+            "growth_prescription": f"Compress receivable DSO & inventory DIO by 8-10 days to unlock ~{report.ccc.fcf_unlock_pct:.1f}% incremental FCF.",
+            "severity": report.ccc.severity,
+            "metric_value": report.ccc.ccc,
+        },
+        {
+            "category": "Operating Margins",
+            "summary": f"EBITDA margin currently at {report.margin.ebitda_margin:.1f}% (COGS: {report.margin.cogs_pct:.1f}%, SG&A: {report.margin.sga_pct:.1f}%).",
+            "growth_prescription": f"Implement procurement discipline to reach target EBITDA margin of {report.margin.target_ebitda_margin:.1f}% (+{report.margin.uplift_potential:,.1f} uplift).",
+            "severity": report.margin.severity,
+            "metric_value": report.margin.ebitda_margin,
+        },
+        {
+            "category": "Capital Allocation",
+            "summary": f"ROIC is {report.roic.roic_pct:.1f}% vs WACC of {report.roic.wacc_pct:.1f}% (Spread: {report.roic.spread_pct:+.1f}%).",
+            "growth_prescription": report.roic.optimal_capex_reallocation,
+            "severity": report.roic.severity,
+            "metric_value": report.roic.roic_pct,
+        },
+    ]
+
+    severity_order = {"high": 0, "medium": 1, "low": 2}
+    items.sort(key=lambda x: severity_order.get(x["severity"], 3))
+    return items
+

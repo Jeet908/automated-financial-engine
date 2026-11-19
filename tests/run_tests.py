@@ -52,6 +52,13 @@ from tests.test_audit_ledger_and_otel import (
     test_excel_deliverable_provenance_tab_embedding,
     test_opentelemetry_observability_and_schema_drift,
 )
+from tests.test_regulatory_erp_mesh import (
+    test_regulatory_mesh_multi_region_polling_and_benchmarks,
+    test_fernet_token_encryption_and_tenant_isolation,
+    test_all_five_erp_adapters_and_invariant_equilibriums,
+    test_erp_oauth_and_sync_api_routes,
+    test_end_to_end_monthly_board_pack_execution,
+)
 
 
 def main():
@@ -85,6 +92,11 @@ def main():
         ("Public Audit Verification API Endpoints (/verify & /verify-hash)", test_public_audit_verification_endpoints),
         ("Excel Deliverable Provenance Tab (09_Audit_&_Lineage_Ledger)", test_excel_deliverable_provenance_tab_embedding),
         ("OpenTelemetry Observability, SLA Monitoring & Schema Drift", test_opentelemetry_observability_and_schema_drift),
+        ("Regulatory Data Mesh Ingestion & SectorBenchmark Store", test_regulatory_mesh_multi_region_polling_and_benchmarks),
+        ("Fernet Token Vault Encryption & Tenant Isolation", test_fernet_token_encryption_and_tenant_isolation),
+        ("All 5 Read-Only ERP Adapters & Invariant Parity (0.00 Err)", test_all_five_erp_adapters_and_invariant_equilibriums),
+        ("ERP OAuth Connect, State Signing & Sync Routes", test_erp_oauth_and_sync_api_routes),
+        ("Automated Monthly Board Pack Compilation & Alerts", test_end_to_end_monthly_board_pack_execution),
     ]
 
     print("=" * 70)

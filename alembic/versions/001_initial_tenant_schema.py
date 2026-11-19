@@ -131,6 +131,47 @@ def upgrade() -> None:
         sa.Column("received_at", sa.DateTime(timezone=True), nullable=False),
     )
 
+    # Sector Benchmarks
+    op.create_table(
+        "sector_benchmarks",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("region", sa.String(length=32), nullable=False),
+        sa.Column("sector", sa.String(length=64), nullable=False),
+        sa.Column("as_of_date", sa.String(length=10), nullable=False),
+        sa.Column("median_ev_ebitda", sa.Float(), nullable=False, server_default="12.5"),
+        sa.Column("median_ev_revenue", sa.Float(), nullable=False, server_default="3.2"),
+        sa.Column("median_beta", sa.Float(), nullable=False, server_default="1.0"),
+        sa.Column("risk_free_rate", sa.Float(), nullable=False, server_default="0.045"),
+        sa.Column("equity_risk_premium", sa.Float(), nullable=False, server_default="0.055"),
+        sa.Column("peer_tickers_json", sa.Text(), nullable=False, server_default="[]"),
+        sa.Column("source_sha256", sa.String(length=64), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_sector_benchmarks_region", "sector_benchmarks", ["region"])
+    op.create_index("ix_sector_benchmarks_sector", "sector_benchmarks", ["sector"])
+    op.create_index("ix_sector_benchmarks_as_of_date", "sector_benchmarks", ["as_of_date"])
+
+    # ERP Connections
+    op.create_table(
+        "erp_connections",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("tenant_id", sa.String(length=36), nullable=False),
+        sa.Column("provider", sa.String(length=32), nullable=False),
+        sa.Column("org_name", sa.String(length=255), nullable=False),
+        sa.Column("external_realm_id", sa.String(length=128), nullable=True),
+        sa.Column("encrypted_access_token", sa.Text(), nullable=False),
+        sa.Column("encrypted_refresh_token", sa.Text(), nullable=True),
+        sa.Column("token_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("scopes", sa.String(length=512), nullable=True),
+        sa.Column("sync_frequency", sa.String(length=32), nullable=False, server_default="monthly"),
+        sa.Column("last_synced_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("status", sa.String(length=32), nullable=False, server_default="connected"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_erp_connections_tenant_id", "erp_connections", ["tenant_id"])
+    op.create_index("ix_erp_connections_provider", "erp_connections", ["provider"])
+    op.create_index("ix_erp_connections_status", "erp_connections", ["status"])
+
     # PostgreSQL Row Level Security (RLS) enforcement
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
