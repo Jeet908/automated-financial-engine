@@ -16,6 +16,7 @@ from src.portal import auth, billing, jobs
 from src.portal.database import database_ready, get_storage_backend, init_database
 from src.portal.mailer import email_delivery_configured
 from src.portal.security import SESSION_COOKIE, load_session_secret
+from src.observability.telemetry import sla_tracker
 from src.storage.object_store import check_object_storage_connectivity, is_s3_configured
 from src.workers.celery_app import check_redis_connectivity
 
@@ -73,6 +74,13 @@ app.include_router(auth.router)
 app.include_router(billing.router)
 app.include_router(jobs.router)
 
+# OpenTelemetry FastAPI Auto-Instrumentation (safe no-op when package not installed)
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    FastAPIInstrumentor.instrument_app(app)
+except Exception:
+    pass
+
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_portal():
@@ -110,8 +118,15 @@ async def health_check():
             "storage_backend": get_storage_backend(),
             "redis": check_redis_connectivity(),
             "object_storage": check_object_storage_connectivity() if is_s3_configured() else "local",
+            "telemetry_sla": sla_tracker.get_summary(),
         },
     }
+
+
+@app.get("/api/v1/health/sla")
+async def health_sla():
+    """Returns real-time SLA metrics, 99.9% availability, and upstream schema drift events."""
+    return sla_tracker.get_summary()
 
 
 def _legal_page(title: str, paragraphs: list[str]) -> str:

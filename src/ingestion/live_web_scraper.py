@@ -26,6 +26,49 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+import time
+from src.observability.telemetry import (
+    record_schema_drift,
+    record_scraper_latency,
+    trace_span,
+)
+
+
+def detect_schema_drift(
+    available_tags: List[str],
+    required_tags: Optional[List[str]] = None,
+    source_system: str = "SEC_EDGAR_XBRL",
+) -> List[str]:
+    """
+    Scans ingested table headers or XBRL concept names against mandated
+    financial reporting line items. Increments OTel schema drift counter
+    if any critical tag is missing.
+    """
+    if required_tags is None:
+        required_tags = [
+            "revenue",
+            "operating_income",
+            "total_assets",
+            "total_liabilities",
+            "stockholders_equity",
+            "operating_cash_flow",
+        ]
+
+    normalized_available = {re.sub(r"[^a-z0-9]", "", str(t).casefold()) for t in available_tags}
+    missing: List[str] = []
+
+    for req in required_tags:
+        req_norm = re.sub(r"[^a-z0-9]", "", req.casefold())
+        if not any(req_norm in avail for avail in normalized_available):
+            missing.append(req)
+            record_schema_drift(
+                source_system=source_system,
+                missing_tag=req,
+                details=f"Mandatory tag '{req}' missing from upstream source response",
+            )
+
+    return missing
+
 
 # Curated catalog of verified real listed companies across high-impact domains
 DOMAIN_CATALOG: Dict[str, List[Dict[str, Any]]] = {
@@ -352,47 +395,52 @@ class LiveWebScraper:
         Discovers a live company by domain, extracts statements, and exports
         both client .xlsx workbook and engine .json config.
         """
-        chosen_domain = self._resolve_domain(domain)
-        market_filter = (market or "random").lower()
-        if market_filter not in {"india", "us", "global", "random"}:
-            raise ValueError(f"Unsupported market '{market}'.")
+        t0 = time.time()
+        with trace_span("scraper.discover_and_extract", {"domain": str(domain), "market": str(market)}):
+            chosen_domain = self._resolve_domain(domain)
+            market_filter = (market or "random").lower()
+            if market_filter not in {"india", "us", "global", "random"}:
+                raise ValueError(f"Unsupported market '{market}'.")
 
-        candidates = list(DOMAIN_CATALOG[chosen_domain])
-        if market_filter == "india":
-            candidates = [c for c in candidates if c["ticker"].endswith(".NS")]
-        elif market_filter == "us":
-            candidates = [c for c in candidates if not c["ticker"].endswith(".NS")]
-        if not candidates:
-            raise ValueError(f"No {market_filter} companies are listed for '{chosen_domain}'.")
+            candidates = list(DOMAIN_CATALOG[chosen_domain])
+            if market_filter == "india":
+                candidates = [c for c in candidates if c["ticker"].endswith(".NS")]
+            elif market_filter == "us":
+                candidates = [c for c in candidates if not c["ticker"].endswith(".NS")]
+            if not candidates:
+                raise ValueError(f"No {market_filter} companies are listed for '{chosen_domain}'.")
 
-        random.shuffle(candidates)
-        errors = []
-        company_data = None
-        for candidate in candidates:
-            try:
-                company_data = self._extract_live_company(candidate)
-                break
-            except (ValueError, KeyError, TypeError, IndexError) as exc:
-                errors.append(f"{candidate['ticker']}: {exc}")
-        if company_data is None:
-            detail = "; ".join(errors)
-            raise RuntimeError(f"Could not retrieve usable live statements for '{chosen_domain}': {detail}")
+            random.shuffle(candidates)
+            errors = []
+            company_data = None
+            for candidate in candidates:
+                try:
+                    company_data = self._extract_live_company(candidate)
+                    break
+                except (ValueError, KeyError, TypeError, IndexError) as exc:
+                    errors.append(f"{candidate['ticker']}: {exc}")
+            if company_data is None:
+                detail = "; ".join(errors)
+                raise RuntimeError(f"Could not retrieve usable live statements for '{chosen_domain}': {detail}")
 
-        ticker_slug = company_data["ticker"].replace(".NS", "").lower()
+            ticker_slug = company_data["ticker"].replace(".NS", "").lower()
 
-        # 3. Export Multi-Tab Excel Workbook into client_inbox
-        xlsx_filename = f"{company_data['ticker'].replace('.', '_')}_Live_Scraped.xlsx"
-        xlsx_path = self.output_inbox / xlsx_filename
-        self._export_excel_workbook(company_data, str(xlsx_path))
+            # 3. Export Multi-Tab Excel Workbook into client_inbox
+            xlsx_filename = f"{company_data['ticker'].replace('.', '_')}_Live_Scraped.xlsx"
+            xlsx_path = self.output_inbox / xlsx_filename
+            self._export_excel_workbook(company_data, str(xlsx_path))
 
-        # 4. Generate & Calibrate engine config into inputs/
-        json_filename = f"{ticker_slug}_live_config.json"
-        json_path = self.output_inputs / json_filename
-        config_data = self._build_engine_config(company_data)
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(config_data, f, indent=2)
+            # 4. Generate & Calibrate engine config into inputs/
+            json_filename = f"{ticker_slug}_live_config.json"
+            json_path = self.output_inputs / json_filename
+            config_data = self._build_engine_config(company_data)
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(config_data, f, indent=2)
 
-        return company_data, xlsx_path, json_path
+            latency_ms = (time.time() - t0) * 1000.0
+            record_scraper_latency(latency_ms, {"ticker": company_data["ticker"], "domain": chosen_domain})
+
+            return company_data, xlsx_path, json_path
 
     @staticmethod
     def _resolve_domain(domain: Optional[str]) -> str:

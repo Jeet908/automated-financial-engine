@@ -43,6 +43,15 @@ from tests.test_distributed_architecture import (
     test_celery_daily_benchmark_refresh_task,
     test_s3_tenant_object_key_and_presigned_url,
 )
+from tests.test_audit_ledger_and_otel import (
+    test_canonical_source_fact_determinism,
+    test_merkle_tree_root_determinism_and_tamper_detection,
+    test_four_stage_provenance_chain_integrity,
+    test_audit_ledger_database_persistence_and_query_isolation,
+    test_public_audit_verification_endpoints,
+    test_excel_deliverable_provenance_tab_embedding,
+    test_opentelemetry_observability_and_schema_drift,
+)
 
 
 def main():
@@ -69,6 +78,13 @@ def main():
         ("Concurrent reserve_job() Row-Level Quota Locking", test_concurrent_reserve_job_locking),
         ("Celery Worker Pool & Scheduled 00:00 UTC Beat Task", test_celery_daily_benchmark_refresh_task),
         ("Signed S3/R2 Object Storage & 900s Presigned URLs", test_s3_tenant_object_key_and_presigned_url),
+        ("Deterministic SourceFact Fingerprinting & Invariant Hashing", test_canonical_source_fact_determinism),
+        ("SHA-256 Merkle Root & Discrepancy Tamper-Detection", test_merkle_tree_root_determinism_and_tamper_detection),
+        ("4-Stage Cryptographic Provenance Chain & Gate Checks", test_four_stage_provenance_chain_integrity),
+        ("Audit Ledger Database Persistence & Strict Tenant Isolation", test_audit_ledger_database_persistence_and_query_isolation),
+        ("Public Audit Verification API Endpoints (/verify & /verify-hash)", test_public_audit_verification_endpoints),
+        ("Excel Deliverable Provenance Tab (09_Audit_&_Lineage_Ledger)", test_excel_deliverable_provenance_tab_embedding),
+        ("OpenTelemetry Observability, SLA Monitoring & Schema Drift", test_opentelemetry_observability_and_schema_drift),
     ]
 
     print("=" * 70)

@@ -107,6 +107,23 @@ def upgrade() -> None:
     op.create_index("ix_audit_artifacts_tenant_id", "audit_artifacts", ["tenant_id"])
     op.create_index("ix_audit_artifacts_job_id", "audit_artifacts", ["job_id"])
 
+    # Audit Ledger Entries (Tamper-evident Merkle provenance)
+    op.create_table(
+        "audit_ledger_entries",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("job_id", sa.String(length=36), sa.ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column("tenant_id", sa.String(length=36), nullable=False),
+        sa.Column("merkle_root_sha256", sa.String(length=64), nullable=False),
+        sa.Column("stage_1_raw_input_sha256", sa.String(length=64), nullable=False),
+        sa.Column("stage_2_coa_mapping_sha256", sa.String(length=64), nullable=False),
+        sa.Column("stage_3_model_solve_sha256", sa.String(length=64), nullable=False),
+        sa.Column("lineage_manifest_json", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_audit_ledger_entries_job_id", "audit_ledger_entries", ["job_id"])
+    op.create_index("ix_audit_ledger_entries_tenant_id", "audit_ledger_entries", ["tenant_id"])
+    op.create_index("ix_audit_ledger_entries_merkle_root_sha256", "audit_ledger_entries", ["merkle_root_sha256"])
+
     # Webhook Events
     op.create_table(
         "webhook_events",

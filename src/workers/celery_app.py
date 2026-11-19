@@ -45,6 +45,19 @@ if CELERY_AVAILABLE:
         },
     )
     celery_app.autodiscover_tasks(["src.workers"])
+
+    try:
+        from celery.signals import worker_process_init
+
+        @worker_process_init.connect
+        def init_celery_worker_otel(*args, **kwargs):
+            try:
+                from opentelemetry.instrumentation.celery import CeleryInstrumentor
+                CeleryInstrumentor().instrument()
+            except Exception:
+                pass
+    except Exception:
+        pass
 else:
     celery_app = None
 

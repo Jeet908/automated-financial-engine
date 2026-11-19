@@ -14,6 +14,12 @@ from financial_engine.core.types import (
 )
 from financial_engine.core.config import ModelConfiguration
 from financial_engine.core.accounting import AccountingVerifier, AuditCertificate
+from financial_engine.audit.provenance import (
+    SourceFact,
+    LineageNode,
+    ProvenanceChain,
+    build_provenance_ledger,
+)
 from financial_engine.engine import FinancialEngine, FinancialModel
 from financial_engine.cli import run_pipeline
 
@@ -31,6 +37,10 @@ __all__ = [
     "ModelConfiguration",
     "AccountingVerifier",
     "AuditCertificate",
+    "SourceFact",
+    "LineageNode",
+    "ProvenanceChain",
+    "build_provenance_ledger",
     "FinancialEngine",
     "FinancialModel",
     "run_pipeline",

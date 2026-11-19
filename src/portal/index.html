@@ -1630,6 +1630,17 @@
                         link.setAttribute('rel', 'noopener');
                         row.appendChild(link);
                     }
+                    if (job.id && job.status === 'succeeded') {
+                        const auditLink = document.createElement('a');
+                        auditLink.href = `/api/v1/audit/verify/${job.id}`;
+                        auditLink.textContent = 'Verify SHA-256';
+                        auditLink.target = '_blank';
+                        auditLink.setAttribute('rel', 'noopener');
+                        auditLink.style.marginLeft = '0.5rem';
+                        auditLink.style.fontSize = '0.75rem';
+                        auditLink.style.color = 'var(--status-pass)';
+                        row.appendChild(auditLink);
+                    }
                     list.appendChild(row);
                 });
             } catch {

@@ -14,6 +14,7 @@ from src.exporters.tabs.tab_05_cash_flow import build_cash_flow
 from src.exporters.tabs.tab_06_schedules import build_schedules
 from src.exporters.tabs.tab_07_dcf import build_dcf
 from src.exporters.tabs.tab_08_raw_data import build_raw_data
+from src.exporters.tabs.tab_09_audit_ledger import build_audit_ledger
 
 
 def _prepare_output(engine_output: dict, normalized_financials) -> dict:
@@ -221,6 +222,7 @@ class WorkbookCompiler:
         build_schedules(wb, engine_output)
         build_dcf(wb, engine_output)
         build_raw_data(wb, normalized_financials)
+        build_audit_ledger(wb, engine_output, normalized_financials, metadata or {})
 
         # Remove the initial default sheet
         if default_sheet in wb.worksheets:

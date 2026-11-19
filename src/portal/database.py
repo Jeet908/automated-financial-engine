@@ -107,6 +107,20 @@ class AuditArtifact(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
+class AuditLedgerEntry(Base):
+    __tablename__ = "audit_ledger_entries"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    job_id: Mapped[str] = mapped_column(String(36), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, unique=True)
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    merkle_root_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    stage_1_raw_input_sha256: Mapped[str] = mapped_column(String(64))
+    stage_2_coa_mapping_sha256: Mapped[str] = mapped_column(String(64))
+    stage_3_model_solve_sha256: Mapped[str] = mapped_column(String(64))
+    lineage_manifest_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class WebhookEvent(Base):
     __tablename__ = "webhook_events"
 
@@ -225,6 +239,23 @@ def list_tenant_jobs(session, tenant_id: str, limit: int = 20) -> list[Job]:
         .limit(limit)
         .all()
     )
+
+
+def get_audit_ledger_entry(session, job_id: str, tenant_id: str | None = None) -> AuditLedgerEntry | None:
+    """Fetch an audit ledger entry by job_id with optional tenant isolation check."""
+    query = session.query(AuditLedgerEntry).filter(AuditLedgerEntry.job_id == job_id)
+    if tenant_id:
+        query = query.filter(AuditLedgerEntry.tenant_id == tenant_id)
+    return query.first()
+
+
+def find_audit_entry_by_hash(session, hash_str: str) -> AuditLedgerEntry | None:
+    """Find any audit ledger entry matching either merkle root or raw input SHA-256."""
+    clean_hash = hash_str.strip().lower()
+    return session.query(AuditLedgerEntry).filter(
+        (AuditLedgerEntry.merkle_root_sha256 == clean_hash) |
+        (AuditLedgerEntry.stage_1_raw_input_sha256 == clean_hash)
+    ).first()
 
 
 def get_db():

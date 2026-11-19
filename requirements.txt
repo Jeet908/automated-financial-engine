@@ -28,6 +28,13 @@ reportlab>=4.0.0
 python-pptx>=0.6.21
 matplotlib>=3.7.0
 
+# Observability & Distributed Tracing
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
+opentelemetry-instrumentation-fastapi>=0.43b0
+opentelemetry-instrumentation-celery>=0.43b0
+opentelemetry-exporter-otlp-proto-http>=1.22.0
+
 # Financial Data & Market Sources
 yfinance>=0.2.20
 PyMuPDF>=1.23.0
