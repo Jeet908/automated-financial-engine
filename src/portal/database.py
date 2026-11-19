@@ -28,6 +28,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    org_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
     google_subject: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
@@ -36,6 +37,10 @@ class User(Base):
     terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     terms_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    @property
+    def tenant_id(self) -> str:
+        return self.org_id or self.id
 
 
 class EmailToken(Base):
@@ -61,6 +66,7 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
 
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True, default=lambda: str(uuid4()))
     provider: Mapped[str] = mapped_column(String(32), default="razorpay")
     provider_subscription_id: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
     provider_plan_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -75,6 +81,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True, default=lambda: str(uuid4()))
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     kind: Mapped[str] = mapped_column(String(32))
     status: Mapped[str] = mapped_column(String(32), default="pending", index=True)
@@ -84,6 +91,20 @@ class Job(Base):
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class AuditArtifact(Base):
+    __tablename__ = "audit_artifacts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    job_id: Mapped[str] = mapped_column(String(36), ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    artifact_type: Mapped[str] = mapped_column(String(64), index=True)
+    s3_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    local_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sha256_checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class WebhookEvent(Base):
@@ -96,10 +117,11 @@ class WebhookEvent(Base):
 def _database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if url:
+        # Normalize Railway / Heroku postgres:// or postgresql:// to postgresql+psycopg2:// or postgresql+psycopg://
         if url.startswith("postgres://"):
-            return "postgresql+psycopg://" + url[len("postgres://"):]
-        if url.startswith("postgresql://"):
-            return "postgresql+psycopg://" + url[len("postgresql://"):]
+            url = "postgresql+psycopg2://" + url[len("postgres://"):]
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = "postgresql+psycopg2://" + url[len("postgresql://"):]
         return url
     database_path = DATA_DIR / "marketlens.sqlite3"
     return f"sqlite:///{database_path.as_posix()}"
@@ -111,13 +133,20 @@ def _create_engine(url: str) -> Engine:
         options["connect_args"] = {"check_same_thread": False, "timeout": 30}
         if ":memory:" in url:
             options["poolclass"] = StaticPool
+    elif url.startswith("postgresql"):
+        options["pool_size"] = int(os.environ.get("DB_POOL_SIZE", "10"))
+        options["max_overflow"] = int(os.environ.get("DB_MAX_OVERFLOW", "20"))
+        options["pool_recycle"] = int(os.environ.get("DB_POOL_RECYCLE", "1800"))
+
     engine = create_engine(url, **options)
+
     if url.startswith("sqlite:"):
         @event.listens_for(engine, "connect")
         def enable_foreign_keys(connection, _record) -> None:
             cursor = connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
+
     return engine
 
 
@@ -159,6 +188,43 @@ def database_ready() -> bool:
     with _engine.connect() as connection:
         connection.execute(text("SELECT 1"))
     return True
+
+
+def get_storage_backend() -> str:
+    """Dynamically reports whether the system is connected to PostgreSQL or SQLite."""
+    try:
+        dialect_name = _engine.dialect.name
+        if "postgres" in dialect_name:
+            return "postgresql"
+    except Exception:
+        pass
+    if os.environ.get("DATABASE_URL", "").startswith(("postgres://", "postgresql://", "postgresql+")):
+        return "postgresql"
+    return "sqlite"
+
+
+# ---------------------------------------------------------------------------
+# Strict Tenant-Level Row Isolation Helpers
+# ---------------------------------------------------------------------------
+def tenant_query(session, model_cls, tenant_id: str):
+    """Enforce strict tenant-level row isolation across models."""
+    return session.query(model_cls).filter(model_cls.tenant_id == tenant_id)
+
+
+def get_tenant_job(session, job_id: str, tenant_id: str) -> Job | None:
+    """Fetch a job ensuring it strictly belongs to the requesting tenant."""
+    return session.query(Job).filter(Job.id == job_id, Job.tenant_id == tenant_id).first()
+
+
+def list_tenant_jobs(session, tenant_id: str, limit: int = 20) -> list[Job]:
+    """List jobs strictly scoped to the requesting tenant."""
+    return (
+        session.query(Job)
+        .filter(Job.tenant_id == tenant_id)
+        .order_by(Job.created_at.desc())
+        .limit(limit)
+        .all()
+    )
 
 
 def get_db():

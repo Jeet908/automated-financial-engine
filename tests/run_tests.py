@@ -36,6 +36,13 @@ from tests.test_advanced_metrics import (
     test_regional_accounting_rulebook,
     test_saas_plan_catalog,
 )
+from tests.test_distributed_architecture import (
+    test_postgresql_engine_normalization_and_pooling,
+    test_strict_tenant_row_isolation,
+    test_concurrent_reserve_job_locking,
+    test_celery_daily_benchmark_refresh_task,
+    test_s3_tenant_object_key_and_presigned_url,
+)
 
 
 def main():
@@ -57,6 +64,11 @@ def main():
         ("C-Suite Operational Pain Points & Alpha Diagnostic", test_pain_points_diagnostic),
         ("Regional Accounting Rulebook Jurisdiction Detector", test_regional_accounting_rulebook),
         ("Multi-Currency SaaS Plan Catalog & 14-Day Trial", test_saas_plan_catalog),
+        ("PostgreSQL Connection Pooling & URL Normalization", test_postgresql_engine_normalization_and_pooling),
+        ("Strict Tenant-Level Row Isolation & Query Scoping", test_strict_tenant_row_isolation),
+        ("Concurrent reserve_job() Row-Level Quota Locking", test_concurrent_reserve_job_locking),
+        ("Celery Worker Pool & Scheduled 00:00 UTC Beat Task", test_celery_daily_benchmark_refresh_task),
+        ("Signed S3/R2 Object Storage & 900s Presigned URLs", test_s3_tenant_object_key_and_presigned_url),
     ]
 
     print("=" * 70)

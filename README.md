@@ -231,6 +231,74 @@ Overall Status: PASSED
 
 ---
 
-## 8. License
+## 8. Distributed Architecture & Railway Multi-Service Deployment
+
+MarketLens Analytics scales horizontally as a modern distributed microservices system:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       MarketLens Distributed Architecture                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+              ┌───────────────────────┴───────────────────────┐
+              ▼                                               ▼
+    [ Fast API Web Gateway ]                      [ Celery Worker Pool ]
+    (python app.py / Port 8000)                   (concurrency=2, acks_late=True)
+              │                                               │
+              ├───────────────┬───────────────┬───────────────┤
+              ▼               ▼               ▼               ▼
+      [ PostgreSQL 16 ]  [ Redis 7 ]  [ Cloudflare R2 ]  [ Celery Beat ]
+      (Tenant RLS)      (Broker &     (Signed Presigned  (00:00 UTC Scraper)
+                        Backend)       S3 URLs, 900s)
+```
+
+### Multi-Service Configuration:
+
+1. **PostgreSQL 16 (Relational Database & Tenant Isolation)**:
+   - Dual-mode SQLAlchemy engine automatically normalizes Railway `postgres://` or `postgresql://` connection strings to `postgresql+psycopg2://`.
+   - Production connection pooling: `pool_size=10`, `max_overflow=20`, `pool_recycle=1800`, `pool_pre_ping=True`.
+   - Strict tenant-level row isolation via indexed `tenant_id` and PostgreSQL Row-Level Security (`CREATE POLICY`).
+   - Concurrency protection: `SELECT ... FOR UPDATE` row locking prevents quota race conditions.
+
+2. **Redis 7 & Celery Worker Pool**:
+   - Asynchronous offloading for compute-heavy valuation runs (10,000-run Monte Carlo, openpyxl compilation, PDF tear-sheets, PPTX pitchbooks).
+   - Dedicated queues: `valuation_heavy` (heavy modeling) and `scraper_daily` (daily SEC EDGAR & market scrapers).
+   - Scheduled Celery Beat cron at `00:00 UTC` (`crontab(hour=0, minute=0)`).
+   - Zero-config graceful fallback to eager local execution when `REDIS_URL` is omitted.
+
+3. **Signed Object Storage (Cloudflare R2 / AWS S3)**:
+   - Boto3 integration with `s3v4` signature version and virtual-hosted addressing.
+   - Tenant-isolated object keys: `tenants/{tenant_id}/jobs/{job_id}/{filename}`.
+   - Zero-disk bloat: temporary local scratch directories purged in `finally:` blocks.
+   - Secure delivery: 900-second pre-signed download URLs (`ExpiresIn=900`) with custom content disposition.
+
+### Railway Deployment Quickstart:
+
+1. **Link Services on Railway**:
+   - Provision a **Railway PostgreSQL** plugin (automatically exposes `DATABASE_URL`).
+   - Provision a **Railway Redis** plugin (automatically exposes `REDIS_URL`).
+   - Deploy the web service from GitHub repository root (starts `python app.py`).
+   - Add a worker service with custom start command:
+     ```bash
+     celery -A src.workers.celery_app worker -Q valuation_heavy,scraper_daily --loglevel=info --concurrency=2
+     ```
+   - Add a beat scheduler service with start command:
+     ```bash
+     celery -A src.workers.celery_app beat --loglevel=info
+     ```
+
+2. **Configure Cloudflare R2 / AWS S3 Environment Variables**:
+   ```bash
+   S3_BUCKET=marketlens-artifacts
+   S3_ENDPOINT_URL=https://<account_id>.r2.cloudflarestorage.com
+   S3_ACCESS_KEY_ID=<your-access-key-id>
+   S3_SECRET_ACCESS_KEY=<your-secret-access-key>
+   S3_REGION=auto
+   S3_PRESIGN_TTL_SECONDS=900
+   ```
+
+---
+
+## 9. License
 
 Distributed under the MIT License. See `LICENSE` for more information.

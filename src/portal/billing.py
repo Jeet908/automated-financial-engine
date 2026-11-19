@@ -174,7 +174,7 @@ async def create_checkout(
         logger.error("Razorpay subscription creation returned no subscription identifier.")
         raise HTTPException(status_code=502, detail="The payment provider returned an incomplete checkout response.")
 
-    subscription = current_subscription or Subscription(user_id=user.id)
+    subscription = current_subscription or Subscription(user_id=user.id, tenant_id=user.tenant_id)
     subscription.provider = "razorpay"
     subscription.provider_subscription_id = str(provider_id)
     subscription.provider_plan_id = provider_plan_id

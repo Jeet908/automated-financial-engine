@@ -13,9 +13,11 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
 from src.portal import auth, billing, jobs
-from src.portal.database import database_ready, init_database
+from src.portal.database import database_ready, get_storage_backend, init_database
 from src.portal.mailer import email_delivery_configured
 from src.portal.security import SESSION_COOKIE, load_session_secret
+from src.storage.object_store import check_object_storage_connectivity, is_s3_configured
+from src.workers.celery_app import check_redis_connectivity
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
@@ -105,7 +107,9 @@ async def health_check():
                 and os.environ.get("RAZORPAY_PLAN_ID_PRO")
                 and os.environ.get("RAZORPAY_PLAN_ID_BUSINESS")
             ),
-            "storage_backend": "postgresql" if os.environ.get("DATABASE_URL") else "sqlite",
+            "storage_backend": get_storage_backend(),
+            "redis": check_redis_connectivity(),
+            "object_storage": check_object_storage_connectivity() if is_s3_configured() else "local",
         },
     }
 
@@ -155,7 +159,11 @@ init_database()
 
 
 def _start_daily_background_refresh() -> None:
-    """Non-blocking background refresh scheduler updating sector benchmarks every 24 hours."""
+    """Non-blocking background refresh scheduler updating sector benchmarks; skipped if Celery Beat handles cron."""
+    if os.environ.get("REDIS_URL"):
+        logger.info("[*] Distributed Mode: Celery Beat handles 00:00 UTC daily benchmark refresh.")
+        return
+
     import threading
     import time
 

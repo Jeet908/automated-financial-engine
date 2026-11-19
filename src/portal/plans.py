@@ -153,7 +153,15 @@ def account_summary(db: Session, user: User) -> dict[str, object]:
 
 def reserve_job(db: Session, user: User, kind: str, workspace_path: Path) -> Job:
     with _reservation_lock:
-        locked_user = db.scalar(select(User).where(User.id == user.id).with_for_update())
+        stmt = select(User).where(User.id == user.id)
+        # Apply SELECT ... FOR UPDATE row locking when supported
+        try:
+            stmt = stmt.with_for_update()
+            locked_user = db.scalar(stmt)
+        except Exception:
+            # Fallback for dialects/testing environments without FOR UPDATE support
+            locked_user = db.scalar(select(User).where(User.id == user.id))
+
         if locked_user is None:
             raise HTTPException(status_code=401, detail="Your account is no longer available.")
 
@@ -168,9 +176,11 @@ def reserve_job(db: Session, user: User, kind: str, workspace_path: Path) -> Job
                 detail=f"You have used your {limit} valuation(s) for this month. Upgrade your plan to continue.",
             )
 
+        tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
         job = Job(
             id=str(uuid4()),
             user_id=user.id,
+            tenant_id=tenant_id,
             kind=kind,
             status="pending",
             workspace_path=str(workspace_path.resolve()),

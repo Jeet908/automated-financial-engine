@@ -223,6 +223,7 @@ def verify_email(payload: TokenRequest, db: Session = Depends(get_db)) -> dict[s
         db.add(
             Subscription(
                 user_id=user.id,
+                tenant_id=user.tenant_id,
                 provider="trial",
                 plan_key="free_trial",
                 status="trialing",
@@ -396,6 +397,7 @@ async def google_callback(
         db.add(
             Subscription(
                 user_id=user.id,
+                tenant_id=user.tenant_id,
                 provider="trial",
                 plan_key="free_trial",
                 status="trialing",
@@ -428,6 +430,7 @@ def activate_trial(
         db.add(
             Subscription(
                 user_id=user.id,
+                tenant_id=user.tenant_id,
                 provider="trial",
                 plan_key="free_trial",
                 status="trialing",
