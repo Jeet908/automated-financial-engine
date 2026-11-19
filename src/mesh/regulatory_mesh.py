@@ -24,7 +24,7 @@ from src.portal.database import SectorBenchmark, get_sector_benchmark, save_sect
 
 logger = logging.getLogger(__name__)
 
-# Regional regulatory configurations & reference peers
+# Regional regulatory configurations & reference peers with Top-Quartile Distributions
 REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
     "US": {
         "Technology": {
@@ -35,6 +35,14 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 1.15,
             "risk_free_rate": 0.0425,  # 10Y US Treasury
             "equity_risk_premium": 0.055,
+            # Quartile distributions: p25 (top quartile for days), p50, p75 (top quartile for margins & roic)
+            "dso_p25": 42.0, "dso_p50": 58.0, "dso_p75": 75.0,
+            "dio_p25": 15.0, "dio_p50": 28.0, "dio_p75": 42.0,
+            "dpo_p25": 35.0, "dpo_p50": 48.0, "dpo_p75": 65.0,
+            "ccc_p25": 22.0, "ccc_p50": 38.0, "ccc_p75": 55.0,
+            "ebitda_margin_p25": 20.0, "ebitda_margin_p50": 28.0, "ebitda_margin_p75": 36.0,
+            "roic_p25": 14.0, "roic_p50": 20.0, "roic_p75": 30.0,
+            "roic_wacc_spread_bps_p25": 450.0, "roic_wacc_spread_bps_p50": 950.0, "roic_wacc_spread_bps_p75": 1800.0,
         },
         "Healthcare": {
             "source": "SEC EDGAR CompanyFacts (XBRL US GAAP)",
@@ -44,6 +52,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 0.75,
             "risk_free_rate": 0.0425,
             "equity_risk_premium": 0.050,
+            "dso_p25": 48.0, "dso_p50": 62.0, "dso_p75": 82.0,
+            "dio_p25": 55.0, "dio_p50": 78.0, "dio_p75": 110.0,
+            "dpo_p25": 40.0, "dpo_p50": 55.0, "dpo_p75": 75.0,
+            "ccc_p25": 60.0, "ccc_p50": 85.0, "ccc_p75": 120.0,
+            "ebitda_margin_p25": 16.0, "ebitda_margin_p50": 22.5, "ebitda_margin_p75": 30.0,
+            "roic_p25": 10.0, "roic_p50": 15.0, "roic_p75": 22.0,
+            "roic_wacc_spread_bps_p25": 200.0, "roic_wacc_spread_bps_p50": 650.0, "roic_wacc_spread_bps_p75": 1350.0,
         },
         "Consumer": {
             "source": "SEC EDGAR CompanyFacts (XBRL US GAAP)",
@@ -53,6 +68,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 0.65,
             "risk_free_rate": 0.0425,
             "equity_risk_premium": 0.050,
+            "dso_p25": 25.0, "dso_p50": 38.0, "dso_p75": 52.0,
+            "dio_p25": 35.0, "dio_p50": 50.0, "dio_p75": 70.0,
+            "dpo_p25": 45.0, "dpo_p50": 60.0, "dpo_p75": 80.0,
+            "ccc_p25": 15.0, "ccc_p50": 28.0, "ccc_p75": 45.0,
+            "ebitda_margin_p25": 12.0, "ebitda_margin_p50": 16.5, "ebitda_margin_p75": 23.0,
+            "roic_p25": 11.0, "roic_p50": 16.5, "roic_p75": 24.0,
+            "roic_wacc_spread_bps_p25": 250.0, "roic_wacc_spread_bps_p50": 750.0, "roic_wacc_spread_bps_p75": 1450.0,
         },
     },
     "INDIA": {
@@ -64,6 +86,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 0.88,
             "risk_free_rate": 0.0680,  # 10Y Indian G-Sec
             "equity_risk_premium": 0.065,
+            "dso_p25": 55.0, "dso_p50": 80.0, "dso_p75": 115.0,
+            "dio_p25": 60.0, "dio_p50": 95.0, "dio_p75": 140.0,
+            "dpo_p25": 50.0, "dpo_p50": 70.0, "dpo_p75": 95.0,
+            "ccc_p25": 65.0, "ccc_p50": 105.0, "ccc_p75": 160.0,
+            "ebitda_margin_p25": 18.0, "ebitda_margin_p50": 25.0, "ebitda_margin_p75": 32.0,
+            "roic_p25": 14.0, "roic_p50": 22.0, "roic_p75": 30.0,
+            "roic_wacc_spread_bps_p25": 350.0, "roic_wacc_spread_bps_p50": 900.0, "roic_wacc_spread_bps_p75": 1650.0,
         },
         "Technology": {
             "source": "BSE/NSE & Screener.in (Ind AS Schedule III)",
@@ -73,6 +102,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 0.95,
             "risk_free_rate": 0.0680,
             "equity_risk_premium": 0.065,
+            "dso_p25": 48.0, "dso_p50": 65.0, "dso_p75": 82.0,
+            "dio_p25": 10.0, "dio_p50": 20.0, "dio_p75": 35.0,
+            "dpo_p25": 30.0, "dpo_p50": 42.0, "dpo_p75": 58.0,
+            "ccc_p25": 25.0, "ccc_p50": 42.0, "ccc_p75": 60.0,
+            "ebitda_margin_p25": 18.5, "ebitda_margin_p50": 24.0, "ebitda_margin_p75": 29.5,
+            "roic_p25": 16.0, "roic_p50": 24.0, "roic_p75": 33.0,
+            "roic_wacc_spread_bps_p25": 450.0, "roic_wacc_spread_bps_p50": 1100.0, "roic_wacc_spread_bps_p75": 1950.0,
         },
         "Consumer & Food Processing": {
             "source": "BSE/NSE & Screener.in (Ind AS Schedule III)",
@@ -82,6 +118,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 0.72,
             "risk_free_rate": 0.0680,
             "equity_risk_premium": 0.060,
+            "dso_p25": 22.0, "dso_p50": 35.0, "dso_p75": 50.0,
+            "dio_p25": 30.0, "dio_p50": 48.0, "dio_p75": 72.0,
+            "dpo_p25": 42.0, "dpo_p50": 58.0, "dpo_p75": 78.0,
+            "ccc_p25": 10.0, "ccc_p50": 25.0, "ccc_p75": 45.0,
+            "ebitda_margin_p25": 13.0, "ebitda_margin_p50": 18.5, "ebitda_margin_p75": 25.0,
+            "roic_p25": 12.0, "roic_p50": 18.0, "roic_p75": 26.0,
+            "roic_wacc_spread_bps_p25": 250.0, "roic_wacc_spread_bps_p50": 750.0, "roic_wacc_spread_bps_p75": 1500.0,
         },
     },
     "UK_EU": {
@@ -93,6 +136,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 1.05,
             "risk_free_rate": 0.0410,  # 10Y UK Gilt / Bund
             "equity_risk_premium": 0.058,
+            "dso_p25": 45.0, "dso_p50": 60.0, "dso_p75": 78.0,
+            "dio_p25": 40.0, "dio_p50": 62.0, "dio_p75": 88.0,
+            "dpo_p25": 42.0, "dpo_p50": 58.0, "dpo_p75": 76.0,
+            "ccc_p25": 42.0, "ccc_p50": 64.0, "ccc_p75": 90.0,
+            "ebitda_margin_p25": 10.5, "ebitda_margin_p50": 15.0, "ebitda_margin_p75": 21.0,
+            "roic_p25": 8.5, "roic_p50": 13.5, "roic_p75": 19.5,
+            "roic_wacc_spread_bps_p25": 150.0, "roic_wacc_spread_bps_p50": 500.0, "roic_wacc_spread_bps_p75": 1100.0,
         },
         "Enterprise Software": {
             "source": "UK Companies House & ESEF iXBRL (IFRS)",
@@ -102,6 +152,13 @@ REGIONAL_SECTOR_CATALOG: Dict[str, Dict[str, Dict[str, Any]]] = {
             "median_beta": 1.10,
             "risk_free_rate": 0.0410,
             "equity_risk_premium": 0.058,
+            "dso_p25": 40.0, "dso_p50": 55.0, "dso_p75": 72.0,
+            "dio_p25": 12.0, "dio_p50": 24.0, "dio_p75": 38.0,
+            "dpo_p25": 32.0, "dpo_p50": 46.0, "dpo_p75": 62.0,
+            "ccc_p25": 20.0, "ccc_p50": 34.0, "ccc_p75": 50.0,
+            "ebitda_margin_p25": 19.0, "ebitda_margin_p50": 26.5, "ebitda_margin_p75": 34.0,
+            "roic_p25": 13.0, "roic_p50": 19.0, "roic_p75": 28.0,
+            "roic_wacc_spread_bps_p25": 400.0, "roic_wacc_spread_bps_p50": 950.0, "roic_wacc_spread_bps_p75": 1750.0,
         },
     },
 }
@@ -196,6 +253,27 @@ class RegulatoryDataMesh:
                             "risk_free_rate": info["risk_free_rate"],
                             "equity_risk_premium": info["equity_risk_premium"],
                             "peer_tickers_json": json.dumps(info["peers"]),
+                            "dso_p25": info.get("dso_p25", 35.0),
+                            "dso_p50": info.get("dso_p50", 52.0),
+                            "dso_p75": info.get("dso_p75", 75.0),
+                            "dio_p25": info.get("dio_p25", 25.0),
+                            "dio_p50": info.get("dio_p50", 45.0),
+                            "dio_p75": info.get("dio_p75", 70.0),
+                            "dpo_p25": info.get("dpo_p25", 30.0),
+                            "dpo_p50": info.get("dpo_p50", 45.0),
+                            "dpo_p75": info.get("dpo_p75", 65.0),
+                            "ccc_p25": info.get("ccc_p25", 25.0),
+                            "ccc_p50": info.get("ccc_p50", 50.0),
+                            "ccc_p75": info.get("ccc_p75", 85.0),
+                            "ebitda_margin_p25": info.get("ebitda_margin_p25", 12.0),
+                            "ebitda_margin_p50": info.get("ebitda_margin_p50", 18.0),
+                            "ebitda_margin_p75": info.get("ebitda_margin_p75", 26.0),
+                            "roic_p25": info.get("roic_p25", 9.0),
+                            "roic_p50": info.get("roic_p50", 15.0),
+                            "roic_p75": info.get("roic_p75", 22.0),
+                            "roic_wacc_spread_bps_p25": info.get("roic_wacc_spread_bps_p25", 150.0),
+                            "roic_wacc_spread_bps_p50": info.get("roic_wacc_spread_bps_p50", 550.0),
+                            "roic_wacc_spread_bps_p75": info.get("roic_wacc_spread_bps_p75", 1250.0),
                             "source_sha256": source_hash,
                         }
                         record = save_sector_benchmark(db_session, b_data)
@@ -242,6 +320,15 @@ def get_live_benchmark_multiples(region: str, sector: str) -> Dict[str, Any]:
                 "risk_free_rate": benchmark.risk_free_rate,
                 "equity_risk_premium": benchmark.equity_risk_premium,
                 "peers": json.loads(benchmark.peer_tickers_json or "[]"),
+                "quartiles": {
+                    "dso": {"p25": benchmark.dso_p25, "p50": benchmark.dso_p50, "p75": benchmark.dso_p75, "top_quartile": benchmark.dso_p25},
+                    "dio": {"p25": benchmark.dio_p25, "p50": benchmark.dio_p50, "p75": benchmark.dio_p75, "top_quartile": benchmark.dio_p25},
+                    "dpo": {"p25": benchmark.dpo_p25, "p50": benchmark.dpo_p50, "p75": benchmark.dpo_p75, "top_quartile": benchmark.dpo_p75},
+                    "ccc": {"p25": benchmark.ccc_p25, "p50": benchmark.ccc_p50, "p75": benchmark.ccc_p75, "top_quartile": benchmark.ccc_p25},
+                    "ebitda_margin": {"p25": benchmark.ebitda_margin_p25, "p50": benchmark.ebitda_margin_p50, "p75": benchmark.ebitda_margin_p75, "top_quartile": benchmark.ebitda_margin_p75},
+                    "roic": {"p25": benchmark.roic_p25, "p50": benchmark.roic_p50, "p75": benchmark.roic_p75, "top_quartile": benchmark.roic_p75},
+                    "roic_wacc_spread_bps": {"p25": benchmark.roic_wacc_spread_bps_p25, "p50": benchmark.roic_wacc_spread_bps_p50, "p75": benchmark.roic_wacc_spread_bps_p75, "top_quartile": benchmark.roic_wacc_spread_bps_p75},
+                },
                 "source_sha256": benchmark.source_sha256,
             }
 
@@ -267,6 +354,15 @@ def get_live_benchmark_multiples(region: str, sector: str) -> Dict[str, Any]:
             "risk_free_rate": sector_info["risk_free_rate"],
             "equity_risk_premium": sector_info["equity_risk_premium"],
             "peers": sector_info["peers"],
+            "quartiles": {
+                "dso": {"p25": sector_info.get("dso_p25", 35.0), "p50": sector_info.get("dso_p50", 52.0), "p75": sector_info.get("dso_p75", 75.0), "top_quartile": sector_info.get("dso_p25", 35.0)},
+                "dio": {"p25": sector_info.get("dio_p25", 25.0), "p50": sector_info.get("dio_p50", 45.0), "p75": sector_info.get("dio_p75", 70.0), "top_quartile": sector_info.get("dio_p25", 25.0)},
+                "dpo": {"p25": sector_info.get("dpo_p25", 30.0), "p50": sector_info.get("dpo_p50", 45.0), "p75": sector_info.get("dpo_p75", 65.0), "top_quartile": sector_info.get("dpo_p75", 65.0)},
+                "ccc": {"p25": sector_info.get("ccc_p25", 25.0), "p50": sector_info.get("ccc_p50", 50.0), "p75": sector_info.get("ccc_p75", 85.0), "top_quartile": sector_info.get("ccc_p25", 25.0)},
+                "ebitda_margin": {"p25": sector_info.get("ebitda_margin_p25", 12.0), "p50": sector_info.get("ebitda_margin_p50", 18.0), "p75": sector_info.get("ebitda_margin_p75", 26.0), "top_quartile": sector_info.get("ebitda_margin_p75", 26.0)},
+                "roic": {"p25": sector_info.get("roic_p25", 9.0), "p50": sector_info.get("roic_p50", 15.0), "p75": sector_info.get("roic_p75", 22.0), "top_quartile": sector_info.get("roic_p75", 22.0)},
+                "roic_wacc_spread_bps": {"p25": sector_info.get("roic_wacc_spread_bps_p25", 150.0), "p50": sector_info.get("roic_wacc_spread_bps_p50", 550.0), "p75": sector_info.get("roic_wacc_spread_bps_p75", 1250.0), "top_quartile": sector_info.get("roic_wacc_spread_bps_p75", 1250.0)},
+            },
             "source_sha256": "catalog_default",
         }
 
@@ -281,5 +377,14 @@ def get_live_benchmark_multiples(region: str, sector: str) -> Dict[str, Any]:
         "risk_free_rate": 0.045,
         "equity_risk_premium": 0.055,
         "peers": [],
+        "quartiles": {
+            "dso": {"p25": 35.0, "p50": 52.0, "p75": 75.0, "top_quartile": 35.0},
+            "dio": {"p25": 25.0, "p50": 45.0, "p75": 70.0, "top_quartile": 25.0},
+            "dpo": {"p25": 30.0, "p50": 45.0, "p75": 65.0, "top_quartile": 65.0},
+            "ccc": {"p25": 25.0, "p50": 50.0, "p75": 85.0, "top_quartile": 25.0},
+            "ebitda_margin": {"p25": 12.0, "p50": 18.0, "p75": 26.0, "top_quartile": 26.0},
+            "roic": {"p25": 9.0, "p50": 15.0, "p75": 22.0, "top_quartile": 22.0},
+            "roic_wacc_spread_bps": {"p25": 150.0, "p50": 550.0, "p75": 1250.0, "top_quartile": 1250.0},
+        },
         "source_sha256": "baseline_default",
     }

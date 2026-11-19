@@ -56,6 +56,8 @@ class PainPointReport:
     roic: ROICDiagnostic = field(default_factory=ROICDiagnostic)
     overall_health_score: float = 100.0  # 0–100, higher is healthier
     top_recommendation: str = ""
+    peer_benchmark_context: Dict[str, Any] = field(default_factory=dict)
+    total_alpha_unlock_pct: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -90,6 +92,8 @@ class PainPointReport:
             },
             "overall_health_score": round(self.overall_health_score, 1),
             "top_recommendation": self.top_recommendation,
+            "peer_benchmark_context": self.peer_benchmark_context,
+            "total_alpha_unlock_pct": round(self.total_alpha_unlock_pct, 2),
         }
 
 
@@ -259,10 +263,25 @@ def diagnose(model_data: Dict[str, Any], wacc: float = 0.10) -> PainPointReport:
     return report
 
 
-def diagnose_pain_points(model_or_data: Any, wacc: float = 0.10) -> List[Dict[str, Any]]:
+DEFAULT_QUARTILES: Dict[str, Dict[str, float]] = {
+    "dso": {"p25": 35.0, "p50": 52.0, "p75": 75.0, "top_quartile": 35.0},
+    "dio": {"p25": 25.0, "p50": 45.0, "p75": 70.0, "top_quartile": 25.0},
+    "dpo": {"p25": 30.0, "p50": 45.0, "p75": 65.0, "top_quartile": 65.0},
+    "ccc": {"p25": 25.0, "p50": 50.0, "p75": 85.0, "top_quartile": 25.0},
+    "ebitda_margin": {"p25": 12.0, "p50": 18.0, "p75": 26.0, "top_quartile": 26.0},
+    "roic": {"p25": 9.0, "p50": 15.0, "p75": 22.0, "top_quartile": 22.0},
+    "roic_wacc_spread_bps": {"p25": 150.0, "p50": 550.0, "p75": 1250.0, "top_quartile": 1250.0},
+}
+
+
+def diagnose_pain_points(
+    model_or_data: Any,
+    wacc: float = 0.10,
+    peer_benchmark: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Runs diagnostic and returns a ranked list of C-Suite pain point dictionaries
-    with keys: 'category', 'summary', 'growth_prescription', 'severity', 'metric_value'.
+    benchmarked against top-quartile global peers with quantified operational prescriptions.
     """
     if isinstance(model_or_data, dict):
         model_data = model_or_data
@@ -286,20 +305,108 @@ def diagnose_pain_points(model_or_data: Any, wacc: float = 0.10) -> List[Dict[st
 
     report = diagnose(model_data, wacc=wacc)
 
+    # Resolve peer benchmarks & quartile distributions
+    q_bench = DEFAULT_QUARTILES.copy()
+    if peer_benchmark and "quartiles" in peer_benchmark:
+        q_bench.update(peer_benchmark["quartiles"])
+    elif isinstance(model_data.get("peer_benchmark"), dict) and "quartiles" in model_data["peer_benchmark"]:
+        q_bench.update(model_data["peer_benchmark"]["quartiles"])
+
+    dso_q = q_bench.get("dso", DEFAULT_QUARTILES["dso"])
+    dio_q = q_bench.get("dio", DEFAULT_QUARTILES["dio"])
+    dpo_q = q_bench.get("dpo", DEFAULT_QUARTILES["dpo"])
+    ccc_q = q_bench.get("ccc", DEFAULT_QUARTILES["ccc"])
+    ebitda_q = q_bench.get("ebitda_margin", DEFAULT_QUARTILES["ebitda_margin"])
+    roic_q = q_bench.get("roic", DEFAULT_QUARTILES["roic"])
+    spread_q = q_bench.get("roic_wacc_spread_bps", DEFAULT_QUARTILES["roic_wacc_spread_bps"])
+
+    # Base figures for financial capitalization
+    revenue = model_data.get("revenue", model_data.get("is_revenue", []))
+    last_rev = _safe_last(revenue) if revenue else 100.0
+    ev_base = model_data.get("enterprise_value", last_rev * 2.0)
+    if not isinstance(ev_base, (int, float)) or ev_base <= 0:
+        ev_base = max(last_rev * 2.0, 1.0)
+    tax_rate = model_data.get("tax_rate", [0.25])
+    last_tax = _safe_last(tax_rate, 0.25)
+
+    # 1. Working Capital & CCC
+    ccc_val = report.ccc.ccc
+    ccc_top = ccc_q.get("top_quartile", ccc_q.get("p25", 25.0))
+    ccc_median = ccc_q.get("p50", 50.0)
+    ccc_gap = round(max(0.0, ccc_val - ccc_top), 1)
+    ccc_ev_unlock = round((report.ccc.ev_unlock_pct / 100.0) * ev_base, 2)
+    ccc_alpha_pct = round(report.ccc.ev_unlock_pct, 2)
+
+    # 2. Operating Margins
+    margin_val = report.margin.ebitda_margin
+    margin_top = ebitda_q.get("top_quartile", ebitda_q.get("p75", 26.0))
+    margin_median = ebitda_q.get("p50", 18.0)
+    margin_gap = round(max(0.0, margin_top - margin_val), 2)
+    margin_ebitda_opp = round((margin_gap / 100.0) * last_rev, 2) if margin_gap > 0 else round(report.margin.uplift_potential, 2)
+    margin_ev_unlock = round(((margin_ebitda_opp * (1.0 - last_tax)) / wacc) if wacc > 0 else (margin_ebitda_opp * 8.0), 2)
+    margin_alpha_pct = round((margin_ev_unlock / ev_base * 100.0), 2) if ev_base > 0 else 0.0
+
+    # 3. Capital Allocation / ROIC vs WACC
+    roic_val = report.roic.roic_pct
+    roic_top = roic_q.get("top_quartile", roic_q.get("p75", 22.0))
+    roic_median = roic_q.get("p50", 15.0)
+    roic_gap = round(max(0.0, roic_top - roic_val), 2)
+    roic_ebitda_opp = round(max(0.0, (wacc * 100.0 - roic_val) / 100.0 * report.roic.invested_capital), 2) if report.roic.value_destruction else 0.0
+    roic_ev_unlock = round(report.roic.invested_capital * (roic_gap / 100.0), 2)
+    roic_alpha_pct = round((roic_ev_unlock / ev_base * 100.0), 2) if ev_base > 0 else 0.0
+
     items = [
         {
             "category": "Working Capital & CCC",
             "summary": f"Cash Conversion Cycle is {report.ccc.ccc:.1f} days with {report.ccc.cash_trapped_cr:,.1f} trapped in working capital.",
-            "growth_prescription": f"Compress receivable DSO & inventory DIO by 8-10 days to unlock ~{report.ccc.fcf_unlock_pct:.1f}% incremental FCF.",
+            "growth_prescription": f"Compress receivable DSO & inventory DIO to reach top-quartile {ccc_top:.1f} days, unlocking ~{report.ccc.fcf_unlock_pct:.1f}% incremental FCF.",
             "severity": report.ccc.severity,
             "metric_value": report.ccc.ccc,
+            "client_value": round(ccc_val, 1),
+            "peer_median": round(ccc_median, 1),
+            "peer_top_quartile": round(ccc_top, 1),
+            "gap_to_top_quartile": ccc_gap,
+            "cash_trapped": round(report.ccc.cash_trapped_cr, 2),
+            "annual_ebitda_opportunity": 0.0,
+            "implied_ev_unlock": ccc_ev_unlock,
+            "valuation_alpha_pct": ccc_alpha_pct,
+            "owner_role": "CFO / Credit Ops & Treasury",
+            "action_playbook": "Shorten customer credit terms from net-60 to net-30, deploy automated dunning, and shift supplier purchases to dynamic discounting.",
+            "dso_breakdown": {
+                "client_value": report.ccc.dso,
+                "peer_median": dso_q.get("p50", 52.0),
+                "peer_top_quartile": dso_q.get("top_quartile", 35.0),
+                "gap": round(max(0.0, report.ccc.dso - dso_q.get("top_quartile", 35.0)), 1),
+            },
+            "dio_breakdown": {
+                "client_value": report.ccc.dio,
+                "peer_median": dio_q.get("p50", 45.0),
+                "peer_top_quartile": dio_q.get("top_quartile", 25.0),
+                "gap": round(max(0.0, report.ccc.dio - dio_q.get("top_quartile", 25.0)), 1),
+            },
+            "dpo_breakdown": {
+                "client_value": report.ccc.dpo,
+                "peer_median": dpo_q.get("p50", 45.0),
+                "peer_top_quartile": dpo_q.get("top_quartile", 65.0),
+                "gap": round(max(0.0, dpo_q.get("top_quartile", 65.0) - report.ccc.dpo), 1),
+            },
         },
         {
             "category": "Operating Margins",
             "summary": f"EBITDA margin currently at {report.margin.ebitda_margin:.1f}% (COGS: {report.margin.cogs_pct:.1f}%, SG&A: {report.margin.sga_pct:.1f}%).",
-            "growth_prescription": f"Implement procurement discipline to reach target EBITDA margin of {report.margin.target_ebitda_margin:.1f}% (+{report.margin.uplift_potential:,.1f} uplift).",
+            "growth_prescription": f"Implement procurement discipline to reach peer top-quartile EBITDA margin of {margin_top:.1f}% (+{margin_ebitda_opp:,.1f} annual opportunity).",
             "severity": report.margin.severity,
             "metric_value": report.margin.ebitda_margin,
+            "client_value": round(margin_val, 2),
+            "peer_median": round(margin_median, 2),
+            "peer_top_quartile": round(margin_top, 2),
+            "gap_to_top_quartile": margin_gap,
+            "cash_trapped": 0.0,
+            "annual_ebitda_opportunity": margin_ebitda_opp,
+            "implied_ev_unlock": margin_ev_unlock,
+            "valuation_alpha_pct": margin_alpha_pct,
+            "owner_role": "COO / Procurement & Commercial Ops",
+            "action_playbook": "Renegotiate Tier-1 direct raw materials contracts, trim redundant SaaS tooling overhead, and automate quote-to-cash workflows.",
         },
         {
             "category": "Capital Allocation",
@@ -307,10 +414,23 @@ def diagnose_pain_points(model_or_data: Any, wacc: float = 0.10) -> List[Dict[st
             "growth_prescription": report.roic.optimal_capex_reallocation,
             "severity": report.roic.severity,
             "metric_value": report.roic.roic_pct,
+            "client_value": round(roic_val, 2),
+            "peer_median": round(roic_median, 2),
+            "peer_top_quartile": round(roic_top, 2),
+            "gap_to_top_quartile": roic_gap,
+            "cash_trapped": 0.0,
+            "annual_ebitda_opportunity": roic_ebitda_opp,
+            "implied_ev_unlock": roic_ev_unlock,
+            "valuation_alpha_pct": roic_alpha_pct,
+            "owner_role": "CFO / Head of Strategy & Treasury",
+            "action_playbook": "Halt capital allocation to sub-WACC expansion projects, prioritize debt retirement to eliminate negative spread drag, and enforce strict hurdle rates.",
         },
     ]
 
     severity_order = {"high": 0, "medium": 1, "low": 2}
-    items.sort(key=lambda x: severity_order.get(x["severity"], 3))
+    items.sort(key=lambda x: (severity_order.get(x["severity"], 3), -x.get("implied_ev_unlock", 0.0)))
+    for rank, item in enumerate(items, start=1):
+        item["priority_rank"] = rank
+
     return items
 

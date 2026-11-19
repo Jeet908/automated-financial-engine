@@ -59,6 +59,12 @@ from tests.test_regulatory_erp_mesh import (
     test_erp_oauth_and_sync_api_routes,
     test_end_to_end_monthly_board_pack_execution,
 )
+from tests.test_alpha_and_vaas_api import (
+    test_top_quartile_peer_benchmarking_math,
+    test_diagnostics_what_if_and_invariants,
+    test_scoped_api_key_lifecycle_and_metering,
+    test_api_keys_management_and_usage_endpoints,
+)
 
 
 def main():
@@ -97,6 +103,10 @@ def main():
         ("All 5 Read-Only ERP Adapters & Invariant Parity (0.00 Err)", test_all_five_erp_adapters_and_invariant_equilibriums),
         ("ERP OAuth Connect, State Signing & Sync Routes", test_erp_oauth_and_sync_api_routes),
         ("Automated Monthly Board Pack Compilation & Alerts", test_end_to_end_monthly_board_pack_execution),
+        ("Top-Quartile Global Peer Benchmarking & Alpha Prescriptions", test_top_quartile_peer_benchmarking_math),
+        ("What-If Operational Alpha Simulation (0.00 Discrepancy)", test_diagnostics_what_if_and_invariants),
+        ("Scoped API Key Vault, Rate-Limiting & Metered Events", test_scoped_api_key_lifecycle_and_metering),
+        ("Metered VaaS Endpoints & Usage Quota Breakdown", test_api_keys_management_and_usage_endpoints),
     ]
 
     print("=" * 70)

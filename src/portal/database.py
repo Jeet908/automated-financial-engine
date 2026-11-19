@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
+import secrets
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -142,8 +144,67 @@ class SectorBenchmark(Base):
     risk_free_rate: Mapped[float] = mapped_column(Float, default=0.045)
     equity_risk_premium: Mapped[float] = mapped_column(Float, default=0.055)
     peer_tickers_json: Mapped[str] = mapped_column(Text, default="[]")
+
+    # Quartile Distributions (p25, p50_median, p75_top_quartile)
+    dso_p25: Mapped[float] = mapped_column(Float, default=35.0)  # Top quartile (lower is better)
+    dso_p50: Mapped[float] = mapped_column(Float, default=52.0)
+    dso_p75: Mapped[float] = mapped_column(Float, default=75.0)
+
+    dio_p25: Mapped[float] = mapped_column(Float, default=25.0)  # Top quartile (lower is better)
+    dio_p50: Mapped[float] = mapped_column(Float, default=45.0)
+    dio_p75: Mapped[float] = mapped_column(Float, default=70.0)
+
+    dpo_p25: Mapped[float] = mapped_column(Float, default=30.0)
+    dpo_p50: Mapped[float] = mapped_column(Float, default=45.0)
+    dpo_p75: Mapped[float] = mapped_column(Float, default=65.0)  # Top quartile (higher is better)
+
+    ccc_p25: Mapped[float] = mapped_column(Float, default=25.0)  # Top quartile (lower is better)
+    ccc_p50: Mapped[float] = mapped_column(Float, default=50.0)
+    ccc_p75: Mapped[float] = mapped_column(Float, default=85.0)
+
+    ebitda_margin_p25: Mapped[float] = mapped_column(Float, default=12.0)
+    ebitda_margin_p50: Mapped[float] = mapped_column(Float, default=18.0)
+    ebitda_margin_p75: Mapped[float] = mapped_column(Float, default=26.0)  # Top quartile (higher is better)
+
+    roic_p25: Mapped[float] = mapped_column(Float, default=9.0)
+    roic_p50: Mapped[float] = mapped_column(Float, default=15.0)
+    roic_p75: Mapped[float] = mapped_column(Float, default=22.0)  # Top quartile (higher is better)
+
+    roic_wacc_spread_bps_p25: Mapped[float] = mapped_column(Float, default=150.0)
+    roic_wacc_spread_bps_p50: Mapped[float] = mapped_column(Float, default=550.0)
+    roic_wacc_spread_bps_p75: Mapped[float] = mapped_column(Float, default=1250.0)  # Top quartile (higher is better)
+
     source_sha256: Mapped[str] = mapped_column(String(64))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class APIKey(Base):
+    __tablename__ = "api_keys"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    name: Mapped[str] = mapped_column(String(128))
+    key_prefix: Mapped[str] = mapped_column(String(32), index=True)  # e.g., "ml_live_a1b2c3"
+    key_hash: Mapped[str] = mapped_column(String(64), index=True, unique=True)  # SHA-256
+    scopes: Mapped[str] = mapped_column(String(512), default='["model:write", "diagnostics:read", "audit:read"]')
+    rate_limit_per_min: Mapped[int] = mapped_column(Integer, default=60)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class APIUsageEvent(Base):
+    __tablename__ = "api_usage_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), index=True)
+    api_key_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("api_keys.id", ondelete="SET NULL"), nullable=True, index=True)
+    job_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    endpoint: Mapped[str] = mapped_column(String(128), index=True)
+    http_status: Mapped[int] = mapped_column(Integer, default=200)
+    compute_ms: Mapped[float] = mapped_column(Float, default=0.0)
+    billable_units: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
 
 
 class ERPConnection(Base):
@@ -417,6 +478,142 @@ def delete_tenant_erp_connection(session, connection_id: str, tenant_id: str) ->
     session.delete(conn)
     session.commit()
     return True
+
+
+# ---------------------------------------------------------------------------
+# Scoped API Key Management & Metered Usage Helpers
+# ---------------------------------------------------------------------------
+def create_api_key(
+    session,
+    tenant_id: str,
+    name: str,
+    scopes: list[str] | None = None,
+    rate_limit_per_min: int = 60,
+) -> tuple[APIKey, str]:
+    """
+    Creates a new scoped API key for an authenticated tenant.
+    Returns (api_key_record, full_secret_key). The full secret key is never stored in plaintext.
+    """
+    raw_secret = "ml_live_" + secrets.token_urlsafe(32)
+    key_prefix = raw_secret[:14]  # e.g. ml_live_a1b2c3
+    key_hash = hashlib.sha256(raw_secret.encode("utf-8")).hexdigest()
+
+    if scopes is None:
+        scopes = ["model:write", "diagnostics:read", "audit:read"]
+
+    record = APIKey(
+        tenant_id=tenant_id,
+        name=name,
+        key_prefix=key_prefix,
+        key_hash=key_hash,
+        scopes=json.dumps(scopes),
+        rate_limit_per_min=rate_limit_per_min,
+        created_at=utc_now(),
+    )
+    session.add(record)
+    session.commit()
+    return record, raw_secret
+
+
+def get_api_key_by_hash(session, key_hash: str) -> APIKey | None:
+    """Lookup an API key by its deterministic SHA-256 hash."""
+    return session.query(APIKey).filter(APIKey.key_hash == key_hash).first()
+
+
+def list_tenant_api_keys(session, tenant_id: str) -> list[APIKey]:
+    """Lists all active and revoked API keys strictly belonging to a tenant."""
+    return (
+        session.query(APIKey)
+        .filter(APIKey.tenant_id == tenant_id)
+        .order_by(APIKey.created_at.desc())
+        .all()
+    )
+
+
+def get_tenant_api_key(session, key_id: str, tenant_id: str) -> APIKey | None:
+    """Fetches an API key ensuring strict tenant row isolation."""
+    return (
+        session.query(APIKey)
+        .filter(APIKey.id == key_id, APIKey.tenant_id == tenant_id)
+        .first()
+    )
+
+
+def revoke_tenant_api_key(session, key_id: str, tenant_id: str) -> bool:
+    """Immediately revokes an API key for the tenant."""
+    record = get_tenant_api_key(session, key_id, tenant_id)
+    if not record or record.revoked_at is not None:
+        return False
+    record.revoked_at = utc_now()
+    session.commit()
+    return True
+
+
+def record_api_usage(
+    session,
+    tenant_id: str,
+    endpoint: str,
+    http_status: int = 200,
+    api_key_id: str | None = None,
+    job_id: str | None = None,
+    compute_ms: float = 0.0,
+    billable_units: int = 1,
+) -> APIUsageEvent:
+    """Records an API usage event for metering and billing."""
+    event = APIUsageEvent(
+        tenant_id=tenant_id,
+        api_key_id=api_key_id,
+        job_id=job_id,
+        endpoint=endpoint,
+        http_status=http_status,
+        compute_ms=round(compute_ms, 2),
+        billable_units=billable_units,
+        created_at=utc_now(),
+    )
+    session.add(event)
+    session.commit()
+    return event
+
+
+def get_tenant_api_usage_summary(session, tenant_id: str) -> dict[str, Any]:
+    """Aggregates monthly metered usage events, billable units, and latency breakdown."""
+    start_of_month = utc_now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    events = (
+        session.query(APIUsageEvent)
+        .filter(APIUsageEvent.tenant_id == tenant_id, APIUsageEvent.created_at >= start_of_month)
+        .all()
+    )
+    total_units = sum(e.billable_units for e in events)
+    total_requests = len(events)
+    avg_latency = (sum(e.compute_ms for e in events) / total_requests) if total_requests > 0 else 0.0
+
+    endpoint_breakdown: dict[str, dict[str, Any]] = {}
+    for e in events:
+        ep = e.endpoint
+        if ep not in endpoint_breakdown:
+            endpoint_breakdown[ep] = {"count": 0, "billable_units": 0, "total_ms": 0.0}
+        endpoint_breakdown[ep]["count"] += 1
+        endpoint_breakdown[ep]["billable_units"] += e.billable_units
+        endpoint_breakdown[ep]["total_ms"] += e.compute_ms
+
+    formatted_breakdown = [
+        {
+            "endpoint": ep,
+            "requests": data["count"],
+            "billable_units": data["billable_units"],
+            "avg_latency_ms": round(data["total_ms"] / data["count"], 2) if data["count"] > 0 else 0.0,
+        }
+        for ep, data in endpoint_breakdown.items()
+    ]
+
+    return {
+        "tenant_id": tenant_id,
+        "current_period_start": start_of_month.isoformat(),
+        "total_billable_units": total_units,
+        "total_requests": total_requests,
+        "average_compute_ms": round(avg_latency, 2),
+        "endpoint_breakdown": formatted_breakdown,
+    }
 
 
 def get_db():

@@ -29,9 +29,10 @@ from .database import (
     get_tenant_job,
     init_database,
     list_tenant_jobs,
+    record_api_usage,
     utc_now,
 )
-from .dependencies import get_verified_user
+from .dependencies import AuthContext, get_verified_user, optional_audit_auth, require_model_write
 from .plans import account_summary, reserve_job
 from .security import check_csrf
 
@@ -95,10 +96,11 @@ def live_scrape(
     payload: LiveScrapeRequest,
     request: Request,
     background_tasks: BackgroundTasks,
-    user: User = Depends(get_verified_user),
+    auth: AuthContext = Depends(require_model_write),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     check_csrf(request)
+    user = auth.user
     job_id = str(uuid4())
     workspace = _job_workspace(user.id, job_id)
     job = reserve_job(db, user, "live_scrape", workspace)
@@ -108,6 +110,18 @@ def live_scrape(
         logger.exception("Could not allocate private workspace for job %s.", job.id)
         _update_job(job.id, status="failed", error_code="workspace_unavailable")
         raise HTTPException(status_code=503, detail="Private report storage is temporarily unavailable.")
+
+    # Record API usage event for metering
+    record_api_usage(
+        db,
+        tenant_id=auth.tenant_id,
+        endpoint="/api/v1/model/live-scrape",
+        http_status=202,
+        api_key_id=getattr(auth.api_key, "id", None),
+        job_id=job.id,
+        compute_ms=5.0,
+        billable_units=1,
+    )
 
     # Celery dispatch with non-blocking fallback
     use_celery = bool(os.environ.get("REDIS_URL")) and celery_app is not None
@@ -131,10 +145,11 @@ async def generate_pack(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    user: User = Depends(get_verified_user),
+    auth: AuthContext = Depends(require_model_write),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     check_csrf(request)
+    user = auth.user
     filename = Path(file.filename or "upload").name
     extension = Path(filename).suffix.lower()
     if extension not in SUPPORTED_EXTS:
@@ -151,6 +166,18 @@ async def generate_pack(
         logger.exception("Could not allocate private workspace for uploaded job %s.", job.id)
         _update_job(job.id, status="failed", error_code="workspace_unavailable")
         raise HTTPException(status_code=503, detail="Private report storage is temporarily unavailable.")
+
+    # Record API usage event for metering
+    record_api_usage(
+        db,
+        tenant_id=auth.tenant_id,
+        endpoint="/api/v1/model/generate-pack",
+        http_status=202,
+        api_key_id=getattr(auth.api_key, "id", None),
+        job_id=job.id,
+        compute_ms=10.0,
+        billable_units=1,
+    )
 
     input_path = workspace / "client_inbox" / f"source{extension}"
     input_path.parent.mkdir(parents=True, exist_ok=True)
@@ -318,17 +345,31 @@ class VerifyHashRequest(BaseModel):
 @router.get("/audit/verify/{job_id}")
 def verify_audit_ledger_by_job(
     job_id: str,
+    audit_auth: Optional[AuthContext] = Depends(optional_audit_auth),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """
     Public Big-4 verifiability endpoint.
     Returns the deterministic SHA-256 Merkle Provenance Tree and 6-gate invariant status.
+    Accepts browser session or scoped API key (audit:read).
     """
     entry = get_audit_ledger_entry(db, job_id=job_id)
     if entry is None:
         raise HTTPException(
             status_code=404,
             detail=f"Cryptographic audit record not found for job {job_id}.",
+        )
+
+    if audit_auth:
+        record_api_usage(
+            db,
+            tenant_id=audit_auth.tenant_id,
+            endpoint=f"/api/v1/audit/verify/{job_id}",
+            http_status=200,
+            api_key_id=getattr(audit_auth.api_key, "id", None),
+            job_id=job_id,
+            compute_ms=1.0,
+            billable_units=0,
         )
 
     manifest = json.loads(entry.lineage_manifest_json or "{}")

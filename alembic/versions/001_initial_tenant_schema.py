@@ -172,6 +172,41 @@ def upgrade() -> None:
     op.create_index("ix_erp_connections_provider", "erp_connections", ["provider"])
     op.create_index("ix_erp_connections_status", "erp_connections", ["status"])
 
+    # API Keys
+    op.create_table(
+        "api_keys",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("tenant_id", sa.String(length=36), nullable=False),
+        sa.Column("name", sa.String(length=128), nullable=False),
+        sa.Column("key_prefix", sa.String(length=32), nullable=False),
+        sa.Column("key_hash", sa.String(length=64), nullable=False),
+        sa.Column("scopes", sa.String(length=512), nullable=False),
+        sa.Column("rate_limit_per_min", sa.Integer(), nullable=False, server_default="60"),
+        sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_api_keys_tenant_id", "api_keys", ["tenant_id"])
+    op.create_index("ix_api_keys_key_hash", "api_keys", ["key_hash"], unique=True)
+    op.create_index("ix_api_keys_key_prefix", "api_keys", ["key_prefix"])
+
+    # API Usage Events
+    op.create_table(
+        "api_usage_events",
+        sa.Column("id", sa.String(length=36), primary_key=True),
+        sa.Column("tenant_id", sa.String(length=36), nullable=False),
+        sa.Column("api_key_id", sa.String(length=36), sa.ForeignKey("api_keys.id", ondelete="SET NULL"), nullable=True),
+        sa.Column("job_id", sa.String(length=36), nullable=True),
+        sa.Column("endpoint", sa.String(length=128), nullable=False),
+        sa.Column("http_status", sa.Integer(), nullable=False, server_default="200"),
+        sa.Column("compute_ms", sa.Float(), nullable=False, server_default="0.0"),
+        sa.Column("billable_units", sa.Integer(), nullable=False, server_default="1"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_index("ix_api_usage_events_tenant_id", "api_usage_events", ["tenant_id"])
+    op.create_index("ix_api_usage_events_api_key_id", "api_usage_events", ["api_key_id"])
+    op.create_index("ix_api_usage_events_endpoint", "api_usage_events", ["endpoint"])
+
     # PostgreSQL Row Level Security (RLS) enforcement
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
