@@ -9,6 +9,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
@@ -79,6 +80,10 @@ app.include_router(erp_routes.router)
 app.include_router(api_keys.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(index_routes.router)
+
+STATIC_DIR = PROJECT_ROOT / "src" / "portal" / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.middleware("http")

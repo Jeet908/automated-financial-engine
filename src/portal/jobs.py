@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
+from starlette.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ from src.workers.celery_app import celery_app
 from src.workers.tasks import generate_pack_task, live_scrape_task
 
 from . import database
+from .progress_bus import subscribe_job_progress
 from .database import (
     DATA_DIR,
     AuditLedgerEntry,
@@ -268,6 +270,33 @@ def get_job(
         ),
         "result": result,
     }
+
+
+@router.get("/jobs/{job_id}/stream")
+async def stream_job_progress(
+    job_id: str,
+    request: Request,
+    auth: AuthContext = Depends(require_scope("model:read", allow_guest=True)),
+    db: Session = Depends(get_db),
+):
+    """
+    Real-time Server-Sent Events (SSE) progress pipeline for valuation jobs.
+    Streams computational telemetry milestones (15%, 32%, 50%, 70%, 88%, 96%, 100%)
+    with 15-second heartbeats and proxy-buffering disabling headers.
+    """
+    user = auth.user
+    tenant_id = auth.tenant_id
+    job = get_tenant_job(db, job_id, tenant_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Valuation job not found.")
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    }
+    generator = subscribe_job_progress(job_id, request=request)
+    return StreamingResponse(generator, media_type="text/event-stream", headers=headers)
 
 
 @router.get("/jobs")

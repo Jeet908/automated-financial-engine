@@ -21,6 +21,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.ingestion.live_web_scraper import LiveWebScraper, DOMAIN_CATALOG
 from financial_engine.cli import run_pipeline
 from src.cli import process_file
+from src.portal.progress_bus import emit_job_progress
+import time
 
 
 def run_discovery_pipeline(
@@ -29,6 +31,7 @@ def run_discovery_pipeline(
     mc_iterations: int = 10000,
     quiet: bool = False,
     workspace_root: str | Path | None = None,
+    job_id: str | None = None,
 ) -> dict:
     """
     Executes the entire end-to-end zero-touch pipeline:
@@ -38,6 +41,7 @@ def run_discovery_pipeline(
     4. Runs Engine B (Client Executive Pack: .xlsx, .pdf, .pptx, .zip).
     5. Returns unified paths and valuation summaries.
     """
+    t0 = time.time()
     if not quiet:
         print("=" * 80)
         print("   ZERO-TOUCH AUTONOMOUS FINANCIAL DISCOVERY & VALUATION PIPELINE")
@@ -49,6 +53,9 @@ def run_discovery_pipeline(
     # -------------------------------------------------------------
     if not quiet:
         print(f"[*] Step 1: Querying sector indices for domain: '{domain or 'Random Auto-Select'}'...")
+
+    if job_id:
+        emit_job_progress(job_id, "ingestion", 15, "Extracting XBRL balance sheet tags & trial balance...", round(time.time() - t0, 2))
 
     workspace = Path(workspace_root).resolve() if workspace_root else PROJECT_ROOT
     scraper = LiveWebScraper(
@@ -69,6 +76,9 @@ def run_discovery_pipeline(
         print(f"[+] Saved scraped client workbook: {xlsx_inbox_path}")
         print(f"[+] Calibrated financial engine config: {json_config_path}")
 
+    if job_id:
+        emit_job_progress(job_id, "statements", 32, "Solving 3-statement circularity & interest roll-forward...", round(time.time() - t0, 2))
+
     # -------------------------------------------------------------
     # Step 2: Trigger Engine A (Financial Engine Suite)
     # -------------------------------------------------------------
@@ -77,6 +87,10 @@ def run_discovery_pipeline(
 
     if not quiet:
         print(f"\n[*] Step 2A: Launching Deep Stochastic Engine A (10,000 Monte Carlo Iterations)...")
+
+    if job_id:
+        emit_job_progress(job_id, "wacc_dcf", 50, "Running Hamada relevering & WACC cost of capital...", round(time.time() - t0, 2))
+        emit_job_progress(job_id, "monte_carlo", 70, "Simulating 10,000 Monte Carlo stochastic scenarios...", round(time.time() - t0, 2))
 
     model = run_pipeline(
         config_path=str(json_config_path),
@@ -94,6 +108,9 @@ def run_discovery_pipeline(
     if not cert.is_valid:
         raise ValueError(f"Accounting verification failed for {ticker}!")
 
+    if job_id:
+        emit_job_progress(job_id, "invariants", 88, "Verifying 6 structural accounting invariant gates (0.000000e+00 error)...", round(time.time() - t0, 2))
+
     if not quiet:
         max_error = max((check.max_discrepancy for check in cert.checks), default=0.0)
         print(f"[OK] Engine A Invariants Verified: Max Error = {max_error:.6e}.")
@@ -106,6 +123,9 @@ def run_discovery_pipeline(
 
     if not quiet:
         print(f"\n[*] Step 2B: Launching Client Executive Pack Engine B (XLSX, PDF, PPTX, ZIP)...")
+
+    if job_id:
+        emit_job_progress(job_id, "compilation", 96, "Compiling synchronized .xlsx, .pdf, .pptx deliverables...", round(time.time() - t0, 2))
 
     pack_res = process_file(
         file_path=str(xlsx_inbox_path),

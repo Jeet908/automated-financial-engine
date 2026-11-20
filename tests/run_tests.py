@@ -83,6 +83,18 @@ from tests.test_benchmarks_and_indices import (
     test_guest_live_valuation_end_to_end,
     test_zero_proprietary_ip_leaks,
 )
+from tests.test_sse_progress_stream import (
+    test_progress_bus_in_memory_and_replay,
+    test_sse_stream_endpoint_and_headers,
+    test_sse_stream_tenant_isolation_404,
+    test_milestone_instrumentation_live_scrape,
+)
+from tests.test_static_modules import (
+    test_static_modules_served_with_correct_mime,
+    test_index_html_uses_es_module_architecture,
+    test_csp_header_permits_self_scripts,
+    test_es_module_cross_imports,
+)
 
 
 def main():
@@ -139,6 +151,14 @@ def main():
         ("Daily 00:00 UTC Public Sector Index Celery Task", test_daily_index_celery_task),
         ("Guest Live Valuation & Deliverables E2E Flow", test_guest_live_valuation_end_to_end),
         ("Zero Proprietary IP Leaks Verification", test_zero_proprietary_ip_leaks),
+        ("SSE Real-Time Progress Bus & History Replay", test_progress_bus_in_memory_and_replay),
+        ("SSE Stream Endpoint Headers & Keep-Alive", test_sse_stream_endpoint_and_headers),
+        ("SSE Stream Cross-Tenant Isolation (404/403)", test_sse_stream_tenant_isolation_404),
+        ("Valuation Engine 6-Milestone Progression", test_milestone_instrumentation_live_scrape),
+        ("FastAPI Static ES-Module Serving & MIME Types", test_static_modules_served_with_correct_mime),
+        ("HTML ES-Module Integration & Zero Inline Handlers", test_index_html_uses_es_module_architecture),
+        ("Content Security Policy 'self' Script Permission", test_csp_header_permits_self_scripts),
+        ("ES-Module Cross-Dependency Contract Integrity", test_es_module_cross_imports),
     ]
 
     print("=" * 70)
