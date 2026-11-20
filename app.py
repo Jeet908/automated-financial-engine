@@ -6,13 +6,13 @@ import os
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
-from src.portal import api_keys, auth, billing, diagnostics_routes, erp_routes, jobs, saml_sso
+from src.portal import api_keys, auth, billing, diagnostics_routes, erp_routes, index_routes, jobs, saml_sso
 from src.portal.database import database_ready, get_storage_backend, init_database
 from src.portal.mailer import email_delivery_configured
 from src.portal.security import SESSION_COOKIE, load_session_secret
@@ -70,6 +70,42 @@ async def security_headers(request: Request, call_next):
     return response
 
 
+PUBLIC_ALLOWED_ORIGINS = {
+    "https://www.marketlensanalytics.in",
+    "https://app.marketlensanalytics.in",
+    "http://localhost:3000",
+    "http://testserver",
+}
+
+
+@app.middleware("http")
+async def public_api_cors_middleware(request: Request, call_next):
+    """
+    Enables CORS on /api/v1/public/* specifically for www.marketlensanalytics.in,
+    while keeping private /api/v1/model/*, /api/v1/erp/*, and /api/v1/keys/* strictly locked down.
+    """
+    if request.url.path.startswith("/api/v1/public/"):
+        origin = request.headers.get("origin")
+        is_allowed = origin in PUBLIC_ALLOWED_ORIGINS or (bool(origin) and origin.endswith(".marketlensanalytics.in"))
+        if request.method == "OPTIONS":
+            response = Response(status_code=200)
+            if is_allowed and origin:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
+                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+                response.headers["Access-Control-Max-Age"] = "86400"
+            return response
+
+        response = await call_next(request)
+        if is_allowed and origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        return response
+
+    return await call_next(request)
+
+
 app.include_router(auth.router)
 app.include_router(saml_sso.router)
 app.include_router(billing.router)
@@ -77,6 +113,7 @@ app.include_router(jobs.router)
 app.include_router(erp_routes.router)
 app.include_router(api_keys.router)
 app.include_router(diagnostics_routes.router)
+app.include_router(index_routes.router)
 
 # OpenTelemetry FastAPI Auto-Instrumentation (safe no-op when package not installed)
 try:

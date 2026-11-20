@@ -73,6 +73,13 @@ from tests.test_billing_sso_and_gating import (
     test_tier_gating_feature_matrix_and_403_rejection,
     test_health_endpoint_monetization_features,
 )
+from tests.test_benchmarks_and_indices import (
+    test_accounting_benchmark_runner_and_reports,
+    test_public_indices_api_endpoints_and_zero_tenant_data,
+    test_public_indices_html_pages_and_cors,
+    test_wordpress_sync_resilience_and_payload_formatting,
+    test_daily_index_celery_task,
+)
 
 
 def main():
@@ -121,6 +128,11 @@ def main():
         ("Frictionless 1-Valuation Guest Preview & 401 Gating", test_frictionless_guest_1_valuation_and_401_limit),
         ("Strict Plan Tier Gating (require_plan_feature) Matrix", test_tier_gating_feature_matrix_and_403_rejection),
         ("Monetization & Identity Security Health Verification", test_health_endpoint_monetization_features),
+        ("Open-Source 6-Gate Invariant Benchmark (0.00 Err & Report)", test_accounting_benchmark_runner_and_reports),
+        ("Public Sector Valuation Indices API (Zero Tenant Exposure)", test_public_indices_api_endpoints_and_zero_tenant_data),
+        ("Public SEO Index Pages (/indices) & Targeted CORS", test_public_indices_html_pages_and_cors),
+        ("WordPress REST API Sync & Market Brief Formatter", test_wordpress_sync_resilience_and_payload_formatting),
+        ("Daily 00:00 UTC Public Sector Index Celery Task", test_daily_index_celery_task),
     ]
 
     print("=" * 70)

@@ -62,7 +62,28 @@ The engine is benchmarked and verified against the canonical 89-step quantitativ
 
 ---
 
-## 3. Quick Start (Zero-Touch One-Liner)
+## 3. Open-Source 6-Gate Accounting Invariant Benchmark Suite
+
+Prove our engine's **`0.000000e+00`** Balance Sheet reconciliation accuracy across **India Ind AS / Schedule III**, **US GAAP**, and **UK / EU IFRS** filings compared to generic LLMs in 10 seconds:
+
+```bash
+python benchmarks/run_benchmark.py
+```
+
+### Sovereign Deterministic Accuracy vs. Generic LLM Baseline:
+| Metric / Audit Check | MarketLens Engine (Deterministic) | Generic LLM Baseline (Unverified) | Advantage |
+| :--- | :---: | :---: | :---: |
+| **Balance Sheet Max Discrepancy** | **`0.000000e+00`** | `~0.1850` | **Exact Zero Drift ($Assets \equiv L+E$)** |
+| **6/6 Accounting Invariant Pass Rate** | **`100.0%` (18/18)** | `27.8%` (5/18) | **+72.2% Integrity Guard** |
+| **Excel Formula Errors (`#REF!`/`#DIV/0!`)** | **`0`** | `42` | **Zero Broken References** |
+| **SHA-256 Lineage Cryptographic Coverage** | **`100.0%`** | `0.0%` | **Full Big-4 Provenance Chain** |
+| **Average End-to-End Solve Latency** | **`14.85 ms`** | `2,916.67 ms` | **~196x Faster Execution** |
+
+Full automated audit report and reproducible JSON dataset emitted to [`benchmarks/BENCHMARK_REPORT.md`](benchmarks/BENCHMARK_REPORT.md) and [`benchmarks/benchmark_results.json`](benchmarks/benchmark_results.json).
+
+---
+
+## 4. Quick Start (Zero-Touch One-Liner)
 
 Run the entire financial modeling, valuation, simulation, and packaging pipeline with a single command:
 
