@@ -33,6 +33,24 @@
             --accent-odd-border: rgba(255, 90, 31, 0.40);
             --status-pass: #10b981;
 
+            /* Strict 8pt Spatial Scale */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-12: 48px;
+
+            /* Modular Type Scale */
+            --font-xs: 0.75rem;   /* 12px - tags, badges */
+            --font-sm: 0.875rem;  /* 14px - meta, secondary */
+            --font-base: 1.000rem;/* 16px - body copy */
+            --font-lg: 1.250rem;  /* 20px - card headers */
+            --font-xl: 1.500rem;  /* 24px - section headers */
+            --font-2xl: 2.250rem; /* 36px - page titles */
+            --font-3xl: 3.250rem; /* 52px - hero headline */
+
             /* Backward-compatible variable aliases */
             --bg-dark: var(--bg-canvas);
             --surface: var(--bg-surface);
@@ -193,27 +211,24 @@
            ------------------------------------------------------------- */
         main {
             flex: 1;
-            max-width: 1200px;
+            max-width: 1240px;
             width: 100%;
-            margin: 1.5rem auto 3rem;
-            padding: 0 1.25rem;
+            margin: var(--space-6) auto var(--space-12);
+            padding: 0 var(--space-4);
             box-sizing: border-box;
         }
 
         .bento-hero-grid {
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
             align-items: stretch;
         }
 
         .bento-hero-left {
             grid-column: span 7;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-hairline);
-            border-radius: 14px;
-            padding: 2rem;
+            padding: var(--space-8);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -224,59 +239,121 @@
             grid-column: span 5;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: var(--space-4);
             min-width: 0;
         }
 
         .bento-cell {
-            background: var(--bg-surface);
+            position: relative;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%), var(--bg-surface);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
             border: 1px solid var(--border-hairline);
             border-radius: 14px;
-            padding: 1.5rem;
+            padding: var(--space-6);
             min-width: 0;
+        }
+
+        .bento-cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 90, 31, 0.3);
+            border-color: rgba(255, 90, 31, 0.3);
+        }
+
+        .bento-cell::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: radial-gradient(380px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 90, 31, 0.45), rgba(255, 255, 255, 0.12) 45%, transparent 75%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.85;
+            transition: opacity 0.3s ease;
+        }
+
+        .bento-cell::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(320px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 90, 31, 0.06), transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .bento-cell:hover::after {
+            opacity: 1;
+        }
+
+        .bento-cell > * {
+            position: relative;
+            z-index: 2;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.45rem;
+            gap: var(--space-2);
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
-            padding: 0.3rem 0.75rem;
+            padding: var(--space-1) var(--space-3);
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             color: var(--text-secondary);
-            margin-bottom: 0.85rem;
+            margin-bottom: var(--space-3);
         }
 
-        .hero-title {
-            font-size: clamp(1.75rem, 3vw, 2.5rem);
-            font-weight: 750;
-            line-height: 1.15;
+        h1, .hero-title {
+            font-size: clamp(2.1rem, 4vw, var(--font-3xl));
+            line-height: 1.08;
             letter-spacing: -0.03em;
+            font-weight: 750;
             color: var(--text-primary);
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--space-3);
+        }
+
+        h2 {
+            font-size: var(--font-xl);
+            letter-spacing: -0.02em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        h3 {
+            font-size: var(--font-lg);
+            letter-spacing: -0.015em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
         }
 
         .hero-desc {
             color: var(--text-secondary);
-            font-size: 0.92rem;
+            font-size: var(--font-base);
             line-height: 1.6;
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--space-6);
         }
 
         .hero-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: var(--space-3);
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--space-3);
         }
 
         .hero-subtext {
             color: var(--text-dim);
-            font-size: 0.78rem;
+            font-size: var(--font-sm);
         }
 
         /* -------------------------------------------------------------
@@ -287,8 +364,8 @@
             border: 1px solid var(--accent-odd);
             color: #ffffff;
             border-radius: 8px;
-            padding: 0.65rem 1.25rem;
-            font-size: 0.88rem;
+            padding: var(--space-3) var(--space-6);
+            font-size: var(--font-sm);
             font-weight: 650;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -308,8 +385,8 @@
             border: 1px solid var(--border-hairline);
             color: var(--text-primary);
             border-radius: 8px;
-            padding: 0.65rem 1.25rem;
-            font-size: 0.88rem;
+            padding: var(--space-3) var(--space-6);
+            font-size: var(--font-sm);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -334,8 +411,8 @@
             border: 1px solid var(--border-hairline);
             color: var(--text-primary);
             border-radius: 8px;
-            padding: 0.7rem 1rem;
-            font-size: 0.88rem;
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--font-sm);
             font-weight: 500;
             width: 100%;
             outline: none;
@@ -354,16 +431,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
         }
 
         .bento-cell-title {
-            font-size: 0.95rem;
+            font-size: var(--font-lg);
             font-weight: 700;
+            letter-spacing: -0.015em;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 0.45rem;
+            gap: var(--space-2);
         }
 
         .accent-dot {
@@ -375,26 +453,26 @@
         }
 
         .badge-tag {
-            font-size: 0.72rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             color: var(--text-secondary);
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
             border-radius: 9999px;
-            padding: 0.15rem 0.55rem;
+            padding: 2px var(--space-2);
         }
 
         .bento-cell-desc {
-            font-size: 0.82rem;
+            font-size: var(--font-sm);
             color: var(--text-secondary);
-            line-height: 1.45;
-            margin-bottom: 1rem;
+            line-height: 1.5;
+            margin-bottom: var(--space-4);
         }
 
         .bento-cell-controls {
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: var(--space-3);
         }
 
         .btn-live-scrape {
@@ -427,20 +505,21 @@
             border: 1px solid var(--border-hairline);
             display: grid;
             place-items: center;
-            margin: 0 auto 0.75rem;
+            margin: 0 auto var(--space-3);
             color: var(--accent-odd);
         }
 
         .drop-title {
-            font-size: 0.95rem;
+            font-size: var(--font-lg);
             font-weight: 700;
+            letter-spacing: -0.015em;
             color: var(--text-primary);
-            margin-bottom: 0.25rem;
+            margin-bottom: var(--space-1);
         }
 
         .file-tags-row {
             display: flex;
-            gap: 0.4rem;
+            gap: var(--space-2);
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -449,9 +528,9 @@
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
             color: var(--text-secondary);
-            padding: 2px 8px;
+            padding: 2px var(--space-2);
             border-radius: 6px;
-            font-size: 0.72rem;
+            font-size: var(--font-xs);
             font-family: 'JetBrains Mono', monospace;
             font-weight: 500;
         }
@@ -461,14 +540,14 @@
            ------------------------------------------------------------- */
         .auth-panel {
             border-top: 1px solid var(--border-hairline);
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
+            margin-top: var(--space-6);
+            padding-top: var(--space-6);
         }
 
         .auth-tabs {
             display: flex;
-            gap: 0.4rem;
-            margin-bottom: 1rem;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
         }
 
         .auth-tabs button {
@@ -476,8 +555,8 @@
             background: var(--bg-elevated);
             color: var(--text-secondary);
             border-radius: 6px;
-            padding: 0.4rem 0.85rem;
-            font-size: 0.82rem;
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--font-sm);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -491,15 +570,15 @@
 
         .auth-form {
             display: grid;
-            gap: 0.85rem;
+            gap: var(--space-3);
             max-width: 420px;
         }
 
         .auth-form label {
             display: grid;
-            gap: 0.35rem;
+            gap: var(--space-1);
             color: var(--text-secondary);
-            font-size: 0.82rem;
+            font-size: var(--font-sm);
             font-weight: 600;
         }
 
@@ -507,9 +586,9 @@
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
             border-radius: 8px;
-            padding: 0.65rem 0.85rem;
+            padding: var(--space-3);
             color: var(--text-primary);
-            font-size: 0.88rem;
+            font-size: var(--font-sm);
             outline: none;
             transition: border-color 0.15s ease;
         }
@@ -521,10 +600,10 @@
         .terms-check {
             display: flex !important;
             align-items: flex-start;
-            gap: 0.5rem !important;
+            gap: var(--space-2) !important;
             font-weight: 400 !important;
             color: var(--text-dim) !important;
-            font-size: 0.8rem !important;
+            font-size: var(--font-xs) !important;
         }
 
         .terms-check input {
@@ -543,8 +622,8 @@
         }
 
         .auth-feedback {
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
+            font-size: var(--font-sm);
+            margin-top: var(--space-2);
             color: var(--accent-odd);
             min-height: 1.25rem;
         }
@@ -556,9 +635,9 @@
         .legal-links {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            margin-top: 1.25rem;
-            font-size: 0.78rem;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+            font-size: var(--font-xs);
             color: var(--text-dim);
         }
 
@@ -567,54 +646,54 @@
         }
 
         .account-welcome-title {
-            font-size: 1.15rem;
+            font-size: var(--font-xl);
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
         }
 
         .account-meta-row {
             display: flex;
-            gap: 0.75rem;
+            gap: var(--space-3);
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--space-3);
         }
 
         .account-usage-badge {
-            font-size: 0.8rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             color: var(--text-secondary);
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
-            padding: 0.2rem 0.6rem;
+            padding: var(--space-1) var(--space-2);
             border-radius: 6px;
         }
 
         .account-sub-note {
-            font-size: 0.8rem;
+            font-size: var(--font-sm);
             color: var(--text-dim);
         }
 
         .account-actions {
             display: flex;
-            gap: 0.65rem;
+            gap: var(--space-3);
             align-items: center;
             flex-wrap: wrap;
-            margin-top: 0.75rem;
+            margin-top: var(--space-3);
         }
 
         .job-history {
             border-top: 1px solid var(--border-hairline);
-            margin-top: 1rem;
-            padding-top: 0.75rem;
+            margin-top: var(--space-4);
+            padding-top: var(--space-3);
         }
 
         .job-history h3 {
-            font-size: 0.88rem;
+            font-size: var(--font-sm);
             font-weight: 700;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -623,10 +702,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0;
+            gap: var(--space-2);
+            padding: var(--space-2) 0;
             border-bottom: 1px solid var(--border-hairline);
-            font-size: 0.82rem;
+            font-size: var(--font-sm);
             color: var(--text-secondary);
         }
 
@@ -643,8 +722,8 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
             border-radius: 14px;
-            padding: 1.5rem;
-            margin-bottom: 24px;
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
         }
 
         .plans-header-row {
@@ -652,21 +731,21 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
         }
 
         .plans-header-row h2 {
-            font-size: 1.25rem;
-            font-weight: 750;
+            font-size: var(--font-xl);
+            font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.02em;
         }
 
         .plans-header-row p {
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-top: 0.2rem;
+            font-size: var(--font-sm);
+            margin-top: var(--space-1);
         }
 
         #currency-switcher {
@@ -682,9 +761,9 @@
             border: none;
             background: transparent;
             color: var(--text-secondary);
-            padding: 0.35rem 0.75rem;
+            padding: var(--space-1) var(--space-3);
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -699,8 +778,8 @@
         .plan-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin-top: 1rem;
+            gap: var(--space-4);
+            margin-top: var(--space-4);
             align-items: stretch;
         }
 
@@ -709,18 +788,11 @@
             height: 100%;
             box-sizing: border-box;
             overflow: hidden;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-hairline);
             border-radius: 12px;
-            padding: 1.25rem;
+            padding: var(--space-4);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: border-color 0.2s ease;
-        }
-
-        .plan-card:hover {
-            border-color: var(--border-hover);
         }
 
         .plan-card.featured,
@@ -731,35 +803,35 @@
 
         .plan-card h3 {
             color: var(--text-primary);
-            font-size: 1.05rem;
+            font-size: var(--font-lg);
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.01em;
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.015em;
         }
 
         .plan-price {
-            margin: 0.5rem 0 0.75rem;
+            margin: var(--space-2) 0 var(--space-3);
         }
 
         .plan-price .price-val {
-            font-size: 1.75rem;
+            font-size: var(--font-2xl);
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.02em;
         }
 
         .plan-price .price-period {
-            font-size: 0.85rem;
+            font-size: var(--font-sm);
             color: var(--text-secondary);
             font-weight: 500;
         }
 
         .plan-note {
-            font-size: 0.82rem;
+            font-size: var(--font-sm);
             color: var(--text-secondary);
-            line-height: 1.45;
+            line-height: 1.5;
             min-height: 2.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         .plan-actions {
@@ -779,18 +851,18 @@
             justify-content: center;
             text-align: center;
             margin-top: auto;
-            font-size: 0.85rem;
+            font-size: var(--font-sm);
             font-weight: 650;
             border-radius: 8px;
-            padding: 0.65rem 0.75rem;
+            padding: var(--space-2) var(--space-3);
             display: flex;
             align-items: center;
         }
 
         .locked-note {
-            font-size: 0.78rem;
+            font-size: var(--font-xs);
             color: var(--text-dim);
-            margin-top: 0.5rem;
+            margin-top: var(--space-2);
         }
 
         /* -------------------------------------------------------------
@@ -800,14 +872,14 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
             border-radius: 14px;
-            padding: 1.5rem;
-            margin-bottom: 24px;
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
         }
 
         .steps-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            gap: var(--space-3);
         }
 
         .step-item {
@@ -815,7 +887,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 0.45rem;
+            gap: var(--space-2);
         }
 
         .step-num {
@@ -826,7 +898,7 @@
             border: 1px solid var(--border-hairline);
             display: grid;
             place-items: center;
-            font-size: 0.82rem;
+            font-size: var(--font-sm);
             font-weight: 700;
             color: var(--text-dim);
             transition: all 0.2s ease;
@@ -845,7 +917,7 @@
         }
 
         .step-label {
-            font-size: 0.78rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             color: var(--text-dim);
         }
@@ -857,18 +929,18 @@
         #progress-message {
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-top: 1rem;
+            font-size: var(--font-sm);
+            margin-top: var(--space-4);
         }
 
         #error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
             color: #ef4444;
-            padding: 0.85rem 1.25rem;
+            padding: var(--space-3) var(--space-4);
             border-radius: 10px;
-            margin-bottom: 1.5rem;
-            font-size: 0.88rem;
+            margin-bottom: var(--space-6);
+            font-size: var(--font-sm);
         }
 
         /* -------------------------------------------------------------
@@ -878,8 +950,8 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
             border-radius: 14px;
-            padding: 1.75rem;
-            margin-bottom: 24px;
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
         }
 
         .dash-header {
@@ -887,14 +959,14 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 1.25rem;
+            gap: var(--space-4);
+            padding-bottom: var(--space-4);
             border-bottom: 1px solid var(--border-hairline);
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--space-6);
         }
 
         .dash-entity {
-            font-size: 1.45rem;
+            font-size: var(--font-2xl);
             font-weight: 750;
             letter-spacing: -0.02em;
             color: var(--text-primary);
@@ -902,21 +974,21 @@
 
         .dash-meta {
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-top: 0.2rem;
+            font-size: var(--font-sm);
+            margin-top: var(--space-1);
         }
 
         .trust-badge {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
             color: var(--status-pass);
-            padding: 0.4rem 0.85rem;
+            padding: var(--space-1) var(--space-3);
             border-radius: 9999px;
-            font-size: 0.8rem;
+            font-size: var(--font-xs);
             font-weight: 650;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: var(--space-2);
         }
 
         .trust-badge.review {
@@ -928,20 +1000,18 @@
         .kpi-cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 14px;
-            margin-bottom: 1.5rem;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
         }
 
         .kpi-card {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-hairline);
             border-radius: 10px;
-            padding: 1rem 1.25rem;
+            padding: var(--space-4);
             min-width: 0;
         }
 
         .kpi-label {
-            font-size: 0.72rem;
+            font-size: var(--font-xs);
             text-transform: uppercase;
             color: var(--text-dim);
             font-weight: 700;
@@ -949,14 +1019,15 @@
         }
 
         .kpi-val {
-            font-size: 1.6rem;
+            font-size: var(--font-2xl);
             font-weight: 700;
             color: var(--text-primary);
-            margin: 0.35rem 0 0.25rem;
+            margin: var(--space-1) 0;
+            font-variant-numeric: tabular-nums;
         }
 
         .kpi-sub {
-            font-size: 0.78rem;
+            font-size: var(--font-sm);
             color: var(--text-secondary);
             line-height: 1.4;
         }
@@ -965,23 +1036,23 @@
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: var(--space-6);
             text-align: center;
         }
 
         .btn-zip {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
             background: var(--accent-odd);
             color: #ffffff;
             font-weight: 700;
-            font-size: 0.95rem;
-            padding: 0.8rem 1.75rem;
+            font-size: var(--font-base);
+            padding: var(--space-3) var(--space-6);
             border-radius: 8px;
             text-decoration: none;
             transition: background 0.15s ease;
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         .btn-zip:hover {
@@ -991,17 +1062,17 @@
         .btn-dash {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
             color: var(--text-primary);
             font-weight: 650;
-            font-size: 0.95rem;
-            padding: 0.8rem 1.5rem;
+            font-size: var(--font-base);
+            padding: var(--space-3) var(--space-6);
             border-radius: 8px;
             text-decoration: none;
-            margin-left: 0.5rem;
-            margin-bottom: 1rem;
+            margin-left: var(--space-2);
+            margin-bottom: var(--space-4);
             transition: all 0.15s ease;
         }
 
@@ -1012,7 +1083,7 @@
         .sub-downloads {
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
             flex-wrap: wrap;
         }
 
@@ -1020,10 +1091,10 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
             color: var(--text-secondary);
-            padding: 0.45rem 0.85rem;
+            padding: var(--space-2) var(--space-3);
             border-radius: 6px;
             text-decoration: none;
-            font-size: 0.78rem;
+            font-size: var(--font-xs);
             font-weight: 600;
             transition: all 0.15s ease;
         }
@@ -1039,8 +1110,9 @@
         .bento-panel {
             background: var(--bg-surface);
             border: 1px solid var(--border-hairline);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 14px;
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
         }
 
         .bento-panel-header {
@@ -1048,9 +1120,9 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-            padding-bottom: 1rem;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
             border-bottom: 1px solid var(--border-hairline);
         }
 
@@ -1058,8 +1130,8 @@
             background: var(--accent-odd);
             color: #ffffff;
             border-radius: 6px;
-            padding: 0.25rem 0.6rem;
-            font-size: 0.72rem;
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--font-xs);
             font-weight: 750;
             letter-spacing: 0.04em;
         }
@@ -1067,9 +1139,9 @@
         .health-score-badge {
             background: var(--bg-elevated);
             border: 1px solid var(--border-hairline);
-            padding: 0.35rem 0.75rem;
+            padding: var(--space-1) var(--space-3);
             border-radius: 9999px;
-            font-size: 0.8rem;
+            font-size: var(--font-xs);
             font-weight: 650;
             color: var(--text-secondary);
         }
@@ -1077,12 +1149,12 @@
         .pain-points-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 14px;
+            gap: var(--space-3);
         }
 
         .btn-alpha-sim {
-            padding: 0.75rem 1.75rem;
-            font-size: 0.92rem;
+            padding: var(--space-3) var(--space-6);
+            font-size: var(--font-sm);
             font-weight: 700;
         }
 
@@ -1091,9 +1163,9 @@
            ------------------------------------------------------------- */
         footer {
             text-align: center;
-            padding: 2rem 1.5rem;
+            padding: var(--space-8) var(--space-6);
             color: var(--text-dim);
-            font-size: 0.8rem;
+            font-size: var(--font-sm);
             border-top: 1px solid var(--border-hairline);
         }
 
@@ -1107,7 +1179,7 @@
         @media (max-width: 1079px) and (min-width: 640px) {
             .plan-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                gap: 16px !important;
+                gap: var(--space-4) !important;
             }
         }
 
@@ -1122,7 +1194,10 @@
 
         @media (max-width: 768px) {
             nav {
-                padding: 0 1rem;
+                padding: 0 var(--space-4);
+            }
+            .nav-links {
+                gap: var(--space-3);
             }
             .nav-link {
                 display: none;
@@ -1131,8 +1206,8 @@
                 display: inline-block;
             }
             main {
-                padding: 0 1rem;
-                margin: 1rem auto 2rem;
+                padding: 0 var(--space-4);
+                margin: var(--space-4) auto var(--space-8);
             }
             .dash-header {
                 flex-direction: column;
@@ -1145,9 +1220,15 @@
         }
 
         @media (max-width: 639px) {
+            main {
+                padding: 0 var(--space-3);
+            }
+            .bento-hero-left, .bento-cell, .plans-card, .bento-panel {
+                padding: var(--space-4) !important;
+            }
             .plan-grid {
                 grid-template-columns: minmax(0, 1fr) !important;
-                gap: 12px !important;
+                gap: var(--space-3) !important;
             }
             #currency-switcher {
                 width: 100% !important;
@@ -1163,10 +1244,23 @@
             }
         }
 
-        @media (prefers-reduced-motion: reduce) {
+        @media (prefers-reduced-motion: reduce), (hover: none) {
             *, *::before, *::after {
                 scroll-behavior: auto !important;
                 transition-duration: 0.01ms !important;
+            }
+            .bento-cell {
+                transition: none !important;
+                transform: none !important;
+            }
+            .bento-cell:hover {
+                transform: none !important;
+                box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+                border-color: var(--border-hairline) !important;
+            }
+            .bento-cell::before,
+            .bento-cell::after {
+                display: none !important;
             }
         }
     </style>
@@ -1193,7 +1287,7 @@
         <!-- ASYMMETRIC BENTO HERO + DUAL ACTION GRID -->
         <div class="bento-hero-grid" id="platform">
             <!-- Top-Left Bento Compartment (7 cols) -->
-            <div class="bento-hero-left">
+            <div class="bento-hero-left bento-cell">
                 <div>
                     <div class="hero-badge">
                         <span class="pulse-dot"></span> 6-Gate Mathematical Verification &middot; Zero-Tolerance Reconciliation
@@ -1336,67 +1430,63 @@
         </div>
 
         <!-- CONNECTED ERPS (ZERO-TOUCH MONTHLY BOARD PACKS) BENTO SECTION -->
-        <section class="bento-panel erp-mesh-section" id="enterprise" aria-labelledby="erp-heading" style="margin-bottom: 24px;">
+        <section class="bento-panel bento-cell erp-mesh-section" id="enterprise" aria-labelledby="erp-heading" style="margin-bottom: var(--space-6);">
             <div class="bento-panel-header">
                 <div>
-                    <h2 id="erp-heading" style="font-size:1.15rem; font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">
-                        Connected ERPs (Zero-Touch Monthly Board Packs)
-                    </h2>
-                    <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
+                    <h2 id="erp-heading">Connected ERPs (Zero-Touch Monthly Board Packs)</h2>
+                    <p style="font-size:var(--font-sm); color:var(--text-secondary); margin:0;">
                         1-Click Read-Only integration. Automatically pulls Trial Balances, verifies 6 accounting invariants, and compiles monthly Executive Board Packs (.xlsx, .pdf, .pptx).
                     </p>
                 </div>
-                <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:var(--space-3);">
                     <span class="status-dot-badge" style="background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.3);">
                         <span class="pulse-dot"></span> Live Sector Comps Updated Today (00:00 UTC)
                     </span>
-                    <button class="secondary-button" type="button" onclick="refreshERPProviders()" style="font-size:0.78rem; padding:0.35rem 0.75rem;">
+                    <button class="secondary-button" type="button" onclick="refreshERPProviders()" style="font-size:var(--font-xs); padding:var(--space-1) var(--space-3);">
                         ↻ Refresh Status
                     </button>
                 </div>
             </div>
 
             <!-- 5-ERP Provider Cards Grid -->
-            <div id="erp-provider-grid" class="erp-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; margin-top:1rem;">
+            <div id="erp-provider-grid" class="erp-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:var(--space-3); margin-top:var(--space-4);">
                 <!-- Populated dynamically via refreshERPProviders() -->
             </div>
-            <p id="erp-status-note" style="font-size:0.78rem; color:var(--text-dim); margin-top:0.75rem; text-align:right;">
+            <p id="erp-status-note" style="font-size:var(--font-xs); color:var(--text-dim); margin-top:var(--space-3); text-align:right;">
                 OAuth 2.0 tokens are encrypted at rest with Fernet symmetric cipher under strict tenant row isolation.
             </p>
         </section>
 
         <!-- DEVELOPER & UNDERWRITING API (VaaS) SECTION -->
-        <section class="bento-panel" style="margin-top: 1.5rem;" aria-labelledby="dev-api-heading">
+        <section class="bento-panel bento-cell" id="developer-api" style="margin-top: var(--space-6);" aria-labelledby="dev-api-heading">
             <div class="bento-panel-header">
                 <div>
-                    <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.25rem;">
+                    <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-1);">
                         <span class="alert-pill" style="background:#10b981;">VaaS API</span>
-                        <h2 id="dev-api-heading" style="font-size:1.15rem; font-weight:700; color:var(--text-primary); margin:0;">
-                            Developer &amp; Underwriting API Platform
-                        </h2>
+                        <h2 id="dev-api-heading" style="margin:0;">Developer &amp; Underwriting API Platform</h2>
                     </div>
-                    <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
+                    <p style="font-size:var(--font-sm); color:var(--text-secondary); margin:0;">
                         Embed autonomous 3-statement modeling, DCF valuations, and C-Suite diagnostics directly into institutional pipelines via scoped, metered API keys.
                     </p>
                 </div>
-                <button type="button" class="primary-button" onclick="promptCreateApiKey()" style="font-size:0.82rem; padding:0.5rem 1rem;">
+                <button type="button" class="primary-button" onclick="promptCreateApiKey()" style="font-size:var(--font-sm); padding:var(--space-2) var(--space-4);">
                     + Generate Scoped Key
                 </button>
             </div>
 
             <!-- Metered Usage Summary Grid -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:1.25rem;">
-                <div class="kpi-card" style="padding:0.85rem 1rem;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:var(--space-3); margin-bottom:var(--space-4);">
+                <div class="kpi-card bento-cell" style="padding:var(--space-3) var(--space-4);">
                     <div class="kpi-label">Billable API Calls (This Month)</div>
                     <div class="kpi-val" id="api-metric-units" style="font-size:1.4rem;">0</div>
                     <div class="kpi-sub" id="api-metric-quota">Remaining Quota: --</div>
                 </div>
-                <div class="kpi-card" style="padding:0.85rem 1rem;">
+                <div class="kpi-card bento-cell" style="padding:var(--space-3) var(--space-4);">
                     <div class="kpi-label">Active API Keys</div>
                     <div class="kpi-val" id="api-metric-active-keys" style="font-size:1.4rem;">0</div>
                     <div class="kpi-sub">Scoped with sliding rate limit</div>
                 </div>
-                <div class="kpi-card" style="padding:0.85rem 1rem;">
+                <div class="kpi-card bento-cell" style="padding:var(--space-3) var(--space-4);">
                     <div class="kpi-label">Average Engine Latency</div>
                     <div class="kpi-val" id="api-metric-latency" style="font-size:1.4rem;">-- ms</div>
                     <div class="kpi-sub">Deterministic solve &amp; audit</div>
@@ -1404,26 +1494,26 @@
             </div>
 
             <!-- API Keys Table Container -->
-            <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; overflow:hidden; margin-bottom:1.25rem;">
-                <div style="padding:0.75rem 1rem; border-bottom:1px solid var(--border-hairline); font-size:0.85rem; font-weight:700; color:var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; overflow:hidden; margin-bottom:var(--space-4);">
+                <div style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--border-hairline); font-size:var(--font-sm); font-weight:700; color:var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
                     <span>Active Scoped API Keys</span>
-                    <button class="secondary-button" style="font-size:0.72rem; padding:0.25rem 0.5rem;" onclick="refreshApiKeys()">↻ Refresh</button>
+                    <button class="secondary-button" style="font-size:var(--font-xs); padding:var(--space-1) var(--space-2);" onclick="refreshApiKeys()">↻ Refresh</button>
                 </div>
-                <div id="api-keys-table-body" style="padding:0.75rem 1rem; font-size:0.82rem; color:var(--text-secondary);">
+                <div id="api-keys-table-body" style="padding:var(--space-3) var(--space-4); font-size:var(--font-sm); color:var(--text-secondary);">
                     Sign in to manage institutional API keys and view real-time metered usage.
                 </div>
             </div>
 
             <!-- Ready-to-Run Snippets -->
-            <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; padding:1rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">Institutional Pipeline Snippets</span>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button class="secondary-button" style="font-size:0.75rem; padding:0.25rem 0.6rem;" onclick="copyApiSnippet('curl')">Copy cURL</button>
-                        <button class="secondary-button" style="font-size:0.75rem; padding:0.25rem 0.6rem;" onclick="copyApiSnippet('python')">Copy Python</button>
+            <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-4);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3);">
+                    <span style="font-size:var(--font-sm); font-weight:700; color:var(--text-primary);">Institutional Pipeline Snippets</span>
+                    <div style="display:flex; gap:var(--space-2);">
+                        <button class="secondary-button" style="font-size:var(--font-xs); padding:var(--space-1) var(--space-3);" onclick="copyApiSnippet('curl')">Copy cURL</button>
+                        <button class="secondary-button" style="font-size:var(--font-xs); padding:var(--space-1) var(--space-3);" onclick="copyApiSnippet('python')">Copy Python</button>
                     </div>
                 </div>
-                <pre id="api-snippet-display" style="background:#09090b; border:1px solid rgba(255,255,255,0.06); padding:0.85rem; border-radius:6px; font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:#cbd5e1; overflow-x:auto; line-height:1.5;"># 1. Automated Valuation Pack Ingestion
+                <pre id="api-snippet-display" style="background:#09090b; border:1px solid rgba(255,255,255,0.06); padding:var(--space-3); border-radius:6px; font-family:'JetBrains Mono', monospace; font-size:var(--font-xs); color:#cbd5e1; overflow-x:auto; line-height:1.5;"># 1. Automated Valuation Pack Ingestion
 curl -X POST https://automated-financial-engine-production.up.railway.app/api/v1/model/generate-pack \
   -H "X-API-Key: ml_live_YOUR_SECRET_KEY" \
   -F "file=@financials.xlsx"
@@ -1435,14 +1525,14 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
         </section>
 
         <!-- 4-COLUMN RESPONSIVE SUBSCRIPTION MATRIX -->
-        <section class="plans-card" aria-labelledby="plans-heading">
+        <section class="plans-card bento-cell" id="pricing" aria-labelledby="plans-heading">
             <div class="plans-header-row">
                 <div>
                     <h2 id="plans-heading">Global Subscription &amp; Enterprise Tiers</h2>
                     <p>Enterprise financial intelligence with instant 14-day free trial. Cancel anytime.</p>
                 </div>
-                <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <span style="font-size:0.82rem; font-weight:600; color:var(--text-secondary);">Currency:</span>
+                <div style="display:flex; align-items:center; gap:var(--space-2);">
+                    <span style="font-size:var(--font-sm); font-weight:600; color:var(--text-secondary);">Currency:</span>
                     <div id="currency-switcher">
                         <button type="button" onclick="setPlanCurrency('USD')" id="curr-btn-USD" class="active">USD ($)</button>
                         <button type="button" onclick="setPlanCurrency('INR')" id="curr-btn-INR">INR (₹)</button>
@@ -1480,7 +1570,7 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
         <div id="error-message" role="alert" hidden></div>
 
         <!-- Results Dashboard -->
-        <div id="results-dashboard" style="display:none;">
+        <div id="results-dashboard" class="bento-panel bento-cell" style="display:none; margin-bottom:var(--space-6);">
             <div class="dash-header">
                 <div>
                     <div class="dash-entity" id="res-entity">Entity Name</div>
@@ -1492,22 +1582,22 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             </div>
 
             <div class="kpi-cards-grid">
-                <div class="kpi-card">
+                <div class="kpi-card bento-cell">
                     <div class="kpi-label">Implied Fair Value / Share</div>
                     <div class="kpi-val" id="val-fair-price">₹312.40</div>
                     <div class="kpi-sub" id="val-market-comparison">Market: ₹298.50 (+4.7% Upside)</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card bento-cell">
                     <div class="kpi-label">Enterprise Value (Base DCF)</div>
                     <div class="kpi-val" id="val-ev">₹45,210 Cr</div>
                     <div class="kpi-sub" id="val-wacc-tgr">WACC: 11.2% • Gordon TV</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card bento-cell">
                     <div class="kpi-label">Implied Equity Value</div>
                     <div class="kpi-val" id="val-equity">₹46,120 Cr</div>
                     <div class="kpi-sub" id="val-net-debt">Net Cash: +₹910 Cr</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card bento-cell">
                     <div class="kpi-label">Mathematical Invariant Audit</div>
                     <div class="kpi-val" id="val-audit-result">PASS</div>
                     <div class="kpi-sub" id="val-audit-status">Accounting checks verified</div>
@@ -1516,7 +1606,7 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             </div>
 
             <div class="cta-section">
-                <div style="margin-bottom: 1rem;">
+                <div style="margin-bottom: var(--space-4);">
                     <a href="#" class="btn-zip" id="btn-zip-download">
                         Download executive pack (.zip)
                     </a>
@@ -1534,12 +1624,12 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             </div>
 
             <!-- C-SUITE PAIN POINT DIAGNOSTIC PANEL -->
-            <div id="pain-point-panel" style="display:none; margin-top:1.5rem;">
-                <div class="bento-panel">
+            <div id="pain-point-panel" class="bento-panel bento-cell" style="display:none; margin-top:var(--space-6);">
+                <div>
                     <div class="bento-panel-header">
-                        <div style="display:flex; align-items:center; gap:0.6rem;">
+                        <div style="display:flex; align-items:center; gap:var(--space-2);">
                             <span class="alert-pill">⚠ C-SUITE ALERT</span>
-                            <span style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">Operational Pain Point Diagnostic &amp; Growth Prescription</span>
+                            <span style="font-size:var(--font-lg); font-weight:700; color:var(--text-primary);">Operational Pain Point Diagnostic &amp; Growth Prescription</span>
                         </div>
                         <div id="pain-point-health-badge" class="health-score-badge">
                             Health Score: --
@@ -1548,7 +1638,7 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     <div id="pain-points-content" class="pain-points-grid">
                         <!-- Populated by renderPainPoints() -->
                     </div>
-                    <div style="text-align:center; margin-top:1.25rem;">
+                    <div style="text-align:center; margin-top:var(--space-4);">
                         <button id="btn-alpha-sim" onclick="simulateAlphaFix()" class="primary-button btn-alpha-sim">
                             ⚡ Simulate Fixing All Pain Points (+Alpha)
                         </button>
@@ -1799,7 +1889,7 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
 
             plans.forEach(plan => {
                 const card = document.createElement('article');
-                card.className = 'plan-card';
+                card.className = 'plan-card bento-cell';
                 card.dataset.planKey = plan.key;
                 if (plan.key === 'free_trial' || plan.key === 'pro') {
                     card.classList.add('featured');
@@ -2294,17 +2384,17 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             ];
 
             container.innerHTML = cards.map(c => `
-                <div style="background:var(--bg-elevated); border:1px solid ${c.severity === 'high' ? 'var(--accent-odd-border)' : (c.severity === 'medium' ? 'rgba(245,158,11,0.35)' : 'var(--border-hairline)')}; border-radius:10px; padding:1.25rem;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+                <div class="bento-cell" style="padding:var(--space-4); border-radius:10px; margin-bottom:var(--space-2);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-2);">
                         <span style="font-size:1.25rem;">${c.icon}</span>
-                        <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; padding:0.15rem 0.55rem; border-radius:9999px; background:${c.severity === 'high' ? 'var(--accent-odd-soft)' : (c.severity === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)')}; color:${c.severity === 'high' ? 'var(--accent-odd)' : (c.severity === 'medium' ? '#fbbf24' : 'var(--status-pass)')};">${c.severity}</span>
+                        <span style="font-size:var(--font-xs); font-weight:700; text-transform:uppercase; padding:0.15rem 0.55rem; border-radius:9999px; background:${c.severity === 'high' ? 'var(--accent-odd-soft)' : (c.severity === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)')}; color:${c.severity === 'high' ? 'var(--accent-odd)' : (c.severity === 'medium' ? '#fbbf24' : 'var(--status-pass)')};">${c.severity}</span>
                     </div>
-                    <div style="font-weight:700; color:var(--text-primary); font-size:0.95rem; margin-bottom:0.35rem;">${c.title}</div>
-                    <div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.5rem; line-height:1.45;">${c.detail}</div>
+                    <div style="font-weight:700; color:var(--text-primary); font-size:var(--font-base); margin-bottom:var(--space-1);">${c.title}</div>
+                    <div style="font-size:var(--font-sm); color:var(--text-secondary); margin-bottom:var(--space-2); line-height:1.45;">${c.detail}</div>
 
                     <!-- Peer Benchmark Gauge -->
-                    <div style="background:var(--bg-canvas); border:1px solid var(--border-hairline); border-radius:8px; padding:0.65rem 0.8rem; margin:0.75rem 0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-dim); margin-bottom:0.35rem; font-family:'JetBrains Mono', monospace;">
+                    <div style="background:var(--bg-canvas); border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-2) var(--space-3); margin:var(--space-3) 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--font-xs); color:var(--text-dim); margin-bottom:var(--space-1); font-family:'JetBrains Mono', monospace;">
                             <span>Client: <strong style="color:var(--text-primary);">${c.clientVal}</strong></span>
                             <span>Median: <strong style="color:var(--text-secondary);">${c.medianVal}</strong></span>
                             <span>Top Quartile: <strong style="color:var(--accent-odd);">${c.topQuartile}</strong></span>
@@ -2312,13 +2402,13 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                         <div style="position:relative; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
                             <div style="position:absolute; top:0; left:0; height:100%; width:${c.gaugePct}%; background:${c.severity === 'high' ? 'var(--accent-odd)' : '#10b981'}; border-radius:3px;"></div>
                         </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-top:0.35rem;">
+                        <div style="display:flex; justify-content:space-between; font-size:var(--font-xs); color:var(--text-dim); margin-top:var(--space-1);">
                             <span>Gap: <strong style="color:${c.severity === 'high' ? 'var(--accent-odd)' : 'var(--text-secondary)'};">${c.gap}</strong></span>
                             <span>Implied Alpha: <strong style="color:var(--status-pass);">${c.alpha}</strong></span>
                         </div>
                     </div>
 
-                    <div style="font-size:0.8rem; color:var(--accent-odd); font-weight:600; line-height:1.4;">${c.impact}</div>
+                    <div style="font-size:var(--font-sm); color:var(--accent-odd); font-weight:600; line-height:1.4;">${c.impact}</div>
                 </div>
             `).join('');
             panel.style.display = 'block';
@@ -2776,6 +2866,46 @@ print("Alpha Prescriptions:", diag["pain_points"])`;
                 prompt('Copy snippet:', code);
             });
         }
+
+        // Bento cursor-proximity radial glow tracker
+        (function initBentoGlowTracker() {
+            if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+            let ticking = false;
+            let lastEvent = null;
+
+            function updateGlow() {
+                if (!lastEvent) { ticking = false; return; }
+                const clientX = lastEvent.clientX;
+                const clientY = lastEvent.clientY;
+                const cells = document.querySelectorAll('.bento-cell');
+                const glowRadius = 500;
+
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    const rect = cell.getBoundingClientRect();
+                    if (
+                        clientX >= rect.left - glowRadius &&
+                        clientX <= rect.right + glowRadius &&
+                        clientY >= rect.top - glowRadius &&
+                        clientY <= rect.bottom + glowRadius
+                    ) {
+                        const x = clientX - rect.left;
+                        const y = clientY - rect.top;
+                        cell.style.setProperty('--mouse-x', `${x}px`);
+                        cell.style.setProperty('--mouse-y', `${y}px`);
+                    }
+                }
+                ticking = false;
+            }
+
+            window.addEventListener('mousemove', function(e) {
+                lastEvent = e;
+                if (!ticking) {
+                    requestAnimationFrame(updateGlow);
+                    ticking = true;
+                }
+            }, { passive: true });
+        })();
 
         setAuthMode('register');
         setAccess(null);
