@@ -136,50 +136,36 @@ def test_public_indices_api_endpoints_and_zero_tenant_data():
 
 def test_public_indices_html_pages_and_cors():
     """
-    Verify public SEO HTML pages (/indices, /indices/{sector_slug}) serve
-    responsive Bento layouts with 14-day trial CTAs and proper CORS on public endpoints.
+    Verify public SEO & embed routes cleanly redirect (307) to the commercial portal /,
+    and CORS on /api/v1/public/indices properly whitelists allowed origins.
     """
     client = TestClient(app)
 
-    # 1. GET /indices HTML Hub
-    hub_resp = client.get("/indices")
-    assert hub_resp.status_code == 200
-    assert "text/html" in hub_resp.headers["content-type"]
-    assert "Global Public Sector Valuation Indices" in hub_resp.text
-    assert "0.000000e+00 Discrepancy Verified" in hub_resp.text
-    assert "Value Your Own Company Free (14-Day Trial)" in hub_resp.text
-    assert "indian-defence-it" in hub_resp.text
+    # 1. GET /indices cleanly redirects to /
+    hub_resp = client.get("/indices", follow_redirects=False)
+    assert hub_resp.status_code == 307
+    assert hub_resp.headers["location"] == "/"
 
-    # 2. GET /indices/{sector_slug} HTML Detail
-    detail_resp = client.get("/indices/indian-defence-it")
-    assert detail_resp.status_code == 200
-    assert "text/html" in detail_resp.headers["content-type"]
-    assert "Daily Indian Defence & IT DCF Index" in detail_resp.text
-    assert "BEL.NS" in detail_resp.text
-    assert "0.000000e+00" in detail_resp.text
+    # 2. GET /indices/{sector_slug} cleanly redirects to /
+    detail_resp = client.get("/indices/indian-defence-it", follow_redirects=False)
+    assert detail_resp.status_code == 307
+    assert detail_resp.headers["location"] == "/"
 
-    # 404 for invalid HTML detail
-    invalid_html = client.get("/indices/unknown-sector-slug")
-    assert invalid_html.status_code == 404
+    # 3. GET /benchmarks cleanly redirects to /
+    bench_resp = client.get("/benchmarks", follow_redirects=False)
+    assert bench_resp.status_code == 307
+    assert bench_resp.headers["location"] == "/"
 
-    # 3. GET /benchmarks HTML Report
-    bench_resp = client.get("/benchmarks")
-    assert bench_resp.status_code == 200
-    assert "text/html" in bench_resp.headers["content-type"]
-    assert "Accounting Invariant Benchmark" in bench_resp.text
-    assert "0.000000e+00" in bench_resp.text
-    assert "run_benchmark.py" in bench_resp.text
+    # 4. GET /embed/indices WordPress Embed Snippet cleanly redirects to /
+    embed_resp = client.get("/embed/indices", follow_redirects=False)
+    assert embed_resp.status_code == 307
+    assert embed_resp.headers["location"] == "/"
 
-    # 4. GET /embed/indices WordPress Embed Snippet
-    embed_resp = client.get("/embed/indices")
-    assert embed_resp.status_code == 200
-    assert "text/html" in embed_resp.headers["content-type"]
-    assert "ml-public-index-widget" in embed_resp.text
-    assert "X-Frame-Options" not in embed_resp.headers or embed_resp.headers.get("X-Frame-Options") == "ALLOWALL"
-
-    # 5. GET /docs OpenAPI documentation
-    docs_resp = client.get("/docs")
-    assert docs_resp.status_code == 200
+    # 5. Following redirect to / loads the commercial portal with the Enterprise Audit Guarantee badge
+    portal_resp = client.get("/indices", follow_redirects=True)
+    assert portal_resp.status_code == 200
+    assert "6-Gate Mathematical Verification" in portal_resp.text
+    assert "MarketLens" in portal_resp.text
 
     # 6. CORS verification on /api/v1/public/indices
     cors_origin = "https://www.marketlensanalytics.in"
@@ -262,3 +248,68 @@ def test_daily_index_celery_task():
     assert task_res["indices_refreshed_count"] == 4
     assert task_res["audit_guarantee"] == "0.000000e+00 Balance Sheet Error"
     assert "wordpress_sync" in task_res
+
+
+def test_guest_live_valuation_end_to_end():
+    """
+    Verify full guest live valuation lifecycle:
+    1. Unauthenticated POST /api/v1/model/live-scrape succeeds with HTTP 202 and issues guest session.
+    2. Polling GET /api/v1/jobs/{job_id} succeeds for guest without 401.
+    3. Downloading deliverable files via GET /api/v1/jobs/{job_id}/files/{file_key} returns 200.
+    """
+    from src.portal.database import init_database
+    init_database()
+    client = TestClient(app)
+
+    # 1. Trigger live scrape for domain as anonymous guest
+    resp = client.post(
+        "/api/v1/model/live-scrape",
+        json={"domain": "US AI & Cloud Semiconductors"},
+    )
+    assert resp.status_code == 202, f"Expected 202, got {resp.status_code}: {resp.text}"
+    body = resp.json()
+    assert "job_id" in body
+    job_id = body["job_id"]
+
+    # 2. Poll job status
+    poll_resp = client.get(f"/api/v1/jobs/{job_id}")
+    assert poll_resp.status_code == 200, f"Expected 200, got {poll_resp.status_code}: {poll_resp.text}"
+    job_data = poll_resp.json()
+    assert job_data["status"] in ("succeeded", "completed", "processing", "pending")
+
+    # If the fallback ran in-process, it should be succeeded
+    if job_data["status"] in ("succeeded", "completed"):
+        res = job_data.get("result") or {}
+        files = res.get("files") or {}
+        for file_key in ["dashboard_html", "xlsx_model", "pdf_tearsheet", "pptx_pitchbook"]:
+            if file_key in files:
+                dl_resp = client.get(f"/api/v1/jobs/{job_id}/files/{file_key}")
+                assert dl_resp.status_code == 200, f"Download {file_key} failed with {dl_resp.status_code}"
+
+
+def test_zero_proprietary_ip_leaks():
+    """
+    Verify zero occurrences of proprietary IP (github.com, Jeet908, git clone)
+    in src/ and app.py.
+    """
+    root_dir = Path(__file__).resolve().parent.parent
+    src_dir = root_dir / "src"
+    app_py = root_dir / "app.py"
+    index_html = root_dir / "src" / "portal" / "index.html"
+
+    forbidden_patterns = ["github.com", "Jeet908", "git clone"]
+    violations = []
+
+    files_to_check = list(src_dir.rglob("*.py")) + [app_py, index_html]
+    for file_path in files_to_check:
+        if "__pycache__" in str(file_path):
+            continue
+        try:
+            content = file_path.read_text(encoding="utf-8", errors="ignore")
+            for pattern in forbidden_patterns:
+                if pattern in content:
+                    violations.append(f"{file_path.name} contains '{pattern}'")
+        except Exception:
+            pass
+
+    assert not violations, f"Found proprietary IP leaks in production files: {violations}"

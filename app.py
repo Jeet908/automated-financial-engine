@@ -8,7 +8,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.ingestion.live_web_scraper import DOMAIN_CATALOG
@@ -23,14 +23,14 @@ from src.workers.celery_app import check_redis_connectivity
 PROJECT_ROOT = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
 is_production = os.environ.get("APP_ENV") == "production" or bool(os.environ.get("RAILWAY_ENVIRONMENT"))
-enable_public_docs = os.environ.get("ENABLE_DOCS", "true").lower() in ("1", "true", "yes")
 
 app = FastAPI(
     title="MarketLens Analytics",
-    description="Deterministic financial modeling, institutional company valuation, and Valuation-as-a-Service (VaaS) APIs.",
+    description="Deterministic financial modeling, institutional company valuation, and subscription management.",
     version="2.0.0",
-    docs_url="/docs" if enable_public_docs else None,
-    redoc_url="/redoc" if enable_public_docs else None,
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
 )
 
 allowed_hosts = [
@@ -56,58 +56,19 @@ app.add_middleware(
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    is_embed = request.url.path.startswith("/embed/")
-    if not is_embed:
-        response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-    frame_ancestors = "'self' https://*.marketlensanalytics.in https://marketlensanalytics.in" if is_embed else "'none'"
     response.headers.setdefault(
         "Content-Security-Policy",
-        f"default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://js.stripe.com; "
-        f"style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com https://api.stripe.com; "
-        f"frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
-        f"img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors {frame_ancestors}",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://js.stripe.com; "
+        "style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com https://api.stripe.com; "
+        "frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
+        "img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
     )
     if request.url.path.startswith("/api/"):
         response.headers.setdefault("Cache-Control", "no-store")
     return response
-
-
-PUBLIC_ALLOWED_ORIGINS = {
-    "https://www.marketlensanalytics.in",
-    "https://app.marketlensanalytics.in",
-    "http://localhost:3000",
-    "http://testserver",
-}
-
-
-@app.middleware("http")
-async def public_api_cors_middleware(request: Request, call_next):
-    """
-    Enables CORS on /api/v1/public/* specifically for www.marketlensanalytics.in,
-    while keeping private /api/v1/model/*, /api/v1/erp/*, and /api/v1/keys/* strictly locked down.
-    """
-    if request.url.path.startswith("/api/v1/public/"):
-        origin = request.headers.get("origin")
-        is_allowed = origin in PUBLIC_ALLOWED_ORIGINS or (bool(origin) and origin.endswith(".marketlensanalytics.in"))
-        if request.method == "OPTIONS":
-            response = Response(status_code=200)
-            if is_allowed and origin:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
-                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-                response.headers["Access-Control-Max-Age"] = "86400"
-            return response
-
-        response = await call_next(request)
-        if is_allowed and origin:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-        return response
-
-    return await call_next(request)
 
 
 app.include_router(auth.router)
@@ -118,6 +79,30 @@ app.include_router(erp_routes.router)
 app.include_router(api_keys.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(index_routes.router)
+
+
+@app.middleware("http")
+async def public_api_cors_middleware(request: Request, call_next):
+    if request.url.path.startswith("/api/v1/public/"):
+        origin = request.headers.get("origin")
+        allowed_origins = {
+            "https://www.marketlensanalytics.in",
+            "https://marketlensanalytics.in",
+            "https://app.marketlensanalytics.in",
+        }
+        if request.method == "OPTIONS":
+            resp = Response(status_code=200)
+            if origin in allowed_origins:
+                resp.headers["Access-Control-Allow-Origin"] = origin
+                resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+                resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+            return resp
+        response = await call_next(request)
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        return response
+    return await call_next(request)
 
 # OpenTelemetry FastAPI Auto-Instrumentation (safe no-op when package not installed)
 try:
@@ -133,6 +118,15 @@ async def serve_portal():
     if not portal_html.is_file():
         raise HTTPException(status_code=500, detail="Portal entry page is missing from the deployment image.")
     return portal_html.read_text(encoding="utf-8")
+
+
+@app.get("/benchmarks")
+@app.get("/indices")
+@app.get("/indices/{sector_slug}")
+@app.get("/embed/{rest_of_path:path}")
+async def redirect_unfinished_routes():
+    """Cleanly redirects legacy or unfinished public SEO/embed routes to the commercial portal."""
+    return RedirectResponse(url="/", status_code=307)
 
 
 @app.get("/api/v1/health")

@@ -158,7 +158,7 @@ def authenticate_request(
             request.cookies.get("marketlens_guest_run") == "1"
             or bool(request.session.get("guest_run_used"))
         )
-        if guest_run_used:
+        if guest_run_used and required_scope == "model:write":
             raise HTTPException(
                 status_code=401,
                 detail="Guest valuation limit reached (1 run). Sign up for a 14-day free trial or sign in to continue.",

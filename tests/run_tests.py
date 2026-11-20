@@ -79,6 +79,8 @@ from tests.test_benchmarks_and_indices import (
     test_public_indices_html_pages_and_cors,
     test_wordpress_sync_resilience_and_payload_formatting,
     test_daily_index_celery_task,
+    test_guest_live_valuation_end_to_end,
+    test_zero_proprietary_ip_leaks,
 )
 
 
@@ -133,6 +135,8 @@ def main():
         ("Public SEO Index Pages (/indices) & Targeted CORS", test_public_indices_html_pages_and_cors),
         ("WordPress REST API Sync & Market Brief Formatter", test_wordpress_sync_resilience_and_payload_formatting),
         ("Daily 00:00 UTC Public Sector Index Celery Task", test_daily_index_celery_task),
+        ("Guest Live Valuation & Deliverables E2E Flow", test_guest_live_valuation_end_to_end),
+        ("Zero Proprietary IP Leaks Verification", test_zero_proprietary_ip_leaks),
     ]
 
     print("=" * 70)

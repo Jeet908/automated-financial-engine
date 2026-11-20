@@ -1180,26 +1180,23 @@
             </div>
         </a>
         <div class="nav-links">
-            <a href="/indices" class="nav-link">Sector Indices</a>
-            <a href="/benchmarks" class="nav-link">0.00 Invariant Benchmark</a>
-            <a href="/docs" class="nav-link">API Docs</a>
-            <a href="https://github.com/Jeet908/automated-financial-engine" class="nav-link" target="_blank" rel="noopener noreferrer">Repository</a>
-            <a href="/api/v1/health" class="nav-link">Health</a>
-            <div class="status-dot-badge"><span class="pulse-dot"></span> Online</div>
+            <a href="#platform" class="nav-link">Platform</a>
+            <a href="#pricing" class="nav-link">Pricing</a>
+            <a href="#enterprise" class="nav-link">Enterprise</a>
             <button class="nav-link btn-text" id="nav-auth-button" type="button" onclick="showAuthPanel('login')">Sign in</button>
-            <button class="btn-pill-trial" id="nav-trial-btn" type="button" onclick="showAuthPanel('register')">Start 14-Day Trial</button>
+            <button class="btn-pill-trial" id="nav-trial-btn" type="button" onclick="showAuthPanel('register')">Start 14-Day Free Trial</button>
             <span id="nav-account-label" class="nav-link" hidden></span>
         </div>
     </nav>
 
     <main>
         <!-- ASYMMETRIC BENTO HERO + DUAL ACTION GRID -->
-        <div class="bento-hero-grid">
+        <div class="bento-hero-grid" id="platform">
             <!-- Top-Left Bento Compartment (7 cols) -->
             <div class="bento-hero-left">
                 <div>
                     <div class="hero-badge">
-                        <span class="pulse-dot"></span> Sovereign Financial Intelligence Terminal
+                        <span class="pulse-dot"></span> 6-Gate Mathematical Verification &middot; Zero-Tolerance Reconciliation
                     </div>
                     <h1 class="hero-title">Make the numbers easier to act on.</h1>
                     <p class="hero-desc">Build institutional valuation models from listed companies or private financial files, complete with deterministic regional accounting rules and C-suite growth diagnostics.</p>
@@ -1338,98 +1335,8 @@
             </div>
         </div>
 
-        <!-- LIVE PUBLIC SECTOR VALUATION INDICES BENTO SECTION -->
-        <section class="bento-panel" id="public-indices" aria-labelledby="indices-heading" style="margin-bottom: 24px;">
-            <div class="bento-panel-header">
-                <div>
-                    <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.25rem;">
-                        <span class="status-dot-badge" style="background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.3); font-size:0.75rem;">
-                            <span class="pulse-dot"></span> Live 00:00 UTC Scrape
-                        </span>
-                        <h2 id="indices-heading" style="font-size:1.15rem; font-weight:700; color:var(--text-primary); margin:0;">
-                            Live Public Sector Valuation Indices (Comps &amp; DCF)
-                        </h2>
-                    </div>
-                    <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
-                        Unauthenticated public market intelligence across global champions with <strong>0.000000e+00</strong> balance sheet invariant verification.
-                    </p>
-                </div>
-                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-                    <a href="/benchmarks" class="secondary-button" style="text-decoration:none; font-size:0.78rem; padding:0.4rem 0.8rem; display:inline-flex; align-items:center; gap:0.35rem;">
-                        <span>✓</span> 6-Gate Invariant Report
-                    </a>
-                    <a href="/indices" class="primary-button" style="text-decoration:none; font-size:0.78rem; padding:0.4rem 0.85rem;">
-                        View All Indices &rarr;
-                    </a>
-                </div>
-            </div>
-
-            <!-- 4-Sector Preview Grid -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:1rem;">
-                <a href="/indices/indian-defence-it" class="bento-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; padding:1.1rem; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; transition:border-color 0.15s ease;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.04em;">India &middot; Ind AS</span>
-                            <span style="font-size:0.72rem; color:var(--status-pass); font-weight:700;">✓ 0.00 Plug</span>
-                        </div>
-                        <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem;">Indian Defence &amp; IT</h3>
-                        <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin-bottom:0.75rem;">BEL, HAL, BDL, TCS, INFY</p>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border-hairline); padding-top:0.6rem;">
-                        <span style="font-size:0.75rem; color:var(--text-dim);">Median Upside</span>
-                        <span class="tabular-nums" style="font-size:1.1rem; font-weight:700; color:var(--status-pass);">+18.1%</span>
-                    </div>
-                </a>
-
-                <a href="/indices/global-saas-roic" class="bento-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; padding:1.1rem; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; transition:border-color 0.15s ease;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.04em;">US &middot; US GAAP</span>
-                            <span style="font-size:0.72rem; color:var(--status-pass); font-weight:700;">✓ 0.00 Plug</span>
-                        </div>
-                        <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem;">US Semi &amp; Cloud AI</h3>
-                        <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin-bottom:0.75rem;">NVDA, MSFT, AVGO, GOOGL, AMZN</p>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border-hairline); padding-top:0.6rem;">
-                        <span style="font-size:0.75rem; color:var(--text-dim);">Median Upside</span>
-                        <span class="tabular-nums" style="font-size:1.1rem; font-weight:700; color:var(--status-pass);">+21.9%</span>
-                    </div>
-                </a>
-
-                <a href="/indices/european-clean-tech" class="bento-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; padding:1.1rem; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; transition:border-color 0.15s ease;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.04em;">Europe &middot; IFRS</span>
-                            <span style="font-size:0.72rem; color:var(--status-pass); font-weight:700;">✓ 0.00 Plug</span>
-                        </div>
-                        <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem;">EU Clean Tech &amp; Industrial</h3>
-                        <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin-bottom:0.75rem;">ASML, SIE, ENEL, IBE, AIR</p>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border-hairline); padding-top:0.6rem;">
-                        <span style="font-size:0.75rem; color:var(--text-dim);">Median Upside</span>
-                        <span class="tabular-nums" style="font-size:1.1rem; font-weight:700; color:var(--status-pass);">+16.8%</span>
-                    </div>
-                </a>
-
-                <a href="/indices/uk-energy-transition" class="bento-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; padding:1.1rem; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; transition:border-color 0.15s ease;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.04em;">UK &middot; IFRS / FRS 102</span>
-                            <span style="font-size:0.72rem; color:var(--status-pass); font-weight:700;">✓ 0.00 Plug</span>
-                        </div>
-                        <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem;">UK Financials &amp; Energy</h3>
-                        <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin-bottom:0.75rem;">AZN, SHEL, HSBC, BP, ULVR</p>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border-hairline); padding-top:0.6rem;">
-                        <span style="font-size:0.75rem; color:var(--text-dim);">Median Upside</span>
-                        <span class="tabular-nums" style="font-size:1.1rem; font-weight:700; color:var(--status-pass);">+17.2%</span>
-                    </div>
-                </a>
-            </div>
-        </section>
-
         <!-- CONNECTED ERPS (ZERO-TOUCH MONTHLY BOARD PACKS) BENTO SECTION -->
-        <section class="bento-panel erp-mesh-section" id="erps" aria-labelledby="erp-heading" style="margin-bottom: 24px;">
+        <section class="bento-panel erp-mesh-section" id="enterprise" aria-labelledby="erp-heading" style="margin-bottom: 24px;">
             <div class="bento-panel-header">
                 <div>
                     <h2 id="erp-heading" style="font-size:1.15rem; font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">
@@ -2164,11 +2071,11 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ domain, market: 'random' })
                 });
+                const result = await apiJobResult(job.job_id);
                 if (!currentAccount) {
                     localStorage.setItem('marketlens_guest_run', '1');
                     document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
                 }
-                const result = await apiJobResult(job.job_id);
                 markAllCompleted();
                 renderLiveDashboard(result);
                 await refreshAccount();
@@ -2201,11 +2108,11 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     headers: csrfHeaders(),
                     body: formData
                 });
+                const result = await apiJobResult(job.job_id);
                 if (!currentAccount) {
                     localStorage.setItem('marketlens_guest_run', '1');
                     document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
                 }
-                const result = await apiJobResult(job.job_id);
                 markAllCompleted();
                 renderUploadDashboard(result);
                 await refreshAccount();

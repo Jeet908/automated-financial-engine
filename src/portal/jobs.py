@@ -32,7 +32,7 @@ from .database import (
     record_api_usage,
     utc_now,
 )
-from .dependencies import AuthContext, get_verified_user, optional_audit_auth, require_model_write
+from .dependencies import AuthContext, get_verified_user, optional_audit_auth, require_model_write, require_scope
 from .plans import account_summary, require_plan_feature, reserve_job
 from .security import check_csrf
 
@@ -78,7 +78,10 @@ def _update_job(job_id: str, *, status: str, result: dict[str, Any] | None = Non
 def _run_live_job_fallback(job_id: str, user_id: str, domain: str | None, market: str) -> None:
     """Fallback in-process execution when Celery is not active."""
     try:
-        live_scrape_task(None, job_id, user_id, domain, market)
+        if hasattr(live_scrape_task, "apply"):
+            live_scrape_task.apply(args=[job_id, user_id, domain, market])
+        else:
+            live_scrape_task(None, job_id, user_id, domain, market)
     except Exception as exc:
         logger.exception("Fallback live valuation job failed for %s: %s", job_id, exc)
 
@@ -86,7 +89,10 @@ def _run_live_job_fallback(job_id: str, user_id: str, domain: str | None, market
 def _run_upload_job_fallback(job_id: str, user_id: str, input_path: str) -> None:
     """Fallback in-process execution for file uploads when Celery is not active."""
     try:
-        generate_pack_task(None, job_id, user_id, input_path)
+        if hasattr(generate_pack_task, "apply"):
+            generate_pack_task.apply(args=[job_id, user_id, input_path])
+        else:
+            generate_pack_task(None, job_id, user_id, input_path)
     except Exception as exc:
         logger.exception("Fallback upload valuation job failed for %s: %s", job_id, exc)
 
@@ -129,7 +135,11 @@ def live_scrape(
     )
 
     # Celery dispatch with non-blocking fallback
-    use_celery = bool(os.environ.get("REDIS_URL")) and celery_app is not None
+    use_celery = (
+        bool(os.environ.get("USE_CELERY_WORKERS"))
+        and bool(os.environ.get("REDIS_URL"))
+        and celery_app is not None
+    )
     if use_celery:
         try:
             live_scrape_task.apply_async(
@@ -210,7 +220,11 @@ async def generate_pack(
     finally:
         await file.close()
 
-    use_celery = bool(os.environ.get("REDIS_URL")) and celery_app is not None
+    use_celery = (
+        bool(os.environ.get("USE_CELERY_WORKERS"))
+        and bool(os.environ.get("REDIS_URL"))
+        and celery_app is not None
+    )
     if use_celery:
         try:
             generate_pack_task.apply_async(
@@ -229,10 +243,11 @@ async def generate_pack(
 @router.get("/jobs/{job_id}")
 def get_job(
     job_id: str,
-    user=Depends(get_verified_user),
+    auth: AuthContext = Depends(require_scope("model:read", allow_guest=True)),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
-    tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
+    user = auth.user
+    tenant_id = auth.tenant_id
     job = get_tenant_job(db, job_id, tenant_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Valuation job not found.")
@@ -258,10 +273,11 @@ def get_job(
 @router.get("/jobs")
 def list_jobs(
     limit: int = Query(default=20, ge=1, le=50),
-    user: User = Depends(get_verified_user),
+    auth: AuthContext = Depends(require_scope("model:read", allow_guest=True)),
     db: Session = Depends(get_db),
 ) -> dict[str, list[dict[str, object]]]:
-    tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
+    user = auth.user
+    tenant_id = auth.tenant_id
     recent_jobs = list_tenant_jobs(db, tenant_id, limit=limit)
     items: list[dict[str, object]] = []
     for job in recent_jobs:
@@ -286,15 +302,16 @@ def download_job_file(
     job_id: str,
     file_key: str,
     request: Request,
-    user=Depends(get_verified_user),
+    auth: AuthContext = Depends(require_scope("model:read", allow_guest=True)),
     db: Session = Depends(get_db),
 ):
-    if file_key == "zip_pack":
+    user = auth.user
+    tenant_id = auth.tenant_id
+    if file_key == "zip_pack" and auth.auth_type != "guest":
         require_plan_feature("zip_packs", db, user)
     if request.query_params.get("white_label") == "true":
         require_plan_feature("white_label_export", db, user)
 
-    tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
     job = get_tenant_job(db, job_id, tenant_id)
     if job is None or job.status != "succeeded":
         raise HTTPException(status_code=404, detail="Report not found.")
