@@ -162,7 +162,26 @@ def test_public_indices_html_pages_and_cors():
     invalid_html = client.get("/indices/unknown-sector-slug")
     assert invalid_html.status_code == 404
 
-    # 3. CORS verification on /api/v1/public/indices
+    # 3. GET /benchmarks HTML Report
+    bench_resp = client.get("/benchmarks")
+    assert bench_resp.status_code == 200
+    assert "text/html" in bench_resp.headers["content-type"]
+    assert "Accounting Invariant Benchmark" in bench_resp.text
+    assert "0.000000e+00" in bench_resp.text
+    assert "run_benchmark.py" in bench_resp.text
+
+    # 4. GET /embed/indices WordPress Embed Snippet
+    embed_resp = client.get("/embed/indices")
+    assert embed_resp.status_code == 200
+    assert "text/html" in embed_resp.headers["content-type"]
+    assert "ml-public-index-widget" in embed_resp.text
+    assert "X-Frame-Options" not in embed_resp.headers or embed_resp.headers.get("X-Frame-Options") == "ALLOWALL"
+
+    # 5. GET /docs OpenAPI documentation
+    docs_resp = client.get("/docs")
+    assert docs_resp.status_code == 200
+
+    # 6. CORS verification on /api/v1/public/indices
     cors_origin = "https://www.marketlensanalytics.in"
     cors_resp = client.get("/api/v1/public/indices", headers={"Origin": cors_origin})
     assert cors_resp.status_code == 200

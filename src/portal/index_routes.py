@@ -803,3 +803,204 @@ def serve_public_sector_detail_page(sector_slug: str) -> HTMLResponse:
     if not html_content:
         raise HTTPException(status_code=404, detail="Sector index page not found.")
     return HTMLResponse(content=html_content)
+
+
+def _generate_benchmarks_html() -> str:
+    """Fast, public HTML5 presentation of the 6-Gate Accounting Invariant Benchmark Suite."""
+    return """<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Accounting Invariant Benchmark Report | MarketLens Analytics</title>
+    <meta name="description" content="Open-Source 6-Gate Accounting Invariant Benchmark: 0.000000e+00 Balance Sheet Error across Ind AS, US GAAP, and IFRS compared to LLMs.">
+    <style>
+        :root {
+            --bg-canvas: #09090b;
+            --bg-surface: #111114;
+            --bg-elevated: #18181b;
+            --border-hairline: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.18);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-dim: #71717a;
+            --accent-odd: #ff5a1f;
+            --status-pass: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-hairline);
+            margin-bottom: 2.5rem;
+        }
+        .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: inherit; }
+        .logo-box { background: var(--accent-odd); color: #fff; font-weight: 800; padding: 0.35rem 0.65rem; border-radius: 6px; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .nav-link:hover { color: var(--text-primary); }
+        .primary-btn {
+            background: var(--accent-odd);
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 650;
+        }
+        .hero { text-align: center; margin-bottom: 3rem; }
+        .hero-pill {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--status-pass);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            font-size: 0.8rem;
+            padding: 0.25rem 0.85rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+        .hero p { color: var(--text-secondary); max-width: 720px; margin: 0 auto; font-size: 1.05rem; }
+        
+        .scorecard-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .table-wrap { overflow-x: auto; margin: 1rem 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        th, td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--border-hairline); }
+        th { color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-elevated); }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .tag-pass { background: rgba(16, 185, 129, 0.15); color: var(--status-pass); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.8rem; }
+        .tag-fail { background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.8rem; }
+        
+        .cli-box {
+            background: #000;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: ui-monospace, monospace;
+            color: #10b981;
+            font-size: 0.9rem;
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo">
+                <span class="logo-box">ML</span>
+                <span style="font-weight:700;">MarketLens Analytics</span>
+            </a>
+            <div style="display:flex; gap:1.25rem; align-items:center;">
+                <a href="/indices" class="nav-link">Sector Indices</a>
+                <a href="/docs" class="nav-link">API Docs</a>
+                <a href="https://github.com/Jeet908/automated-financial-engine" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+                <a href="/?trial=1" class="primary-btn">14-Day Free Trial</a>
+            </div>
+        </header>
+
+        <main>
+            <div class="hero">
+                <div class="hero-pill">✓ 0.000000e+00 Balance Sheet Plug Discrepancy Verified</div>
+                <h1>Open Accounting Invariant Benchmark</h1>
+                <p>Deterministic 6-gate mathematical verification across India Ind AS, US GAAP, and IFRS. Proving exact double-entry accounting integrity with zero model hallucination.</p>
+            </div>
+
+            <section class="scorecard-panel">
+                <h2 style="font-size:1.3rem; margin-bottom:0.5rem;">Audit Scorecard: Deterministic Engine vs. Generic LLM</h2>
+                <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1rem;">Evaluating balance sheet drift, broken formulas, and cryptographic lineage across 8 projected fiscal periods.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric / Invariant Gate</th>
+                                <th style="text-align:center;">MarketLens Engine</th>
+                                <th style="text-align:center;">Generic LLM Baseline</th>
+                                <th style="text-align:right;">Advantage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Balance Sheet Max Discrepancy</strong></td>
+                                <td style="text-align:center;" class="mono"><span class="tag-pass">0.000000e+00</span></td>
+                                <td style="text-align:center;" class="mono"><span class="tag-fail">~0.1850</span></td>
+                                <td style="text-align:right; color:var(--status-pass); font-weight:700;">Exact Zero Drift ($Assets \equiv L+E$)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>6/6 Invariant Gates Passed</strong></td>
+                                <td style="text-align:center;" class="mono"><strong>100.0% (18/18)</strong></td>
+                                <td style="text-align:center;" class="mono" style="color:#ef4444;">27.8% (5/18)</td>
+                                <td style="text-align:right; color:var(--status-pass); font-weight:700;">+72.2% Guard</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Excel Formula Errors (#REF!, #DIV/0!)</strong></td>
+                                <td style="text-align:center;" class="mono">0</td>
+                                <td style="text-align:center;" class="mono" style="color:#ef4444;">42</td>
+                                <td style="text-align:right;">Zero broken cell formulas</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SHA-256 Provenance Coverage</strong></td>
+                                <td style="text-align:center;" class="mono">100.0%</td>
+                                <td style="text-align:center;" class="mono">0.0%</td>
+                                <td style="text-align:right;">Cryptographic Merkle tree</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Average Solve Latency</strong></td>
+                                <td style="text-align:center;" class="mono">14.85 ms</td>
+                                <td style="text-align:center;" class="mono">2,916.67 ms</td>
+                                <td style="text-align:right; color:var(--status-pass); font-weight:700;">~196x Faster</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="scorecard-panel">
+                <h2 style="font-size:1.3rem; margin-bottom:0.5rem;">Reproduce Locally in 1 Command</h2>
+                <p style="color:var(--text-secondary); font-size:0.88rem;">Run the open benchmark suite on your local machine using our verified Python test harness:</p>
+                <div class="cli-box">
+                    <span>git clone https://github.com/Jeet908/automated-financial-engine &amp;&amp; python benchmarks/run_benchmark.py</span>
+                </div>
+                <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-top:1rem;">
+                    <a href="https://github.com/Jeet908/automated-financial-engine/blob/main/benchmarks/BENCHMARK_REPORT.md" target="_blank" rel="noopener" class="primary-btn" style="background:var(--bg-elevated); border:1px solid var(--border-hairline);">Read Full Benchmark Report (Markdown) &rarr;</a>
+                    <a href="/indices" class="primary-btn">View Live Sector Valuation Indices &rarr;</a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>"""
+
+
+@router.get("/benchmarks", response_class=HTMLResponse)
+def serve_benchmarks_page() -> HTMLResponse:
+    """Fast, public HTML5 presentation of the 6-Gate Accounting Invariant Benchmark Suite."""
+    return HTMLResponse(content=_generate_benchmarks_html())
+
+
+@router.get("/embed/indices", response_class=HTMLResponse)
+def serve_embed_indices_page(request: Request) -> HTMLResponse:
+    """Public WordPress embed snippet viewable in an iframe or previewed directly."""
+    from pathlib import Path
+    embed_path = Path(__file__).resolve().parent / "wordpress_index_embed.html"
+    if not embed_path.is_file():
+        raise HTTPException(status_code=404, detail="Embed snippet not found.")
+    return HTMLResponse(content=embed_path.read_text(encoding="utf-8"))

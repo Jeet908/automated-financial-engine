@@ -23,13 +23,14 @@ from src.workers.celery_app import check_redis_connectivity
 PROJECT_ROOT = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
 is_production = os.environ.get("APP_ENV") == "production" or bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+enable_public_docs = os.environ.get("ENABLE_DOCS", "true").lower() in ("1", "true", "yes")
 
 app = FastAPI(
     title="MarketLens Analytics",
-    description="Financial modeling, company valuation, and subscription management.",
+    description="Deterministic financial modeling, institutional company valuation, and Valuation-as-a-Service (VaaS) APIs.",
     version="2.0.0",
-    docs_url=None if is_production else "/docs",
-    redoc_url=None if is_production else "/redoc",
+    docs_url="/docs" if enable_public_docs else None,
+    redoc_url="/redoc" if enable_public_docs else None,
 )
 
 allowed_hosts = [
@@ -55,15 +56,18 @@ app.add_middleware(
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "DENY")
+    is_embed = request.url.path.startswith("/embed/")
+    if not is_embed:
+        response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    frame_ancestors = "'self' https://*.marketlensanalytics.in https://marketlensanalytics.in" if is_embed else "'none'"
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://js.stripe.com; "
-        "style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com https://api.stripe.com; "
-        "frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
-        "img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+        f"default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://js.stripe.com; "
+        f"style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.razorpay.com https://api.stripe.com; "
+        f"frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
+        f"img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors {frame_ancestors}",
     )
     if request.url.path.startswith("/api/"):
         response.headers.setdefault("Cache-Control", "no-store")
@@ -243,5 +247,6 @@ _start_daily_background_refresh()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    print(f"[*] Starting MarketLens Analytics on 0.0.0.0:{port}")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False, proxy_headers=True)
+    workers = int(os.environ.get("WEB_CONCURRENCY", 1))
+    print(f"[*] Starting MarketLens Analytics on 0.0.0.0:{port} (workers={workers})")
+    uvicorn.run("app:app", host="0.0.0.0", port=port, workers=workers, reload=False, proxy_headers=True)
