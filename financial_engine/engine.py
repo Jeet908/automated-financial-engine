@@ -117,6 +117,11 @@ class FinancialModel:
         }
         return diagnose(model_data, wacc=self.wacc).to_dict()
 
+    @property
+    def dupont_roe(self) -> Dict[str, Any]:
+        from financial_engine.reporting.dupont import compute_dupont_decomposition
+        return compute_dupont_decomposition(self)
+
 
 class FinancialEngine:
     """Production-ready Autonomous Financial Modeling & Valuation Engine."""

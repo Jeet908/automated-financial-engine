@@ -31,6 +31,7 @@ from tests.test_cli import test_cli_pipeline_execution
 from tests.test_advanced_metrics import (
     test_roic_and_eva_computation,
     test_dupont_5way_reconciliation,
+    test_dupont_decomposition_model_property,
     test_football_field_bands,
     test_pain_points_diagnostic,
     test_regional_accounting_rulebook,
@@ -99,6 +100,7 @@ def main():
         ("End-to-End CLI Pipeline & Artifact Generation", lambda: test_cli_pipeline_execution(ROOT_DIR / "artifacts")),
         ("ROIC & Economic Value Added (EVA) Engine", test_roic_and_eva_computation),
         ("DuPont 5-Way ROE Decomposition Reconciliation", test_dupont_5way_reconciliation),
+        ("DuPont 5-Way Full Model Invariant (1e-6 Err)", test_dupont_decomposition_model_property),
         ("Valuation Football Field Range Generator", test_football_field_bands),
         ("C-Suite Operational Pain Points & Alpha Diagnostic", test_pain_points_diagnostic),
         ("Regional Accounting Rulebook Jurisdiction Detector", test_regional_accounting_rulebook),

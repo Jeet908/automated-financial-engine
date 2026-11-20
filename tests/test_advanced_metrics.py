@@ -138,3 +138,26 @@ def test_saas_plan_catalog():
     assert catalog["pro"]["prices"]["USD"] == 49
     assert catalog["business"]["prices"]["USD"] == 199
 
+
+def test_dupont_decomposition_model_property():
+    from financial_engine.engine import FinancialEngine
+
+    engine = FinancialEngine.from_template("kaveri_foods")
+    model = engine.solve(run_mc=False)
+    dupont = model.dupont_roe
+    assert dupont is not None
+    assert "periods" in dupont
+    assert len(dupont["periods"]) >= 5
+    assert dupont["all_identities_verified"] is True
+    for p in dupont["periods"]:
+        assert p["identity_verified"] is True
+        assert p["max_discrepancy"] < 1e-6
+        calc_roe = (
+            p["operating_margin"]["ratio"]
+            * p["asset_turnover"]["ratio"]
+            * p["leverage_factor"]["ratio"]
+            * p["interest_burden"]["ratio"]
+            * p["tax_burden"]["ratio"]
+        )
+        assert abs(calc_roe - p["roe"]["ratio"]) < 1e-6
+
