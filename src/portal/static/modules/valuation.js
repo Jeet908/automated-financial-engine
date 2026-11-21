@@ -192,17 +192,18 @@ export function closeTrialUpgradeModal() {
 window._openTrialUpgradeModal = openTrialUpgradeModal;
 
 export async function triggerLiveScrape() {
-    const { currentAccount, analysisBusy } = appState.getState();
-    if (analysisBusy) return;
+    const state = appState.getState();
+    if (state.analysisBusy) return;
 
+    const account = state.currentAccount;
     const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
-    const limitReached = Boolean(currentAccount && currentAccount.plan && currentAccount.plan.remaining_this_month <= 0);
+    const limitReached = Boolean(account && account.plan && account.plan.remaining_this_month <= 0);
 
-    if (!currentAccount && guestUsed) {
+    if (!account && guestUsed) {
         openTrialUpgradeModal();
         return;
     }
-    if (currentAccount && limitReached) {
+    if (account && limitReached) {
         showToast('Monthly valuation limit reached. Please choose an upgraded plan below.', 'error');
         const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
         if (plansSec) plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -218,7 +219,7 @@ export async function triggerLiveScrape() {
 
     clearError();
     appState.setState({ analysisBusy: true });
-    setAccess(appState.getState().currentAccount);
+    setAccess(account);
 
     if (processFlow) processFlow.style.display = 'block';
     if (resultsDashboard) resultsDashboard.style.display = 'none';
@@ -234,9 +235,9 @@ export async function triggerLiveScrape() {
     setStep(1);
 
     try {
-        const { currentAccount } = appState.getState();
+        const liveAccount = appState.getState().currentAccount;
         const headers = csrfHeaders({ 'Content-Type': 'application/json' });
-        if (!currentAccount) {
+        if (!liveAccount) {
             headers['X-Guest-Run'] = '1';
         }
 
@@ -262,11 +263,11 @@ export async function triggerLiveScrape() {
         renderLiveDashboard(result);
         await refreshAccount();
     } catch (error) {
-        const { currentAccount } = appState.getState();
+        const errAccount = appState.getState().currentAccount;
         const isGuestLimit = error.status === 401 || (error.message && error.message.includes('Guest valuation limit'));
         const isQuotaLimit = error.status === 429 || (error.message && error.message.includes('valuation(s) for this month'));
 
-        if (isGuestLimit || (!currentAccount && isQuotaLimit)) {
+        if (isGuestLimit || (!errAccount && isQuotaLimit)) {
             // High-converting frictionless enterprise modal (zero red error message)
             openTrialUpgradeModal();
         } else if (isQuotaLimit) {
@@ -284,17 +285,18 @@ export async function triggerLiveScrape() {
 }
 
 export async function handleUpload(file) {
-    const { currentAccount, analysisBusy } = appState.getState();
-    if (analysisBusy) return;
+    const state = appState.getState();
+    if (state.analysisBusy) return;
 
+    const account = state.currentAccount;
     const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
-    const limitReached = Boolean(currentAccount && currentAccount.plan && currentAccount.plan.remaining_this_month <= 0);
+    const limitReached = Boolean(account && account.plan && account.plan.remaining_this_month <= 0);
 
-    if (!currentAccount && guestUsed) {
+    if (!account && guestUsed) {
         openTrialUpgradeModal();
         return;
     }
-    if (currentAccount && limitReached) {
+    if (account && limitReached) {
         showToast('Monthly valuation limit reached. Please choose an upgraded plan below.', 'error');
         const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
         if (plansSec) plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -303,7 +305,7 @@ export async function handleUpload(file) {
 
     clearError();
     appState.setState({ analysisBusy: true });
-    setAccess(currentAccount);
+    setAccess(account);
 
     const processFlow = document.getElementById('process-flow');
     const resultsDashboard = document.getElementById('results-dashboard');
@@ -321,9 +323,9 @@ export async function handleUpload(file) {
     const fileInput = document.getElementById('file-input');
 
     try {
-        const { currentAccount } = appState.getState();
+        const uploadAccount = appState.getState().currentAccount;
         const uploadHeaders = csrfHeaders();
-        if (!currentAccount) {
+        if (!uploadAccount) {
             uploadHeaders['X-Guest-Run'] = '1';
         }
 
@@ -336,8 +338,7 @@ export async function handleUpload(file) {
         window._currentJobId = job.job_id;
 
         const result = await apiJobResult(job.job_id);
-        const { currentAccount } = appState.getState();
-        if (!currentAccount) {
+        if (!appState.getState().currentAccount) {
             localStorage.setItem('marketlens_guest_run', '1');
             document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
         }
@@ -345,8 +346,8 @@ export async function handleUpload(file) {
         renderUploadDashboard(result);
         await refreshAccount();
     } catch (error) {
-        const { currentAccount } = appState.getState();
-        if (!currentAccount && error.status === 401) {
+        const errAccount = appState.getState().currentAccount;
+        if (!errAccount && error.status === 401) {
             showAuthPanel('register');
         }
         showError(`File processing failed: ${error.message}`);
@@ -680,11 +681,10 @@ window._refreshJobHistory = refreshJobHistory;
 
 export function initValuation() {
     const liveBtn = document.getElementById('btn-live-scrape');
-    if (liveBtn) liveBtn.addEventListener('click', triggerLiveScrape);
-
     const tickerInput = document.getElementById('ticker-search-input');
     const quickChips = document.getElementById('quick-ticker-chips');
     const domainSelect = document.getElementById('domain-selector');
+    const statusLabel = document.getElementById('live-selection-label');
 
     function updateRunButtonLabel(ticker) {
         if (!liveBtn) return;
@@ -698,6 +698,34 @@ export function initValuation() {
         } else {
             liveBtn.textContent = 'Run Institutional Valuation';
         }
+    }
+
+    function selectTicker(ticker, triggerNow = true) {
+        const normTicker = (ticker || '').trim().toUpperCase();
+        if (quickChips) {
+            quickChips.querySelectorAll('.ticker-chip').forEach(c => {
+                const chipTicker = (c.dataset.ticker || '').toUpperCase();
+                c.classList.toggle('active', chipTicker === normTicker || (!normTicker && !chipTicker));
+            });
+        }
+        if (tickerInput) {
+            tickerInput.value = normTicker;
+        }
+        updateRunButtonLabel(normTicker);
+        if (statusLabel) {
+            statusLabel.textContent = normTicker ? `Target Ticker: ${normTicker}` : 'Random Global Benchmark';
+        }
+        if (triggerNow) {
+            showToast(normTicker ? `Running institutional valuation for ${normTicker}...` : 'Discovering benchmark company...', 'info');
+            triggerLiveScrape();
+        }
+    }
+
+    if (liveBtn) {
+        liveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerLiveScrape();
+        });
     }
 
     if (tickerInput) {
@@ -716,25 +744,30 @@ export function initValuation() {
                 });
             }
             updateRunButtonLabel(val);
+            if (statusLabel) {
+                statusLabel.textContent = val ? `Target Ticker: ${val}` : 'Random Global Benchmark';
+            }
         });
     }
 
+    // Direct event listener on each chip button AND delegation on the parent container
     if (quickChips) {
+        // Individual listener on each chip
+        quickChips.querySelectorAll('.ticker-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const ticker = chip.dataset.ticker || '';
+                selectTicker(ticker, true);
+            });
+        });
+
+        // Fallback delegation
         quickChips.addEventListener('click', (e) => {
             const btn = e.target.closest('.ticker-chip');
             if (!btn) return;
-            quickChips.querySelectorAll('.ticker-chip').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            const targetTicker = btn.dataset.ticker || '';
-            if (tickerInput) {
-                tickerInput.value = targetTicker;
-            }
-            updateRunButtonLabel(targetTicker);
-            if (targetTicker) {
-                showToast(`Selected ${targetTicker}. Click 'Run Valuation for ${targetTicker}' below.`, 'info');
-            } else {
-                showToast('Selected random benchmark discovery. Click Run below.', 'info');
-            }
+            const ticker = btn.dataset.ticker || '';
+            selectTicker(ticker, true);
         });
     }
 
@@ -748,9 +781,15 @@ export function initValuation() {
                     if (anyChip) anyChip.classList.add('active');
                 }
                 updateRunButtonLabel('');
+                if (statusLabel) {
+                    statusLabel.textContent = `Sector: ${domainSelect.value}`;
+                }
                 showToast(`Sector filter set to ${domainSelect.value}`, 'info');
             } else {
                 updateRunButtonLabel('');
+                if (statusLabel) {
+                    statusLabel.textContent = 'Random Global Benchmark';
+                }
             }
         });
     }

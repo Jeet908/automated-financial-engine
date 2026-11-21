@@ -123,7 +123,16 @@ export function setAccess(account) {
         if (isBusy) {
             liveBtn.textContent = 'Running Valuation Pipeline...';
         } else {
-            liveBtn.textContent = 'Run Institutional Valuation';
+            const tickerInput = document.getElementById('ticker-search-input');
+            const ticker = tickerInput && tickerInput.value.trim() ? tickerInput.value.trim().toUpperCase() : '';
+            if (ticker) {
+                liveBtn.textContent = `Run Valuation for ${ticker}`;
+            } else if (domainSelect && domainSelect.value && domainSelect.value !== 'Any Random Domain') {
+                const shortDomain = domainSelect.value.split('&')[0].trim();
+                liveBtn.textContent = `Run Valuation (${shortDomain})`;
+            } else {
+                liveBtn.textContent = 'Run Institutional Valuation';
+            }
         }
     }
     if (fileIn) fileIn.disabled = isBusy;
