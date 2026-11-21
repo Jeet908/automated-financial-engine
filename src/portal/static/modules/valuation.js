@@ -684,6 +684,21 @@ export function initValuation() {
 
     const tickerInput = document.getElementById('ticker-search-input');
     const quickChips = document.getElementById('quick-ticker-chips');
+    const domainSelect = document.getElementById('domain-selector');
+
+    function updateRunButtonLabel(ticker) {
+        if (!liveBtn) return;
+        const { analysisBusy } = appState.getState();
+        if (analysisBusy) return;
+        if (ticker) {
+            liveBtn.textContent = `Run Valuation for ${ticker}`;
+        } else if (domainSelect && domainSelect.value !== 'Any Random Domain') {
+            const shortDomain = domainSelect.value.split('&')[0].trim();
+            liveBtn.textContent = `Run Valuation (${shortDomain})`;
+        } else {
+            liveBtn.textContent = 'Run Institutional Valuation';
+        }
+    }
 
     if (tickerInput) {
         tickerInput.addEventListener('keydown', (e) => {
@@ -700,6 +715,7 @@ export function initValuation() {
                     btn.classList.toggle('active', chipTicker === val || (!val && !chipTicker));
                 });
             }
+            updateRunButtonLabel(val);
         });
     }
 
@@ -713,12 +729,15 @@ export function initValuation() {
             if (tickerInput) {
                 tickerInput.value = targetTicker;
             }
-            // Trigger valuation run for this ticker (or benchmark champion if 'Any')
-            triggerLiveScrape();
+            updateRunButtonLabel(targetTicker);
+            if (targetTicker) {
+                showToast(`Selected ${targetTicker}. Click 'Run Valuation for ${targetTicker}' below.`, 'info');
+            } else {
+                showToast('Selected random benchmark discovery. Click Run below.', 'info');
+            }
         });
     }
 
-    const domainSelect = document.getElementById('domain-selector');
     if (domainSelect) {
         domainSelect.addEventListener('change', () => {
             if (domainSelect.value !== 'Any Random Domain') {
@@ -728,6 +747,10 @@ export function initValuation() {
                     const anyChip = quickChips.querySelector('[data-ticker=""]');
                     if (anyChip) anyChip.classList.add('active');
                 }
+                updateRunButtonLabel('');
+                showToast(`Sector filter set to ${domainSelect.value}`, 'info');
+            } else {
+                updateRunButtonLabel('');
             }
         });
     }

@@ -86,16 +86,20 @@ function wireInteractiveElements() {
 }
 
 async function bootstrap() {
-    // 1. Initialize component controllers and listeners
-    initAuth();
-    initValuation();
-    initBilling();
-    initCharts(null);
-    wireInteractiveElements();
+    // 1. Initialize component controllers and listeners with independent fail-safes
+    try { initAuth(); } catch (err) { console.error('[MarketLens Portal] initAuth error:', err); }
+    try { initValuation(); } catch (err) { console.error('[MarketLens Portal] initValuation error:', err); }
+    try { initBilling(); } catch (err) { console.error('[MarketLens Portal] initBilling error:', err); }
+    try { initCharts(null); } catch (err) { console.error('[MarketLens Portal] initCharts error:', err); }
+    try { wireInteractiveElements(); } catch (err) { console.error('[MarketLens Portal] wireInteractiveElements error:', err); }
 
     // 2. Set default UI states
-    setAuthMode('register');
-    setAccess(null);
+    try {
+        setAuthMode('register');
+        setAccess(null);
+    } catch (err) {
+        console.error('[MarketLens Portal] Default state error:', err);
+    }
 
     // 3. Parallel fetch core portal features and session
     try {
@@ -110,6 +114,8 @@ async function bootstrap() {
     } catch (err) {
         console.error('[MarketLens Portal] Bootstrap initialization notice:', err);
     }
+
+    console.log('[MarketLens Analytics] Terminal interactive controllers armed and ready.');
 }
 
 if (document.readyState === 'loading') {

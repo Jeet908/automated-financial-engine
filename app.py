@@ -78,8 +78,10 @@ async def security_headers(request: Request, call_next):
         "frame-src https://api.razorpay.com https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; "
         "img-src 'self' data: https://*.razorpay.com https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
     )
-    if request.url.path.startswith("/api/"):
-        response.headers.setdefault("Cache-Control", "no-store")
+    if request.url.path == "/" or request.url.path.startswith("/static/") or request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     return response
 
 
@@ -120,7 +122,9 @@ if not _static_mounted:
             content=safe_path.read_bytes(),
             media_type=f"{media_type}; charset=utf-8" if "text" in media_type or "javascript" in media_type else media_type,
             headers={
-                "Cache-Control": "public, max-age=3600",
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
                 "X-Content-Type-Options": "nosniff",
             },
         )
