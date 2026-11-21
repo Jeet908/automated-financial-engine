@@ -144,9 +144,9 @@ export function setAccess(account) {
         if (isBusy) {
             // Handled during execution
         } else if (user && limitReached) {
-            progMsg.textContent = 'Monthly quota reached. Start 14-day enterprise trial or upgrade plan for instant access.';
+            progMsg.textContent = 'Monthly quota reached. Upgrade to Professional Advisory or Institutional Fund for expanded access.';
         } else if (!user && guestUsed) {
-            progMsg.textContent = 'Guest preview completed. Start your 14-day free trial for 5 instant full valuations.';
+            progMsg.textContent = 'Guest preview completed. Request executive access to unlock full institutional models and downloads.';
         }
     }
 
@@ -250,7 +250,7 @@ export async function submitCredentials(event) {
     try {
         if (authMode === 'register') {
             const termsCheck = document.getElementById('terms-accepted');
-            await apiRequest('/api/v1/auth/register', {
+            const res = await apiRequest('/api/v1/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -259,8 +259,22 @@ export async function submitCredentials(event) {
                     accepted_terms: termsCheck ? termsCheck.checked : false
                 })
             });
-            setAuthFeedback('Account created. Check your email to verify the address, then sign in.');
-            setAuthMode('login');
+            if (res && res.user) {
+                appState.setState({
+                    currentAccount: res,
+                    csrfToken: res.csrf_token
+                });
+                const authPanel = document.getElementById('auth-panel');
+                if (authPanel) authPanel.hidden = true;
+                setAccess(res);
+                if (typeof window._renderPlans === 'function') {
+                    window._renderPlans();
+                }
+                showToast('Account created and verified! Welcome to MarketLens.', 'success');
+            } else {
+                setAuthFeedback(res.message || 'Account created. Check your email to verify the address, then sign in.');
+                setAuthMode('login');
+            }
         } else {
             const account = await apiRequest('/api/v1/auth/login', {
                 method: 'POST',

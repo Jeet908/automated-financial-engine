@@ -78,28 +78,49 @@ export function renderPlans() {
             ? plan.prices[activeCurrency]
             : (plan.price_paise === 0 ? 0 : Math.round(plan.price_paise / 100));
 
-        if (plan.key === 'free_trial') {
-            price.innerHTML = `<span class="price-val" style="color:var(--accent-odd);">${sym}0</span> <span class="price-period">/ 14 days</span>`;
-        } else if (plan.key === 'free') {
+        const formattedPrice = typeof priceVal === 'number' ? priceVal.toLocaleString() : priceVal;
+        if (plan.key === 'free') {
             price.innerHTML = `<span class="price-val">${sym}0</span> <span class="price-period">/ month</span>`;
         } else {
-            price.innerHTML = `<span class="price-val">${sym}${priceVal}</span> <span class="price-period">/ month</span>`;
+            price.innerHTML = `<span class="price-val">${sym}${formattedPrice}</span> <span class="price-period">/ month</span>`;
         }
 
         const note = document.createElement('p');
         note.className = 'plan-note';
-        note.textContent = plan.key === 'free_trial'
-            ? 'Instant 14-day full access. No credit card required.'
-            : `${plan.monthly_valuations} valuation${plan.monthly_valuations === 1 ? '' : 's'} per month`;
+        note.textContent = plan.key === 'free'
+            ? 'Deterministic 1-run evaluation with SHA-256 Merkle root.'
+            : `${plan.monthly_valuations} institutional valuations per month`;
+
+        let featuresList = null;
+        if (Array.isArray(plan.features) && plan.features.length) {
+            featuresList = document.createElement('ul');
+            featuresList.className = 'plan-features-list';
+            plan.features.forEach(feat => {
+                const li = document.createElement('li');
+                li.className = 'plan-feature-item';
+                li.innerHTML = `<span class="plan-feature-bullet">✓</span> <span>${feat}</span>`;
+                featuresList.appendChild(li);
+            });
+        }
 
         const actions = document.createElement('div');
         actions.className = 'plan-actions';
         const button = document.createElement('button');
         const isTrial = plan.key === 'free_trial';
-        button.className = isTrial || plan.key === 'pro' ? 'primary-button' : 'secondary-button';
+        button.className = isTrial || plan.key === 'pro' || plan.key === 'business' ? 'primary-button' : 'secondary-button';
 
         const activePlan = currentAccount && currentAccount.plan && currentAccount.plan.key === plan.key;
-        button.textContent = activePlan ? 'Current plan' : (isTrial ? 'Start 14-Day Free Trial' : (plan.key === 'free' ? 'Get started' : `Choose ${plan.name}`));
+        let btnText = `Choose ${plan.name}`;
+        if (activePlan) {
+            btnText = 'Current Plan';
+        } else if (plan.key === 'free') {
+            btnText = 'Instant Sandbox Access';
+        } else if (plan.key === 'pro') {
+            btnText = 'Deploy Professional Suite';
+        } else if (plan.key === 'business') {
+            btnText = 'Deploy Institutional Suite';
+        }
+        button.textContent = btnText;
         button.disabled = Boolean(activePlan || (plan.key !== 'free' && plan.key !== 'free_trial' && !plan.checkout_available));
 
         button.addEventListener('click', async () => {
@@ -116,7 +137,11 @@ export function renderPlans() {
                     }
                 }
             } else if (plan.key === 'free') {
-                showAuthPanel('register');
+                if (!currentAccount) {
+                    showAuthPanel('register');
+                } else {
+                    showToast('You are already on the Executive Sandbox tier.', 'info');
+                }
             } else {
                 startCheckout(plan.key);
             }
@@ -129,7 +154,11 @@ export function renderPlans() {
             setup.textContent = 'Checkout setup is in progress.';
             actions.appendChild(setup);
         }
-        card.append(heading, price, note, actions);
+        if (featuresList) {
+            card.append(heading, price, note, featuresList, actions);
+        } else {
+            card.append(heading, price, note, actions);
+        }
         grid.appendChild(card);
     });
 

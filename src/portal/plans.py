@@ -81,65 +81,56 @@ def require_plan_feature(feature_name: str, db: Session | None = None, user: Use
 
 def plan_catalog() -> dict[str, dict[str, object]]:
     """
-    Returns the full multi-currency SaaS plan catalog.
-    Prices are stored in INR paise for Razorpay; USD/EUR/GBP shown in UI only.
+    Returns the institutional multi-currency SaaS plan catalog calibrated for ₹2 Crore ARR.
+    Prices are stored in INR paise for Razorpay; USD/EUR/GBP shown for global capital allocators.
     """
     return {
-        "free_trial": {
-            "name": "14-Day Free Trial",
-            "price_paise": 0,
-            "monthly_valuations": int(os.environ.get("TRIAL_MONTHLY_VALUATIONS", "5")),
-            "trial_days": 14,
-            "razorpay_plan_env": None,
-            "prices": {"USD": 0, "INR": 0, "EUR": 0, "GBP": 0},
-            "features": [
-                "5 full valuation & pain-point packs",
-                "Live web scraping across all domains",
-                "Excel + PDF + PPTX export",
-                "C-Suite Pain Point diagnostics",
-                "No credit card required",
-            ],
-        },
         "free": {
-            "name": "Free",
+            "name": "Executive Sandbox",
             "price_paise": 0,
             "monthly_valuations": int(os.environ.get("FREE_MONTHLY_VALUATIONS", "1")),
             "trial_days": 0,
             "razorpay_plan_env": None,
             "prices": {"USD": 0, "INR": 0, "EUR": 0, "GBP": 0},
             "features": [
-                "1 valuation per month",
-                "Basic financial modeling",
+                "1 deterministic valuation / month",
+                "Real-time listed global ticker scraper",
+                "6-gate mathematical invariant proof",
+                "Interactive 5×5 sensitivity heatmap",
+                "Monte Carlo 10,000-path stochastic bell curve",
+                "In-browser interactive HTML5 preview",
             ],
         },
         "pro": {
-            "name": "Pro Growth",
-            "price_paise": int(os.environ.get("PRO_PRICE_PAISE", "149900")),
-            "monthly_valuations": int(os.environ.get("PRO_MONTHLY_VALUATIONS", "25")),
+            "name": "Professional Advisory",
+            "price_paise": int(os.environ.get("PRO_PRICE_PAISE", "1499900")),
+            "monthly_valuations": int(os.environ.get("PRO_MONTHLY_VALUATIONS", "35")),
             "trial_days": 0,
             "razorpay_plan_env": "RAZORPAY_PLAN_ID_PRO",
-            "prices": {"USD": 49, "INR": 1499, "EUR": 45, "GBP": 39},
+            "prices": {"USD": 179, "INR": 14999, "EUR": 165, "GBP": 145},
             "features": [
-                "25 valuations/month",
-                "Daily auto-scrape sync",
-                "Full Excel + PDF + PPTX exports",
-                "C-Suite Pain Point diagnostics",
-                "Priority support",
+                "35 full institutional models / month",
+                "Live SEC EDGAR, MCA-21 & Companies House sync",
+                "Full Excel (.xlsx) live formulas + Vector PDF + PPTX",
+                "Operational Pain Point diagnostics & Alpha Prescriptions",
+                "Tamper-evident SHA-256 Merkle Audit Certificate export",
+                "Priority equity analyst support",
             ],
         },
         "business": {
-            "name": "Enterprise Sovereign",
-            "price_paise": int(os.environ.get("BUSINESS_PRICE_PAISE", "499900")),
-            "monthly_valuations": int(os.environ.get("BUSINESS_MONTHLY_VALUATIONS", "999")),
+            "name": "Institutional Fund & PE",
+            "price_paise": int(os.environ.get("BUSINESS_PRICE_PAISE", "4999900")),
+            "monthly_valuations": int(os.environ.get("BUSINESS_MONTHLY_VALUATIONS", "250")),
             "trial_days": 0,
             "razorpay_plan_env": "RAZORPAY_PLAN_ID_BUSINESS",
-            "prices": {"USD": 199, "INR": 4999, "EUR": 185, "GBP": 159},
+            "prices": {"USD": 599, "INR": 49999, "EUR": 549, "GBP": 479},
             "features": [
-                "Unlimited global entities",
-                "Daily ERP/EDGAR/MCA sync",
-                "Dedicated API webhooks",
+                "250 institutional valuations & M&A roll-ups / month",
+                "1-Click Read-Only ERP Sync (Tally, NetSuite, Zoho, QuickBooks, Xero)",
+                "Zero-Touch Monthly Executive Board Packs (.xlsx, .pdf, .pptx)",
+                "Scoped VaaS Underwriting API access (metered 5,000 calls/mo)",
                 "Multi-region accounting (US GAAP / Ind AS / IFRS / J-GAAP)",
-                "White-glove onboarding",
+                "Dedicated investment analyst concierge",
             ],
         },
     }

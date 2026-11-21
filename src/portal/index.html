@@ -1060,6 +1060,30 @@
             background: rgba(255, 90, 31, 0.02);
         }
 
+        .plan-features-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 var(--space-4) 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .plan-feature-item {
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            line-height: 1.4;
+        }
+
+        .plan-feature-bullet {
+            color: var(--accent-odd);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
         .plan-card h3 {
             color: var(--text-primary);
             font-size: var(--font-lg);
@@ -1970,12 +1994,10 @@
             </div>
         </a>
         <div class="nav-links">
-            <a href="#platform" class="nav-link">Platform</a>
-            <a href="#pricing" class="nav-link">Pricing</a>
-            <a href="#enterprise" class="nav-link">Enterprise</a>
             <button class="nav-link btn-text" id="nav-audit-btn" type="button">🛡️ Audit Ledger</button>
+            <a href="#pricing" class="nav-link">Pricing</a>
             <button class="nav-link btn-text" id="nav-auth-button" type="button">Sign in</button>
-            <button class="btn-pill-trial" id="nav-trial-btn" type="button">Start 14-Day Free Trial</button>
+            <button class="btn-pill-trial" id="nav-trial-btn" type="button">Executive Access</button>
             <span id="nav-account-label" class="nav-link" hidden></span>
         </div>
     </nav>
@@ -1997,13 +2019,13 @@
                     <div id="guest-view">
                         <div class="hero-actions">
                             <button class="primary-button" id="btn-guest-trial" type="button">
-                                Start 14-Day Free Trial
+                                Request Executive Pilot
                             </button>
                             <button class="secondary-button" id="btn-guest-signin" type="button">
                                 Sign in
                             </button>
                         </div>
-                        <p class="hero-subtext">No credit card required &middot; 1 free valuation every month thereafter.</p>
+                        <p class="hero-subtext">Deterministic mathematical modeling &middot; 0.000000e+00 balance sheet error.</p>
                     </div>
 
                     <div id="account-view" hidden>
@@ -2249,8 +2271,8 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
         <section class="plans-card bento-cell" id="pricing" aria-labelledby="plans-heading">
             <div class="plans-header-row">
                 <div>
-                    <h2 id="plans-heading">Global Subscription &amp; Enterprise Tiers</h2>
-                    <p>Enterprise financial intelligence with instant 14-day free trial. Cancel anytime.</p>
+                    <h2 id="plans-heading">Institutional Subscription &amp; Sovereign Tiers</h2>
+                    <p>Institutional financial intelligence, automated board packs, and deterministic valuation infrastructure.</p>
                 </div>
                 <div style="display:flex; align-items:center; gap:var(--space-2);">
                     <span style="font-size:var(--font-sm); font-weight:600; color:var(--text-secondary);">Currency:</span>
@@ -2666,10 +2688,10 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                 <span style="font-size:var(--font-xs); font-weight:700; color:var(--accent-odd); text-transform:uppercase; letter-spacing:0.05em;">Executive Access Guarantee</span>
             </div>
             <h2 style="font-size:var(--font-xl); font-weight:750; color:var(--text-primary); margin:0 0 var(--space-2) 0; letter-spacing:-0.02em;">
-                Unlock 5 Full Valuations + Live Downloads
+                Unlock Full Institutional Valuation Suite
             </h2>
             <p style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.5; margin:0 0 var(--space-4) 0;">
-                You have completed your initial evaluation. Activate your 14-day Free Trial to generate 5 full institutional models, live-formula Excel workbooks, and PowerPoint pitchbooks with zero credit card required.
+                Gain direct institutional access to generate full 3-statement models, live-formula Excel workbooks, vector PDFs, and PowerPoint pitchbooks verified against 6 invariant gates.
             </p>
             <form id="trial-modal-form" style="display:flex; flex-direction:column; gap:var(--space-3);">
                 <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); text-align:left;">
@@ -2677,11 +2699,11 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     <input type="email" id="trial-modal-email" class="ticker-search-input" required placeholder="cfo@enterprise.com" style="margin-top:6px; padding-left:14px;" autocomplete="email">
                 </label>
                 <button type="submit" class="primary-button" id="btn-trial-modal-submit" style="width:100%; justify-content:center; padding:var(--space-3) var(--space-4); margin-top:4px;">
-                    Activate 14-Day Free Trial (Instant Access)
+                    Request Institutional Access
                 </button>
             </form>
             <p id="trial-modal-feedback" style="font-size:var(--font-xs); color:var(--text-dim); margin-top:var(--space-3); text-align:center;">
-                Instant activation · No password required · 0.000000e+00 accuracy guarantee
+                Immediate institutional activation · Single-tenant isolation · 0.000000e+00 accuracy guarantee
             </p>
         </div>
     </div>

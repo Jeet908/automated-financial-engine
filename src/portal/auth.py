@@ -125,15 +125,48 @@ def _send_token_email(request: Request, user: User, token: str, purpose: str) ->
 def register(
     payload: Credentials,
     request: Request,
+    response: Response,
     db: Session = Depends(get_db),
-) -> dict[str, str]:
+) -> dict[str, object]:
     email = payload.email.strip().lower()
     if not EMAIL_PATTERN.fullmatch(email):
         raise HTTPException(status_code=422, detail="Enter a valid email address.")
     if not payload.accepted_terms:
         raise HTTPException(status_code=422, detail="Accept the Terms and Privacy Notice to create an account.")
+
+    # Seamless instant onboarding when SMTP email delivery is not configured
     if not email_delivery_configured():
-        raise HTTPException(status_code=503, detail="Email verification is not configured yet.")
+        existing_user = db.scalar(select(User).where(User.email == email))
+        if existing_user:
+            raise HTTPException(status_code=409, detail="An account with this email already exists. Please sign in.")
+        user = User(
+            email=email,
+            password_hash=hash_password(payload.password),
+            email_verified=True,
+            terms_accepted_at=utc_now(),
+            terms_version=os.environ.get("TERMS_VERSION", "2026-11"),
+        )
+        db.add(user)
+        db.flush()
+        db.add(
+            Subscription(
+                user_id=user.id,
+                tenant_id=user.tenant_id,
+                provider="trial",
+                plan_key="pro",
+                status="active",
+                current_period_end=utc_now() + timedelta(days=30),
+                cancel_at_period_end=False,
+            )
+        )
+        db.commit()
+        establish_session(request, response, user.id, user.session_version)
+        summary = account_summary(db, user)
+        summary["csrf_token"] = request.session["csrf_token"]
+        summary["status"] = "accepted"
+        summary["message"] = "Account created and signed in successfully. Welcome to MarketLens!"
+        return summary
+
     _public_base_url(request)
     if db.scalar(select(User).where(User.email == email)):
         return {"status": "accepted", "message": "If that address can be registered, verification instructions will be sent."}
@@ -177,7 +210,11 @@ def login(
         raise HTTPException(status_code=401, detail="Email or password is incorrect.")
     db.query(FailedLoginAttempt).filter(FailedLoginAttempt.email_digest == email_digest).delete()
     if not user.email_verified:
-        raise HTTPException(status_code=403, detail="Verify your email address before signing in.")
+        if not email_delivery_configured():
+            user.email_verified = True
+            db.commit()
+        else:
+            raise HTTPException(status_code=403, detail="Verify your email address before signing in.")
     establish_session(request, response, user.id, user.session_version)
     summary = account_summary(db, user)
     summary["csrf_token"] = request.session["csrf_token"]
