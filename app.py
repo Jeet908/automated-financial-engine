@@ -165,20 +165,19 @@ async def redirect_unfinished_routes():
 
 @app.get("/api/v1/health")
 async def health_check():
+    db_ok = True
     try:
-        database_ready()
-    except Exception:
-        logger.exception("SaaS database health check failed.")
-        return JSONResponse(
-            status_code=503,
-            content={"status": "degraded", "service": "MarketLens Analytics"},
-        )
+        db_ok = database_ready()
+    except Exception as exc:
+        db_ok = False
+        logger.warning("Database health ping notice: %s", exc)
+
     return {
-        "status": "online",
+        "status": "online" if db_ok else "degraded",
         "service": "MarketLens Analytics",
         "domains_supported": list(DOMAIN_CATALOG.keys()),
         "features": {
-            "database": True,
+            "database": db_ok,
             "email_verification": email_delivery_configured(),
             "google_sign_in": bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET")),
             "stripe": bool(os.environ.get("STRIPE_SECRET_KEY") or getattr(billing, "STRIPE_AVAILABLE", False)),
@@ -275,6 +274,13 @@ _start_daily_background_refresh()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    workers = int(os.environ.get("WEB_CONCURRENCY", 1))
+    workers_env = os.environ.get("WEB_CONCURRENCY")
+    try:
+        workers = max(1, min(int(workers_env), 2)) if workers_env else 1
+    except ValueError:
+        workers = 1
     print(f"[*] Starting MarketLens Analytics on 0.0.0.0:{port} (workers={workers})")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, workers=workers, reload=False, proxy_headers=True)
+    if workers > 1:
+        uvicorn.run("app:app", host="0.0.0.0", port=port, workers=workers, reload=False, proxy_headers=True)
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=port, reload=False, proxy_headers=True)

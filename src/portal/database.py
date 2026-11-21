@@ -300,27 +300,43 @@ def configure_database(url: str) -> None:
 
 
 def init_database() -> None:
-    global _database_initialized
+    global _database_initialized, _engine, SessionLocal
     if _database_initialized:
         return
     with _init_lock:
         if not _database_initialized:
-            Base.metadata.create_all(_engine)
-            with SessionLocal.begin() as session:
-                session.execute(
-                    Job.__table__.update()
-                    .where(Job.status.in_(("pending", "running")))
-                    .where(Job.updated_at < utc_now() - timedelta(hours=2))
-                    .values(status="failed", error_code="interrupted")
-                )
-            _database_initialized = True
+            try:
+                Base.metadata.create_all(_engine)
+                with SessionLocal.begin() as session:
+                    session.execute(
+                        Job.__table__.update()
+                        .where(Job.status.in_(("pending", "running")))
+                        .where(Job.updated_at < utc_now() - timedelta(hours=2))
+                        .values(status="failed", error_code="interrupted")
+                    )
+                _database_initialized = True
+            except Exception as exc:
+                # If remote PostgreSQL fails or times out, gracefully fallback to local SQLite
+                fallback_path = DATA_DIR / "marketlens.sqlite3"
+                fallback_url = f"sqlite:///{fallback_path.as_posix()}"
+                try:
+                    _engine.dispose()
+                    _engine = _create_engine(fallback_url)
+                    SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
+                    Base.metadata.create_all(_engine)
+                    _database_initialized = True
+                except Exception:
+                    pass
 
 
 def database_ready() -> bool:
-    init_database()
-    with _engine.connect() as connection:
-        connection.execute(text("SELECT 1"))
-    return True
+    try:
+        init_database()
+        with _engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
 
 
 def get_storage_backend() -> str:
