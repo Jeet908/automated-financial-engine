@@ -5,6 +5,7 @@
 
 import { apiRequest, appState, csrfHeaders, showToast } from './api.js';
 import { refreshAccount, showAuthPanel, setAuthFeedback } from './auth.js';
+import { apiJobResult, markAllCompleted, renderLiveDashboard, setStep } from './valuation.js';
 
 let activeCurrency = 'USD';
 
@@ -303,13 +304,23 @@ export async function refreshERPProviders() {
                 actions.appendChild(syncBtn);
                 actions.appendChild(discBtn);
             } else {
+                const demoBtn = document.createElement('button');
+                demoBtn.className = 'primary-button';
+                demoBtn.textContent = '⚡ Sample Demo';
+                demoBtn.style.fontSize = '0.72rem';
+                demoBtn.style.padding = '0.4rem 0.6rem';
+                demoBtn.style.flex = '1';
+                demoBtn.addEventListener('click', () => runERPSampleDemo(p.provider));
+
                 const connBtn = document.createElement('button');
                 connBtn.className = 'secondary-button';
-                connBtn.textContent = `Connect ${p.name.split(' ')[0]} (Read-Only)`;
-                connBtn.style.fontSize = '0.75rem';
-                connBtn.style.padding = '0.4rem 0.75rem';
-                connBtn.style.width = '100%';
+                connBtn.textContent = 'Connect';
+                connBtn.style.fontSize = '0.72rem';
+                connBtn.style.padding = '0.4rem 0.6rem';
+                connBtn.style.flex = '1';
                 connBtn.addEventListener('click', () => connectERP(p.provider));
+
+                actions.appendChild(demoBtn);
                 actions.appendChild(connBtn);
             }
 
@@ -351,32 +362,128 @@ function renderOfflineERPProviders() {
                 <p style="font-size:0.75rem; color:var(--text-secondary); margin:0 0 0.85rem 0;">${e.desc}</p>
             </div>
         `;
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '0.4rem';
+
+        const demoBtn = document.createElement('button');
+        demoBtn.className = 'primary-button';
+        demoBtn.style.fontSize = '0.72rem';
+        demoBtn.style.padding = '0.4rem 0.6rem';
+        demoBtn.style.flex = '1';
+        demoBtn.textContent = '⚡ Sample Demo';
+        demoBtn.addEventListener('click', () => runERPSampleDemo(e.prov));
+
         const connBtn = document.createElement('button');
         connBtn.className = 'secondary-button';
-        connBtn.style.fontSize = '0.75rem';
-        connBtn.style.padding = '0.4rem 0.75rem';
-        connBtn.style.width = '100%';
-        connBtn.textContent = 'Connect (Read-Only)';
+        connBtn.style.fontSize = '0.72rem';
+        connBtn.style.padding = '0.4rem 0.6rem';
+        connBtn.style.flex = '1';
+        connBtn.textContent = 'Connect';
         connBtn.addEventListener('click', () => connectERP(e.prov));
-        card.appendChild(connBtn);
+
+        actions.appendChild(demoBtn);
+        actions.appendChild(connBtn);
+        card.appendChild(actions);
         grid.appendChild(card);
     });
+}
+
+export function openERPRelayModal(provider) {
+    const modal = document.getElementById('erp-relay-modal');
+    if (!modal) return;
+    const provName = provider.charAt(0).toUpperCase() + provider.slice(1);
+    const badge = document.getElementById('erp-modal-prov-badge');
+    if (badge) badge.textContent = provName;
+
+    const sampleBtn = document.getElementById('btn-erp-modal-sample');
+    if (sampleBtn) {
+        sampleBtn.onclick = () => {
+            closeERPRelayModal();
+            runERPSampleDemo(provider);
+        };
+    }
+
+    const dlBtn = document.getElementById('btn-erp-modal-sample-dl');
+    if (dlBtn) {
+        dlBtn.onclick = () => {
+            const isTally = provider.toLowerCase() === 'tally';
+            const sampleUrl = isTally ? '/static/templates/sample_tally_tb.xml' : '/static/templates/sample_trial_balance.csv';
+            const a = document.createElement('a');
+            a.href = sampleUrl;
+            a.download = `${provider}_sample_ledger.${isTally ? 'xml' : 'csv'}`;
+            a.click();
+            showToast(`Downloaded sample ${provName} ledger template.`, 'success');
+        };
+    }
+
+    modal.hidden = false;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+export function closeERPRelayModal() {
+    const modal = document.getElementById('erp-relay-modal');
+    if (modal) {
+        modal.hidden = true;
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+export async function runERPSampleDemo(provider) {
+    const provName = provider.charAt(0).toUpperCase() + provider.slice(1);
+    const processFlow = document.getElementById('process-flow');
+    const resultsDashboard = document.getElementById('results-dashboard');
+    if (processFlow) processFlow.style.display = 'block';
+    if (resultsDashboard) resultsDashboard.style.display = 'none';
+
+    const stepLabel1 = document.getElementById('step-label-1');
+    if (stepLabel1) stepLabel1.textContent = `Extracting ${provName} Trial Balance ledger`;
+    const progMsg = document.getElementById('progress-message');
+    if (progMsg) progMsg.textContent = `Initializing read-only ${provName} sync...`;
+    setStep(1);
+
+    appState.setState({ analysisBusy: true });
+    showToast(`Simulating read-only ${provName} Trial Balance pull...`, 'info');
+
+    try {
+        const headers = csrfHeaders({ 'Content-Type': 'application/json' });
+        const res = await apiRequest(`/api/v1/erp/${provider}/sample-demo`, {
+            method: 'POST',
+            headers
+        });
+
+        appState.setState({ currentJobId: res.job_id });
+        window._currentJobId = res.job_id;
+
+        const result = await apiJobResult(res.job_id);
+        markAllCompleted();
+        renderLiveDashboard(result);
+        showToast(`${provName} Board Pack compiled successfully!`, 'success');
+    } catch (err) {
+        showToast(err.message || `Failed to run ${provName} sample demo.`, 'error');
+        if (processFlow) processFlow.style.display = 'none';
+    } finally {
+        appState.setState({ analysisBusy: false });
+    }
 }
 
 export async function connectERP(provider) {
     const { currentAccount } = appState.getState();
     if (!currentAccount) {
-        showAuthPanel('login');
-        setAuthFeedback('Please sign in or create an account to connect ERP integrations.', true);
+        openERPRelayModal(provider);
         return;
     }
     try {
         const res = await apiRequest(`/api/v1/erp/${provider}/connect`);
         if (res.authorize_url) {
             window.location.href = res.authorize_url;
+            return;
         }
+        openERPRelayModal(provider);
     } catch (err) {
-        showToast(err.message || 'Could not initiate ERP connection.', 'error');
+        openERPRelayModal(provider);
     }
 }
 
@@ -583,4 +690,14 @@ export function initBilling() {
 
     const copyPyBtn = document.getElementById('btn-copy-python');
     if (copyPyBtn) copyPyBtn.addEventListener('click', () => copyApiSnippet('python'));
+
+    const erpCloseBtn = document.getElementById('erp-modal-close');
+    if (erpCloseBtn) erpCloseBtn.addEventListener('click', closeERPRelayModal);
+
+    const erpModal = document.getElementById('erp-relay-modal');
+    if (erpModal) {
+        erpModal.addEventListener('click', (e) => {
+            if (e.target === erpModal) closeERPRelayModal();
+        });
+    }
 }

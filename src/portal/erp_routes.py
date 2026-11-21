@@ -12,13 +12,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from src.erp import ERP_ADAPTERS
 from src.portal.database import (
+    DATA_DIR,
     ERPConnection,
     User,
     delete_tenant_erp_connection,
@@ -28,8 +29,8 @@ from src.portal.database import (
     list_tenant_erp_connections,
     utc_now,
 )
-from src.portal.dependencies import get_verified_user
-from src.portal.plans import require_plan_feature
+from src.portal.dependencies import AuthContext, get_verified_user, require_scope
+from src.portal.plans import require_plan_feature, reserve_job
 from src.portal.security import check_csrf
 
 logger = logging.getLogger(__name__)
@@ -247,4 +248,52 @@ def disconnect_erp_provider(
         "status": "success",
         "message": "ERP connection tokens revoked and purged.",
         "connection_id": connection_id,
+    }
+
+
+@router.post("/{provider}/sample-demo", status_code=202)
+def run_erp_sample_demo(
+    provider: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    auth: AuthContext = Depends(require_scope("model:write", allow_guest=True)),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Executes a zero-credential sample Board Pack run for the selected ERP provider:
+    Pulls canonical provider Trial Balance, solves 3-statement model, runs Monte Carlo & sensitivity,
+    verifies 6 accounting invariants, and compiles executive deliverables (.xlsx, .pdf, .pptx, .zip).
+    """
+    check_csrf(request)
+    prov_key = provider.lower()
+    if prov_key not in PROVIDER_METADATA:
+        raise HTTPException(status_code=400, detail=f"Unsupported ERP provider '{provider}'.")
+
+    user = auth.user
+    job_id = str(uuid4())
+    workspace = DATA_DIR / "accounts" / user.id / "jobs" / job_id
+    job = reserve_job(db, user, "erp_sync", workspace, job_id=job_id)
+    try:
+        workspace.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        import tempfile
+        workspace = Path(tempfile.mkdtemp(prefix=f"ml_erp_{job.id}_"))
+        job.workspace_path = str(workspace.resolve())
+        db.commit()
+
+    from src.workers.erp_sync_tasks import execute_erp_sample_demo
+
+    def _run_sample_task(p, j, t, w):
+        try:
+            execute_erp_sample_demo(p, j, t, w)
+        except Exception as exc:
+            logger.exception("Sample ERP demo failed for %s: %s", j, exc)
+
+    background_tasks.add_task(_run_sample_task, prov_key, job.id, auth.tenant_id, workspace)
+
+    return {
+        "job_id": job.id,
+        "status": job.status,
+        "provider": prov_key,
+        "message": f"Starting {prov_key.capitalize()} sample Board Pack simulation.",
     }

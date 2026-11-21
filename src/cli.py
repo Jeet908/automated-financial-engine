@@ -104,6 +104,8 @@ def process_file(
     print(f"    - PowerPoint: {pack_res['pptx_path']}")
     print(f"    - Client Valuation Pack: {pack_res['zip_path']}")
 
+    pack_res["metadata"] = metadata
+    pack_res["engine_output"] = engine_output
     return pack_res
 
 

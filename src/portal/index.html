@@ -2515,6 +2515,89 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
         </div>
     </div>
 
+    <!-- CRYPTOGRAPHIC AUDIT LEDGER & INVARIANT VERIFICATION MODAL -->
+    <div id="audit-ledger-modal" class="modal-overlay hidden" hidden style="display: none;">
+        <div class="modal-card" style="max-width: 620px;">
+            <button type="button" class="modal-close-btn" id="audit-modal-close" aria-label="Close modal">&times;</button>
+            <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3);">
+                <span class="status-pass-dot" style="width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+                <span style="font-size:var(--font-xs); font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.05em;">Big-4 Cryptographic Invariant Attestation</span>
+            </div>
+            <h2 style="font-size:var(--font-xl); font-weight:750; color:var(--text-primary); margin:0 0 var(--space-2) 0; letter-spacing:-0.02em;">
+                Tamper-Evident SHA-256 Merkle Ledger
+            </h2>
+            <p style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.5; margin:0 0 var(--space-4) 0;">
+                Every statement, forecast row, and valuation output is deterministically locked in an immutable 4-stage Merkle tree with 0.000000e+00 balance sheet discrepancy.
+            </p>
+            <div style="background:#09090b; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:var(--space-3); margin-bottom:var(--space-4); font-family:'JetBrains Mono', monospace; font-size:var(--font-xs);">
+                <div style="color:var(--text-dim); margin-bottom:4px;">STAGE 4 MERKLE ROOT:</div>
+                <div id="audit-modal-merkle" style="color:var(--accent-odd); word-break:break-all; font-weight:700;">--</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-2); margin-top:var(--space-3); border-top:1px solid rgba(255,255,255,0.06); padding-top:var(--space-2);">
+                    <div>
+                        <span style="color:var(--text-dim);">Stage 1 (Raw Input):</span>
+                        <div id="audit-modal-stage1" style="color:var(--text-secondary); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">--</div>
+                    </div>
+                    <div>
+                        <span style="color:var(--text-dim);">Stage 3 (Model Solve):</span>
+                        <div id="audit-modal-stage3" style="color:var(--text-secondary); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">--</div>
+                    </div>
+                </div>
+            </div>
+            <h4 style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.05em; margin:0 0 var(--space-2) 0;">
+                6 Invariant Verification Gates
+            </h4>
+            <div id="audit-modal-checks" style="display:flex; flex-direction:column; gap:6px; margin-bottom:var(--space-4);">
+                <!-- Populated dynamically -->
+            </div>
+            <div style="display:flex; gap:var(--space-2);">
+                <button type="button" class="primary-button" id="btn-copy-audit-cert" style="flex:1; justify-content:center;">
+                    Copy Cryptographic Certificate
+                </button>
+                <button type="button" class="secondary-button" id="btn-audit-modal-done" style="padding:var(--space-2) var(--space-4);">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTANT ERP RELAY AGENT MODAL -->
+    <div id="erp-relay-modal" class="modal-overlay hidden" hidden style="display: none;">
+        <div class="modal-card" style="max-width: 580px;">
+            <button type="button" class="modal-close-btn" id="erp-modal-close" aria-label="Close modal">&times;</button>
+            <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3);">
+                <span class="status-dot-badge" style="background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.3);">
+                    <span class="pulse-dot"></span> Read-Only Connector
+                </span>
+                <span id="erp-modal-prov-badge" style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary);">TallyPrime</span>
+            </div>
+            <h2 id="erp-modal-title" style="font-size:var(--font-xl); font-weight:750; color:var(--text-primary); margin:0 0 var(--space-2) 0; letter-spacing:-0.02em;">
+                Connect Read-Only ERP Sync
+            </h2>
+            <p id="erp-modal-desc" style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.5; margin:0 0 var(--space-4) 0;">
+                Pull live Trial Balances directly into synchronized 3-statement models, C-suite diagnostics, and monthly Board Packs (.xlsx, .pdf, .pptx).
+            </p>
+            <div style="display:flex; flex-direction:column; gap:var(--space-3); margin-bottom:var(--space-4);">
+                <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-3);">
+                    <div style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary); margin-bottom:4px;">1. Instant Simulation (Zero Credentials Required)</div>
+                    <div style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:8px;">Run a full demonstration using verified standard trial balance ledgers.</div>
+                    <button type="button" class="primary-button" id="btn-erp-modal-sample" style="width:100%; justify-content:center;">
+                        ⚡ Run Instant Board Pack Demo
+                    </button>
+                </div>
+                <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-3);">
+                    <div style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary); margin-bottom:4px;">2. Direct Ledger File Ingestion</div>
+                    <div style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:8px;">Export your Trial Balance directly from your ERP and drop it in the analyzer above.</div>
+                    <button type="button" class="secondary-button" id="btn-erp-modal-sample-dl" style="width:100%; justify-content:center;">
+                        Download Sample Ledger Template (.xml / .csv)
+                    </button>
+                </div>
+            </div>
+            <p style="font-size:11px; color:var(--text-dim); text-align:center; margin:0;">
+                All credentials &amp; tokens are vaulted using Fernet AES-256 encryption under tenant isolation.
+            </p>
+        </div>
+    </div>
+
     <footer>
         MarketLens Analytics &middot; Sovereign Financial Modeling & Valuation Engine &middot; Informational modeling tools, not investment advice.
     </footer>
