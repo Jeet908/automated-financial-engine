@@ -165,20 +165,44 @@ def authenticate_request(
             )
 
         # Synthesize persistent guest user for trial run
-        guest_id = request.cookies.get("marketlens_guest_id") or f"guest_{secrets.token_hex(8)}"
-        guest_user = db.get(User, guest_id)
+        guest_id = request.cookies.get("marketlens_guest_id")
+        guest_user = None
+        if guest_id:
+            guest_user = db.get(User, guest_id)
         if not guest_user:
+            guest_id = f"guest_{secrets.token_hex(10)}"
+            guest_email = f"{guest_id}@guest.marketlens.local"
             guest_user = User(
                 id=guest_id,
-                email=f"{guest_id}@guest.marketlens.local",
+                email=guest_email,
                 org_id=guest_id,
                 email_verified=True,
                 terms_accepted_at=utc_now(),
                 session_version=1,
             )
-            db.add(guest_user)
-            db.commit()
-            db.refresh(guest_user)
+            try:
+                db.add(guest_user)
+                db.commit()
+                db.refresh(guest_user)
+            except Exception as exc:
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
+                # If unique collision on id/email, retry with fresh random token
+                alt_id = f"guest_{secrets.token_hex(12)}"
+                guest_user = User(
+                    id=alt_id,
+                    email=f"{alt_id}@guest.marketlens.local",
+                    org_id=alt_id,
+                    email_verified=True,
+                    terms_accepted_at=utc_now(),
+                    session_version=1,
+                )
+                db.add(guest_user)
+                db.commit()
+                db.refresh(guest_user)
+                guest_id = alt_id
 
         setattr(guest_user, "tenant_id", guest_id)
         setattr(guest_user, "is_guest", True)

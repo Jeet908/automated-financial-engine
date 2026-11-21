@@ -215,19 +215,31 @@ def account_summary(db: Session, user: User) -> dict[str, object]:
     }
 
 
-def reserve_job(db: Session, user: User, kind: str, workspace_path: Path) -> Job:
+def reserve_job(db: Session, user: User, kind: str, workspace_path: Path, job_id: str | None = None) -> Job:
     with _reservation_lock:
-        stmt = select(User).where(User.id == user.id)
-        # Apply SELECT ... FOR UPDATE row locking when supported
+        dialect_name = ""
         try:
-            stmt = stmt.with_for_update()
-            locked_user = db.scalar(stmt)
+            dialect_name = getattr(getattr(db.bind, "dialect", None), "name", "")
         except Exception:
-            # Fallback for dialects/testing environments without FOR UPDATE support
+            pass
+
+        locked_user = None
+        if dialect_name == "postgresql":
+            try:
+                locked_user = db.scalar(select(User).where(User.id == user.id).with_for_update())
+            except Exception as exc:
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
+                locked_user = db.scalar(select(User).where(User.id == user.id))
+        else:
             locked_user = db.scalar(select(User).where(User.id == user.id))
 
         if locked_user is None:
-            raise HTTPException(status_code=401, detail="Your account is no longer available.")
+            locked_user = db.get(User, user.id)
+            if locked_user is None:
+                raise HTTPException(status_code=401, detail="Your account is no longer available.")
 
         plan_key, _ = effective_plan(db, user.id)
         catalog = plan_catalog()
@@ -242,7 +254,7 @@ def reserve_job(db: Session, user: User, kind: str, workspace_path: Path) -> Job
 
         tenant_id = getattr(user, "tenant_id", None) or getattr(user, "org_id", None) or user.id
         job = Job(
-            id=str(uuid4()),
+            id=job_id or str(uuid4()),
             user_id=user.id,
             tenant_id=tenant_id,
             kind=kind,

@@ -111,53 +111,72 @@ def live_scrape(
     auth: AuthContext = Depends(require_model_write),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    check_csrf(request)
-    user = auth.user
-    job_id = str(uuid4())
-    workspace = _job_workspace(user.id, job_id)
-    job = reserve_job(db, user, "live_scrape", workspace)
-    if auth.auth_type == "guest":
-        request.session["guest_run_used"] = True
-        response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
-        response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
     try:
-        workspace.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        logger.exception("Could not allocate private workspace for job %s.", job.id)
-        _update_job(job.id, status="failed", error_code="workspace_unavailable")
-        raise HTTPException(status_code=503, detail="Private report storage is temporarily unavailable.")
-
-    # Record API usage event for metering
-    record_api_usage(
-        db,
-        tenant_id=auth.tenant_id,
-        endpoint="/api/v1/model/live-scrape",
-        http_status=202,
-        api_key_id=getattr(auth.api_key, "id", None),
-        job_id=job.id,
-        compute_ms=5.0,
-        billable_units=1,
-    )
-
-    # Celery dispatch with non-blocking fallback
-    use_celery = (
-        bool(os.environ.get("USE_CELERY_WORKERS"))
-        and bool(os.environ.get("REDIS_URL"))
-        and celery_app is not None
-    )
-    if use_celery:
+        check_csrf(request)
+        user = auth.user
+        job_id = str(uuid4())
+        workspace = _job_workspace(user.id, job_id)
+        job = reserve_job(db, user, "live_scrape", workspace, job_id=job_id)
+        if auth.auth_type == "guest":
+            request.session["guest_run_used"] = True
+            response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
+            response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
         try:
-            live_scrape_task.apply_async(
-                args=[job.id, user.id, payload.domain, payload.market, payload.ticker],
-                queue="valuation_heavy",
+            workspace.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            logger.warning("Could not allocate primary workspace for job %s; using temporary fallback.", job.id)
+            import tempfile
+            workspace = Path(tempfile.mkdtemp(prefix=f"ml_job_{job.id}_"))
+            job.workspace_path = str(workspace.resolve())
+            db.commit()
+
+        # Record API usage event for metering (non-fatal)
+        try:
+            record_api_usage(
+                db,
+                tenant_id=auth.tenant_id,
+                endpoint="/api/v1/model/live-scrape",
+                http_status=202,
+                api_key_id=getattr(auth.api_key, "id", None),
+                job_id=job.id,
+                compute_ms=5.0,
+                billable_units=1,
             )
         except Exception as exc:
-            logger.warning("Failed to enqueue live_scrape_task via Celery (%s); falling back to background thread.", exc)
-            background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
-    else:
-        background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
+            logger.warning("Non-fatal: could not record API usage event (%s)", exc)
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
-    return {"job_id": job.id, "status": job.status}
+        # Celery dispatch with non-blocking fallback
+        use_celery = (
+            bool(os.environ.get("USE_CELERY_WORKERS"))
+            and bool(os.environ.get("REDIS_URL"))
+            and celery_app is not None
+        )
+        if use_celery:
+            try:
+                live_scrape_task.apply_async(
+                    args=[job.id, user.id, payload.domain, payload.market, payload.ticker],
+                    queue="valuation_heavy",
+                )
+            except Exception as exc:
+                logger.warning("Failed to enqueue live_scrape_task via Celery (%s); falling back to background thread.", exc)
+                background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
+        else:
+            background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
+
+        return {"job_id": job.id, "status": job.status}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Live valuation endpoint failed: %s", exc)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Valuation pipeline initialization error: {exc}")
 
 
 @router.post("/model/generate-pack", status_code=202)
@@ -169,80 +188,99 @@ async def generate_pack(
     auth: AuthContext = Depends(require_model_write),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    check_csrf(request)
-    user = auth.user
-    filename = Path(file.filename or "upload").name
-    extension = Path(filename).suffix.lower()
-    if extension not in SUPPORTED_EXTS:
-        raise HTTPException(status_code=415, detail="Upload an XLSX, XLS, CSV, JSON, or PDF financial file.")
-
-    job_id = str(uuid4())
-    workspace = _job_workspace(user.id, job_id)
-    job = reserve_job(db, user, "file_upload", workspace)
-    job.input_name = filename
-    db.commit()
-    if auth.auth_type == "guest":
-        request.session["guest_run_used"] = True
-        response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
-        response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
     try:
-        workspace.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        logger.exception("Could not allocate private workspace for uploaded job %s.", job.id)
-        _update_job(job.id, status="failed", error_code="workspace_unavailable")
-        raise HTTPException(status_code=503, detail="Private report storage is temporarily unavailable.")
+        check_csrf(request)
+        user = auth.user
+        filename = Path(file.filename or "upload").name
+        extension = Path(filename).suffix.lower()
+        if extension not in SUPPORTED_EXTS:
+            raise HTTPException(status_code=415, detail="Upload an XLSX, XLS, CSV, JSON, or PDF financial file.")
 
-    # Record API usage event for metering
-    record_api_usage(
-        db,
-        tenant_id=auth.tenant_id,
-        endpoint="/api/v1/model/generate-pack",
-        http_status=202,
-        api_key_id=getattr(auth.api_key, "id", None),
-        job_id=job.id,
-        compute_ms=10.0,
-        billable_units=1,
-    )
-
-    input_path = workspace / "client_inbox" / f"source{extension}"
-    input_path.parent.mkdir(parents=True, exist_ok=True)
-    size = 0
-    try:
-        with input_path.open("wb") as target:
-            while chunk := await file.read(1024 * 1024):
-                size += len(chunk)
-                if size > MAX_UPLOAD_BYTES:
-                    input_path.unlink(missing_ok=True)
-                    max_mb = MAX_UPLOAD_BYTES / (1024 * 1024)
-                    _update_job(job.id, status="failed", error_code="upload_too_large")
-                    raise HTTPException(status_code=413, detail=f"File is larger than the {max_mb:g} MB upload limit.")
-                target.write(chunk)
-    except OSError:
-        logger.exception("Could not save an uploaded file for job %s.", job.id)
-        input_path.unlink(missing_ok=True)
-        _update_job(job.id, status="failed", error_code="upload_write_failed")
-        raise HTTPException(status_code=500, detail="The uploaded file could not be stored.")
-    finally:
-        await file.close()
-
-    use_celery = (
-        bool(os.environ.get("USE_CELERY_WORKERS"))
-        and bool(os.environ.get("REDIS_URL"))
-        and celery_app is not None
-    )
-    if use_celery:
+        job_id = str(uuid4())
+        workspace = _job_workspace(user.id, job_id)
+        job = reserve_job(db, user, "file_upload", workspace, job_id=job_id)
+        job.input_name = filename
+        db.commit()
+        if auth.auth_type == "guest":
+            request.session["guest_run_used"] = True
+            response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
+            response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
         try:
-            generate_pack_task.apply_async(
-                args=[job.id, user.id, str(input_path)],
-                queue="valuation_heavy",
+            workspace.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            logger.warning("Could not allocate private workspace for uploaded job %s; using temp fallback.", job.id)
+            import tempfile
+            workspace = Path(tempfile.mkdtemp(prefix=f"ml_upload_{job.id}_"))
+            job.workspace_path = str(workspace.resolve())
+            db.commit()
+
+        # Record API usage event for metering (non-fatal)
+        try:
+            record_api_usage(
+                db,
+                tenant_id=auth.tenant_id,
+                endpoint="/api/v1/model/generate-pack",
+                http_status=202,
+                api_key_id=getattr(auth.api_key, "id", None),
+                job_id=job.id,
+                compute_ms=10.0,
+                billable_units=1,
             )
         except Exception as exc:
-            logger.warning("Failed to enqueue generate_pack_task via Celery (%s); falling back to background thread.", exc)
-            background_tasks.add_task(_run_upload_job_fallback, job.id, user.id, str(input_path))
-    else:
-        background_tasks.add_task(_run_upload_job_fallback, job.id, user.id, str(input_path))
+            logger.warning("Non-fatal: could not record API usage event (%s)", exc)
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
-    return {"job_id": job.id, "status": job.status}
+        input_path = workspace / "client_inbox" / f"source{extension}"
+        input_path.parent.mkdir(parents=True, exist_ok=True)
+        size = 0
+        try:
+            with input_path.open("wb") as target:
+                while chunk := await file.read(1024 * 1024):
+                    size += len(chunk)
+                    if size > MAX_UPLOAD_BYTES:
+                        input_path.unlink(missing_ok=True)
+                        max_mb = MAX_UPLOAD_BYTES / (1024 * 1024)
+                        _update_job(job.id, status="failed", error_code="upload_too_large")
+                        raise HTTPException(status_code=413, detail=f"File is larger than the {max_mb:g} MB upload limit.")
+                    target.write(chunk)
+        except OSError:
+            logger.exception("Could not save an uploaded file for job %s.", job.id)
+            input_path.unlink(missing_ok=True)
+            _update_job(job.id, status="failed", error_code="upload_write_failed")
+            raise HTTPException(status_code=500, detail="The uploaded file could not be stored.")
+        finally:
+            await file.close()
+
+        use_celery = (
+            bool(os.environ.get("USE_CELERY_WORKERS"))
+            and bool(os.environ.get("REDIS_URL"))
+            and celery_app is not None
+        )
+        if use_celery:
+            try:
+                generate_pack_task.apply_async(
+                    args=[job.id, user.id, str(input_path)],
+                    queue="valuation_heavy",
+                )
+            except Exception as exc:
+                logger.warning("Failed to enqueue generate_pack_task via Celery (%s); falling back to background thread.", exc)
+                background_tasks.add_task(_run_upload_job_fallback, job.id, user.id, str(input_path))
+        else:
+            background_tasks.add_task(_run_upload_job_fallback, job.id, user.id, str(input_path))
+
+        return {"job_id": job.id, "status": job.status}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Upload valuation endpoint failed: %s", exc)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Upload valuation pipeline initialization error: {exc}")
 
 
 @router.get("/jobs/{job_id}")
