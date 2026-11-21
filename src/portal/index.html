@@ -2262,7 +2262,12 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                 </div>
             </div>
             <div id="plan-grid" class="plan-grid" aria-live="polite"></div>
-            <p class="locked-note" id="billing-note">Multi-currency billing supported. Enterprise custom invoicing available upon request.</p>
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:var(--space-3); padding-top:var(--space-3); border-top:1px solid var(--border-hairline);">
+                <p class="locked-note" id="billing-note" style="margin:0;">Multi-currency dual-rail billing (Stripe &amp; Razorpay). Instant sandbox activation enabled.</p>
+                <button type="button" class="secondary-button" id="btn-open-concierge" style="font-size:var(--font-xs); padding:6px 14px; border-color:var(--accent-odd-border); color:var(--text-primary);">
+                    🏛️ Request Enterprise Sovereign Invoicing (₹4,00,000 / $5,000/yr)
+                </button>
+            </div>
         </section>
 
         <!-- Real-Time SSE Engine Telemetry Terminal -->
@@ -2855,6 +2860,64 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ENTERPRISE SOVEREIGN CONCIERGE & CUSTOM INVOICING MODAL -->
+    <div id="enterprise-concierge-modal" class="modal-overlay hidden" hidden style="display: none;">
+        <div class="modal-card" style="max-width: 620px;">
+            <button type="button" class="modal-close-btn" id="ent-concierge-close" aria-label="Close modal">&times;</button>
+            <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3);">
+                <span class="status-dot-badge" style="background:rgba(255,90,31,0.1); border-color:var(--accent-odd-border); color:var(--accent-odd);">
+                    <span class="pulse-dot" style="background:var(--accent-odd);"></span> ANNUAL CONTRACT
+                </span>
+                <span style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary);">₹4,00,000 / $5,000 Annual</span>
+            </div>
+            <h2 style="font-size:var(--font-xl); font-weight:750; color:var(--text-primary); margin:0 0 var(--space-2) 0; letter-spacing:-0.02em;">
+                Enterprise Sovereign Pilot &amp; Invoicing
+            </h2>
+            <p style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.5; margin:0 0 var(--space-4) 0;">
+                Tailored for Private Equity sponsors, institutional asset managers, and corporate CFO suites requiring multi-entity live ERP mesh, custom accounting invariant certification, and Net-30 purchase orders.
+            </p>
+            <form id="ent-quote-form" style="display:flex; flex-direction:column; gap:var(--space-3);">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);">
+                    <div>
+                        <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Company / Fund Name</label>
+                        <input type="text" id="ent-company-name" required placeholder="e.g. Blackstone India / Apex Fund" style="width:100%; box-sizing:border-box; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:6px; padding:8px 12px; color:var(--text-primary); font-size:var(--font-sm);">
+                    </div>
+                    <div>
+                        <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">CFO / Sponsor Work Email</label>
+                        <input type="email" id="ent-contact-email" required placeholder="cfo@fund.com" style="width:100%; box-sizing:border-box; background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:6px; padding:8px 12px; color:var(--text-primary); font-size:var(--font-sm);">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);">
+                    <div>
+                        <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Team Seats (SAML SSO)</label>
+                        <select id="ent-seats-count" class="elevated-select" style="width:100%;">
+                            <option value="10">10 Seats (Standard Sovereign)</option>
+                            <option value="25">25 Seats (Fund Enterprise)</option>
+                            <option value="50">50 Seats (Institutional Portfolio)</option>
+                            <option value="100">100+ Seats (Global Advisory)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Primary ERP Connector</label>
+                        <select id="ent-erp-system" class="elevated-select" style="width:100%;">
+                            <option value="TallyPrime &amp; Zoho Books">TallyPrime &amp; Zoho Books (Schedule III)</option>
+                            <option value="Oracle NetSuite &amp; SAP S/4HANA">Oracle NetSuite &amp; SAP (US GAAP / IFRS)</option>
+                            <option value="QuickBooks &amp; Xero">QuickBooks Online &amp; Xero</option>
+                            <option value="Custom Proprietary Data Warehouse">Custom SQL Data Warehouse</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="primary-button" id="btn-ent-quote-submit" style="width:100%; justify-content:center; margin-top:var(--space-2);">
+                    Generate Formal Pro-Forma Invoice &amp; Pilot Contract
+                </button>
+            </form>
+            <div id="ent-quote-result" style="display:none;"></div>
+            <p style="font-size:11px; color:var(--text-dim); text-align:center; margin-top:var(--space-3); margin-bottom:0;">
+                Includes 99.9% Uptime SLA, Net-30 Invoicing, and Big-4 SHA-256 Merkle Provenance Attestation.
+            </p>
         </div>
     </div>
 

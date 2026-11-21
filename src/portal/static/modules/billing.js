@@ -155,6 +155,20 @@ export async function startCheckout(planKey) {
                 headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ plan_key: planKey, currency: activeCurrency.toLowerCase() })
             });
+
+            if (data.checkout_url && data.checkout_url.includes('mock_stripe_checkout=1')) {
+                // Instant seamless sandbox activation for global currency
+                const activated = await apiRequest('/api/v1/billing/sandbox/activate', {
+                    method: 'POST',
+                    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ plan_key: planKey })
+                });
+                showToast(activated.message || `Upgraded to ${planKey.toUpperCase()} tier!`, 'success');
+                await refreshAccount();
+                renderPlans();
+                return;
+            }
+
             if (data.checkout_url) {
                 window.location.href = data.checkout_url;
                 return;
@@ -167,6 +181,15 @@ export async function startCheckout(planKey) {
             headers: csrfHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ plan_key: planKey })
         });
+
+        // Fail-safe sandbox activation
+        if (data.mode === 'demo_active' || (data.status === 'active' && !data.subscription_id)) {
+            showToast(data.message || 'Subscription activated successfully!', 'success');
+            await refreshAccount();
+            renderPlans();
+            return;
+        }
+
         if (!window.Razorpay) {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -197,6 +220,7 @@ export async function startCheckout(planKey) {
                     setAuthFeedback('Payment received. Subscription status is syncing.');
                     showToast('Subscription activated successfully!', 'success');
                     await refreshAccount();
+                    renderPlans();
                 } catch (error) {
                     showToast(error.message, 'error');
                 }
@@ -670,6 +694,99 @@ print("Alpha Prescriptions:", diag["pain_points"])`;
     });
 }
 
+export function openEnterpriseConciergeModal() {
+    const modal = document.getElementById('enterprise-concierge-modal');
+    if (modal) {
+        modal.hidden = false;
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+}
+
+export function closeEnterpriseConciergeModal() {
+    const modal = document.getElementById('enterprise-concierge-modal');
+    if (modal) {
+        modal.hidden = true;
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+export async function submitEnterpriseQuote(e) {
+    if (e) e.preventDefault();
+    const companyInput = document.getElementById('ent-company-name');
+    const emailInput = document.getElementById('ent-contact-email');
+    const seatsInput = document.getElementById('ent-seats-count');
+    const erpInput = document.getElementById('ent-erp-system');
+    const submitBtn = document.getElementById('btn-ent-quote-submit');
+    const resultBox = document.getElementById('ent-quote-result');
+
+    if (!companyInput || !emailInput) return;
+    const company_name = companyInput.value.trim();
+    const contact_email = emailInput.value.trim();
+    const seats = seatsInput ? parseInt(seatsInput.value, 10) || 10 : 10;
+    const erp_system = erpInput ? erpInput.value : 'Tally / NetSuite / SAP';
+
+    if (!company_name || !contact_email) {
+        showToast('Please provide your company name and work email.', 'error');
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Generating Institutional Quote...';
+    }
+
+    try {
+        const quote = await apiRequest('/api/v1/billing/enterprise/quote', {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                company_name,
+                contact_email,
+                seats,
+                erp_system,
+                custom_invariants: true,
+                dedicated_vpc: false
+            })
+        });
+
+        if (resultBox) {
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = `
+                <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:var(--space-3); margin-top:var(--space-3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:700; color:var(--status-pass); font-size:var(--font-xs);">${quote.quote_id} · OFFICIAL QUOTE</span>
+                        <span style="font-family:'JetBrains Mono', monospace; font-size:var(--font-xs); color:var(--text-primary); font-weight:700;">₹4,00,000 / $5,000 Annual</span>
+                    </div>
+                    <div style="font-size:var(--font-xs); color:var(--text-secondary); line-height:1.5; margin-bottom:8px;">
+                        Prepared for: <strong style="color:var(--text-primary);">${quote.company_name}</strong> (${quote.contact_email})<br>
+                        Scope: ${quote.seats} Seats · ${quote.erp_system} Sync · Net-30 Corporate Invoicing
+                    </div>
+                    <button type="button" class="secondary-button" id="btn-copy-quote-cert" style="width:100%; justify-content:center; font-size:var(--font-xs);">
+                        Copy Formal Quote &amp; Invoice Instructions
+                    </button>
+                </div>
+            `;
+            const copyBtn = document.getElementById('btn-copy-quote-cert');
+            if (copyBtn) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(JSON.stringify(quote, null, 2));
+                    showToast('Enterprise Sovereign Quote copied to clipboard!', 'success');
+                };
+            }
+        }
+        showToast('Enterprise Sovereign Quote generated successfully!', 'success');
+    } catch (err) {
+        showToast(err.message || 'Could not generate quote.', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Generate Formal Pro-Forma Invoice & Pilot Contract';
+        }
+    }
+}
+
 export function initBilling() {
     ['USD', 'INR', 'EUR', 'GBP'].forEach(curr => {
         const btn = document.getElementById(`curr-btn-${curr}`);
@@ -700,4 +817,21 @@ export function initBilling() {
             if (e.target === erpModal) closeERPRelayModal();
         });
     }
+
+    // Enterprise Sovereign Concierge Modal triggers
+    const openConciergeBtn = document.getElementById('btn-open-concierge');
+    if (openConciergeBtn) openConciergeBtn.addEventListener('click', openEnterpriseConciergeModal);
+
+    const closeConciergeBtn = document.getElementById('ent-concierge-close');
+    if (closeConciergeBtn) closeConciergeBtn.addEventListener('click', closeEnterpriseConciergeModal);
+
+    const conciergeModal = document.getElementById('enterprise-concierge-modal');
+    if (conciergeModal) {
+        conciergeModal.addEventListener('click', (e) => {
+            if (e.target === conciergeModal) closeEnterpriseConciergeModal();
+        });
+    }
+
+    const entForm = document.getElementById('ent-quote-form');
+    if (entForm) entForm.addEventListener('submit', submitEnterpriseQuote);
 }
