@@ -118,7 +118,10 @@ def live_scrape(
         workspace = _job_workspace(user.id, job_id)
         job = reserve_job(db, user, "live_scrape", workspace, job_id=job_id)
         if auth.auth_type == "guest":
-            request.session["guest_run_used"] = True
+            try:
+                request.session["guest_run_used"] = True
+            except Exception:
+                pass
             response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
             response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
         try:
@@ -202,7 +205,10 @@ async def generate_pack(
         job.input_name = filename
         db.commit()
         if auth.auth_type == "guest":
-            request.session["guest_run_used"] = True
+            try:
+                request.session["guest_run_used"] = True
+            except Exception:
+                pass
             response.set_cookie("marketlens_guest_run", "1", max_age=30 * 86400, httponly=True, samesite="lax")
             response.set_cookie("marketlens_guest_id", user.id, max_age=30 * 86400, httponly=True, samesite="lax")
         try:

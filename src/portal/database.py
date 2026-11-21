@@ -50,7 +50,19 @@ class User(Base):
 
     @property
     def tenant_id(self) -> str:
-        return self.org_id or self.id
+        return getattr(self, "_tenant_id", None) or self.org_id or self.id
+
+    @tenant_id.setter
+    def tenant_id(self, val: str | None) -> None:
+        self._tenant_id = val
+
+    @property
+    def is_guest(self) -> bool:
+        return getattr(self, "_is_guest", False)
+
+    @is_guest.setter
+    def is_guest(self, val: bool) -> None:
+        self._is_guest = bool(val)
 
 
 class EmailToken(Base):

@@ -92,7 +92,13 @@ export async function apiRequest(url, options = {}) {
         headers
     });
 
-    const data = await response.json().catch(() => ({}));
+    let data = {};
+    const text = await response.text();
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch {
+        data = { detail: text || `Request failed (${response.status}).` };
+    }
 
     if (!response.ok) {
         if (
@@ -107,11 +113,12 @@ export async function apiRequest(url, options = {}) {
         }
         const errDetail =
             typeof data.detail === 'object'
-                ? data.detail.message
+                ? (data.detail.message || JSON.stringify(data.detail))
                 : data.detail || data.message || `Request failed (${response.status}).`;
         const err = new Error(errDetail);
         err.status = response.status;
         err.data = data;
+        console.error('[API Error]', response.status, url, errDetail);
         throw err;
     }
 

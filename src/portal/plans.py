@@ -239,7 +239,18 @@ def reserve_job(db: Session, user: User, kind: str, workspace_path: Path, job_id
         if locked_user is None:
             locked_user = db.get(User, user.id)
             if locked_user is None:
-                raise HTTPException(status_code=401, detail="Your account is no longer available.")
+                if getattr(user, "is_guest", False) or user.id.startswith("guest_"):
+                    try:
+                        db.merge(user)
+                        db.commit()
+                        locked_user = db.get(User, user.id)
+                    except Exception:
+                        try:
+                            db.rollback()
+                        except Exception:
+                            pass
+                if locked_user is None:
+                    raise HTTPException(status_code=401, detail="Your account is no longer available.")
 
         plan_key, _ = effective_plan(db, user.id)
         catalog = plan_catalog()

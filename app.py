@@ -94,6 +94,15 @@ app.include_router(api_keys.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(index_routes.router)
 
+
+@app.exception_handler(Exception)
+async def unhandled_global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled server exception on %s %s: %s", request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"{type(exc).__name__}: {str(exc)}"},
+    )
+
 STATIC_DIR = PROJECT_ROOT / "src" / "portal" / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -199,18 +199,27 @@ def authenticate_request(
                     terms_accepted_at=utc_now(),
                     session_version=1,
                 )
-                db.add(guest_user)
-                db.commit()
-                db.refresh(guest_user)
-                guest_id = alt_id
+                try:
+                    db.add(guest_user)
+                    db.commit()
+                    db.refresh(guest_user)
+                    guest_id = alt_id
+                except Exception:
+                    try:
+                        db.rollback()
+                    except Exception:
+                        pass
 
-        setattr(guest_user, "tenant_id", guest_id)
-        setattr(guest_user, "is_guest", True)
-        request.session["user_id"] = guest_id
-        request.session["session_version"] = guest_user.session_version
-        request.session["is_guest"] = True
-        if not request.session.get("csrf_token"):
-            request.session["csrf_token"] = secrets.token_urlsafe(32)
+        guest_user.tenant_id = guest_id
+        guest_user.is_guest = True
+        try:
+            request.session["user_id"] = guest_id
+            request.session["session_version"] = guest_user.session_version
+            request.session["is_guest"] = True
+            if not request.session.get("csrf_token"):
+                request.session["csrf_token"] = secrets.token_urlsafe(32)
+        except Exception:
+            pass
 
         auth_ctx = AuthContext(
             user=guest_user,
