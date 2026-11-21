@@ -417,11 +417,21 @@
             width: 100%;
             outline: none;
             cursor: pointer;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto !important;
             transition: border-color 0.15s ease;
         }
 
         .elevated-select:focus {
             border-color: var(--accent-odd);
+        }
+
+        .elevated-select option {
+            background-color: #18181b;
+            color: #fafafa;
+            padding: 8px 12px;
+            font-size: var(--font-sm);
         }
 
         /* -------------------------------------------------------------
@@ -473,11 +483,14 @@
             display: flex;
             flex-direction: column;
             gap: var(--space-3);
+            position: relative;
+            z-index: 10;
         }
 
         .ticker-search-wrapper {
             position: relative;
             width: 100%;
+            z-index: 10;
         }
 
         .ticker-search-input {
@@ -492,6 +505,9 @@
             outline: none;
             transition: all 0.15s ease;
             box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto !important;
         }
 
         .ticker-search-input:focus {
@@ -508,6 +524,7 @@
             pointer-events: none;
             display: flex;
             align-items: center;
+            z-index: 11;
         }
 
         .quick-ticker-chips {
@@ -515,6 +532,8 @@
             flex-wrap: wrap;
             gap: 6px;
             align-items: center;
+            position: relative;
+            z-index: 10;
         }
 
         .ticker-chip {
@@ -524,23 +543,32 @@
             font-size: var(--font-xs);
             font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.15s ease;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto !important;
+            user-select: none;
         }
 
         .ticker-chip:hover {
-            border-color: var(--border-hover);
+            border-color: var(--accent-odd);
             color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 90, 31, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .ticker-chip:active {
+            transform: translateY(0);
         }
 
         .ticker-chip.active {
             background: var(--accent-odd);
             border-color: var(--accent-odd);
             color: #ffffff;
-            box-shadow: 0 0 8px rgba(255, 90, 31, 0.35);
+            box-shadow: 0 0 10px rgba(255, 90, 31, 0.45);
         }
 
         /* Modal Backdrop & Enterprise Trial Activation Modal */
@@ -555,6 +583,14 @@
             align-items: center;
             justify-content: center;
             padding: var(--space-4);
+        }
+
+        .modal-overlay[hidden],
+        .modal-overlay.hidden,
+        [hidden] {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
         }
 
         .modal-card {
@@ -2447,7 +2483,7 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
     </main>
 
     <!-- ZERO-BOUNCE ENTERPRISE TRIAL ACTIVATION MODAL -->
-    <div id="trial-upgrade-modal" class="modal-overlay" hidden>
+    <div id="trial-upgrade-modal" class="modal-overlay hidden" hidden style="display: none;">
         <div class="modal-card">
             <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">&times;</button>
             <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3);">

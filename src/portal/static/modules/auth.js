@@ -106,9 +106,9 @@ export function setAccess(account) {
         if (histList) histList.replaceChildren();
     }
 
+    const isBusy = Boolean(state.analysisBusy);
     const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
     const limitReached = Boolean(account && account.plan && account.plan.remaining_this_month <= 0);
-    const locked = user ? (limitReached || state.analysisBusy) : (guestUsed || state.analysisBusy);
 
     const domainSelect = document.getElementById('domain-selector');
     const liveBtn = document.getElementById('btn-live-scrape');
@@ -116,18 +116,28 @@ export function setAccess(account) {
     const drop = document.getElementById('dropzone');
     const progMsg = document.getElementById('progress-message');
 
-    if (domainSelect) domainSelect.disabled = locked;
-    if (liveBtn) liveBtn.disabled = locked;
-    if (fileIn) fileIn.disabled = locked;
+    // ONLY disable inputs while analysis computation is actively in progress
+    if (domainSelect) domainSelect.disabled = isBusy;
+    if (liveBtn) {
+        liveBtn.disabled = isBusy;
+        if (isBusy) {
+            liveBtn.textContent = 'Running Valuation Pipeline...';
+        } else {
+            liveBtn.textContent = 'Run Institutional Valuation';
+        }
+    }
+    if (fileIn) fileIn.disabled = isBusy;
     if (drop) {
-        drop.setAttribute('aria-disabled', String(locked));
-        drop.classList.toggle('locked', locked);
+        drop.setAttribute('aria-disabled', String(isBusy));
+        drop.classList.toggle('locked', isBusy);
     }
     if (progMsg) {
-        if (user && limitReached) {
-            progMsg.textContent = 'Monthly quota reached. Upgrade your plan to run another valuation.';
+        if (isBusy) {
+            // Handled during execution
+        } else if (user && limitReached) {
+            progMsg.textContent = 'Monthly quota reached. Start 14-day enterprise trial or upgrade plan for instant access.';
         } else if (!user && guestUsed) {
-            progMsg.textContent = '1-run guest preview completed. Sign in or start a 14-day free trial for full access.';
+            progMsg.textContent = 'Guest preview completed. Start your 14-day free trial for 5 instant full valuations.';
         }
     }
 

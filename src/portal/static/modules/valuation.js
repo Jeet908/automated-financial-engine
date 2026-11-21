@@ -170,6 +170,8 @@ export function openTrialUpgradeModal() {
     const modal = document.getElementById('trial-upgrade-modal');
     if (modal) {
         modal.hidden = false;
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
         const emailInput = document.getElementById('trial-modal-email');
         if (emailInput) {
             emailInput.focus();
@@ -181,6 +183,8 @@ export function closeTrialUpgradeModal() {
     const modal = document.getElementById('trial-upgrade-modal');
     if (modal) {
         modal.hidden = true;
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
     }
 }
 
@@ -188,6 +192,23 @@ export function closeTrialUpgradeModal() {
 window._openTrialUpgradeModal = openTrialUpgradeModal;
 
 export async function triggerLiveScrape() {
+    const { currentAccount, analysisBusy } = appState.getState();
+    if (analysisBusy) return;
+
+    const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
+    const limitReached = Boolean(currentAccount && currentAccount.plan && currentAccount.plan.remaining_this_month <= 0);
+
+    if (!currentAccount && guestUsed) {
+        openTrialUpgradeModal();
+        return;
+    }
+    if (currentAccount && limitReached) {
+        showToast('Monthly valuation limit reached. Please choose an upgraded plan below.', 'error');
+        const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
+        if (plansSec) plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     const tickerInput = document.getElementById('ticker-search-input');
     const ticker = tickerInput && tickerInput.value.trim() ? tickerInput.value.trim().toUpperCase() : null;
     const domainSelect = document.getElementById('domain-selector');
@@ -263,9 +284,26 @@ export async function triggerLiveScrape() {
 }
 
 export async function handleUpload(file) {
+    const { currentAccount, analysisBusy } = appState.getState();
+    if (analysisBusy) return;
+
+    const guestUsed = document.cookie.includes('marketlens_guest_run=1') || localStorage.getItem('marketlens_guest_run') === '1';
+    const limitReached = Boolean(currentAccount && currentAccount.plan && currentAccount.plan.remaining_this_month <= 0);
+
+    if (!currentAccount && guestUsed) {
+        openTrialUpgradeModal();
+        return;
+    }
+    if (currentAccount && limitReached) {
+        showToast('Monthly valuation limit reached. Please choose an upgraded plan below.', 'error');
+        const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
+        if (plansSec) plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     clearError();
     appState.setState({ analysisBusy: true });
-    setAccess(appState.getState().currentAccount);
+    setAccess(currentAccount);
 
     const processFlow = document.getElementById('process-flow');
     const resultsDashboard = document.getElementById('results-dashboard');
@@ -645,6 +683,8 @@ export function initValuation() {
     if (liveBtn) liveBtn.addEventListener('click', triggerLiveScrape);
 
     const tickerInput = document.getElementById('ticker-search-input');
+    const quickChips = document.getElementById('quick-ticker-chips');
+
     if (tickerInput) {
         tickerInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -652,9 +692,17 @@ export function initValuation() {
                 triggerLiveScrape();
             }
         });
+        tickerInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim().toUpperCase();
+            if (quickChips) {
+                quickChips.querySelectorAll('.ticker-chip').forEach(btn => {
+                    const chipTicker = (btn.dataset.ticker || '').toUpperCase();
+                    btn.classList.toggle('active', chipTicker === val || (!val && !chipTicker));
+                });
+            }
+        });
     }
 
-    const quickChips = document.getElementById('quick-ticker-chips');
     if (quickChips) {
         quickChips.addEventListener('click', (e) => {
             const btn = e.target.closest('.ticker-chip');
@@ -665,8 +713,21 @@ export function initValuation() {
             if (tickerInput) {
                 tickerInput.value = targetTicker;
             }
-            if (targetTicker) {
-                triggerLiveScrape();
+            // Trigger valuation run for this ticker (or benchmark champion if 'Any')
+            triggerLiveScrape();
+        });
+    }
+
+    const domainSelect = document.getElementById('domain-selector');
+    if (domainSelect) {
+        domainSelect.addEventListener('change', () => {
+            if (domainSelect.value !== 'Any Random Domain') {
+                if (tickerInput) tickerInput.value = '';
+                if (quickChips) {
+                    quickChips.querySelectorAll('.ticker-chip').forEach(c => c.classList.remove('active'));
+                    const anyChip = quickChips.querySelector('[data-ticker=""]');
+                    if (anyChip) anyChip.classList.add('active');
+                }
             }
         });
     }
