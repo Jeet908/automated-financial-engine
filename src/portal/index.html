@@ -1973,6 +1973,7 @@
             <a href="#platform" class="nav-link">Platform</a>
             <a href="#pricing" class="nav-link">Pricing</a>
             <a href="#enterprise" class="nav-link">Enterprise</a>
+            <button class="nav-link btn-text" id="nav-audit-btn" type="button">🛡️ Audit Ledger</button>
             <button class="nav-link btn-text" id="nav-auth-button" type="button">Sign in</button>
             <button class="btn-pill-trial" id="nav-trial-btn" type="button">Start 14-Day Free Trial</button>
             <span id="nav-account-label" class="nav-link" hidden></span>
@@ -2713,6 +2714,19 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
                     </div>
                 </div>
             </div>
+            <div style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-3); margin-bottom:var(--space-4);">
+                <label style="font-size:var(--font-xs); color:var(--text-secondary); display:block; margin-bottom:6px; font-weight:600;">
+                    🔍 Verify Any Artifact SHA-256 Hash or Valuation Job ID:
+                </label>
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="audit-verify-hash-input" placeholder="Paste 64-char SHA-256 hex or job UUID..." style="flex:1; background:var(--bg-canvas); border:1px solid var(--border-hairline); border-radius:6px; padding:6px 10px; color:var(--text-primary); font-family:'JetBrains Mono', monospace; font-size:11px; outline:none;">
+                    <button type="button" class="secondary-button" id="btn-run-hash-verify" style="font-size:11px; padding:6px 12px; white-space:nowrap;">
+                        Verify Proof
+                    </button>
+                </div>
+                <div id="audit-verify-hash-status" style="font-size:11px; margin-top:6px; display:none;"></div>
+            </div>
+
             <h4 style="font-size:var(--font-xs); font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.05em; margin:0 0 var(--space-2) 0;">
                 6 Invariant Verification Gates
             </h4>

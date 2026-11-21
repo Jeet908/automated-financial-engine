@@ -16,7 +16,8 @@ import {
     setAccess
 } from './modules/auth.js';
 import {
-    initValuation
+    initValuation,
+    openAuditLedgerModal
 } from './modules/valuation.js';
 import {
     initCharts,
@@ -40,6 +41,9 @@ function wireInteractiveElements() {
 
     const navTrial = document.getElementById('nav-trial-btn');
     if (navTrial) navTrial.addEventListener('click', () => showAuthPanel('register'));
+
+    const navAudit = document.getElementById('nav-audit-btn');
+    if (navAudit) navAudit.addEventListener('click', () => openAuditLedgerModal());
 
     // Hero Guest Action Buttons
     const heroTrial = document.getElementById('btn-guest-trial');
