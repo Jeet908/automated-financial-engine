@@ -411,6 +411,71 @@ async def google_callback(
     return response
 
 
+class GuestTrialRequest(BaseModel):
+    email: str = Field(..., max_length=320)
+
+
+@router.post("/trial/guest-activate")
+def guest_activate_trial(
+    payload: GuestTrialRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Frictionless 1-click Free Trial activation:
+    Instantly provisions/upgrades user with 14-day Free Trial (5 full valuations),
+    sets authenticated session cookie, and lifts guest rate-limit with zero email delay.
+    """
+    email = payload.email.strip().lower()
+    if not EMAIL_PATTERN.fullmatch(email):
+        raise HTTPException(status_code=422, detail="Enter a valid email address.")
+
+    user = db.scalar(select(User).where(User.email == email))
+    if user is None:
+        user = User(
+            email=email,
+            password_hash=hash_password(secrets.token_urlsafe(16)),
+            email_verified=True,
+            terms_accepted_at=utc_now(),
+            terms_version=os.environ.get("TERMS_VERSION", "2026-11"),
+        )
+        db.add(user)
+        db.flush()
+    else:
+        user.email_verified = True
+
+    existing_sub = db.get(Subscription, user.id)
+    if not existing_sub:
+        db.add(
+            Subscription(
+                user_id=user.id,
+                tenant_id=user.tenant_id,
+                provider="trial",
+                plan_key="free_trial",
+                status="trialing",
+                current_period_end=utc_now() + timedelta(days=14),
+                cancel_at_period_end=False,
+            )
+        )
+    elif existing_sub.plan_key == "free":
+        existing_sub.plan_key = "free_trial"
+        existing_sub.status = "trialing"
+        existing_sub.current_period_end = utc_now() + timedelta(days=14)
+    db.commit()
+
+    response.delete_cookie("marketlens_guest_run", path="/")
+    establish_session(request, response, user.id, user.session_version)
+    summary = account_summary(db, user)
+    summary["csrf_token"] = request.session["csrf_token"]
+    return {
+        "status": "trial_activated",
+        "message": "14-Day Free Trial activated! 5 valuation credits added.",
+        "account": summary,
+        "csrf_token": request.session["csrf_token"],
+    }
+
+
 @router.post("/trial/activate")
 def activate_trial(
     request: Request,

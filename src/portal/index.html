@@ -475,6 +475,123 @@
             gap: var(--space-3);
         }
 
+        .ticker-search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .ticker-search-input {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: var(--space-3) var(--space-4) var(--space-3) 2.5rem;
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            font-family: inherit;
+            outline: none;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+        }
+
+        .ticker-search-input:focus {
+            border-color: var(--accent-odd);
+            box-shadow: 0 0 0 2px var(--accent-odd-soft);
+        }
+
+        .ticker-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .quick-ticker-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .ticker-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-hairline);
+            color: var(--text-secondary);
+            font-size: var(--font-xs);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .ticker-chip:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ticker-chip.active {
+            background: var(--accent-odd);
+            border-color: var(--accent-odd);
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 90, 31, 0.35);
+        }
+
+        /* Modal Backdrop & Enterprise Trial Activation Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+
+        .modal-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hover);
+            border-radius: 14px;
+            padding: var(--space-6);
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+            position: relative;
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.15s ease;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-primary);
+        }
+
         .btn-live-scrape {
             width: 100%;
             justify-content: center;
@@ -1823,23 +1940,43 @@
                 <div class="bento-cell live-control-card">
                     <div class="bento-cell-header">
                         <div class="bento-cell-title">
-                            <span class="accent-dot"></span> Explore a Listed Company
+                            <span class="accent-dot"></span> Institutional Valuation Engine
                         </div>
-                        <span class="badge-tag">Public Data</span>
+                        <span class="badge-tag">NSE · NASDAQ · LSE</span>
                     </div>
-                    <p class="bento-cell-desc">Select an industry to discover a company and run the real-time valuation pipeline.</p>
+                    <p class="bento-cell-desc">Type any global ticker or pick a benchmark champion to run the real-time valuation pipeline.</p>
                     <div class="bento-cell-controls">
-                        <select id="domain-selector" class="elevated-select" aria-label="Select an industry">
-                            <option value="Any Random Domain">Any industry</option>
-                            <option value="Indian IT & Defence">Indian IT &amp; defence</option>
-                            <option value="US AI & Cloud Semiconductors">US AI &amp; semiconductors</option>
-                            <option value="Global FinTech & SaaS">Global fintech &amp; SaaS</option>
-                            <option value="Indian FMCG & Consumer">Indian consumer goods</option>
-                            <option value="Healthcare & BioPharma">Healthcare &amp; biopharma</option>
-                            <option value="Clean Energy & EV">Clean energy &amp; EV</option>
+                        <div class="ticker-search-wrapper">
+                            <div class="ticker-search-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </div>
+                            <input type="text" id="ticker-search-input" class="ticker-search-input" placeholder="Enter ticker (e.g. NVDA, AAPL, TCS.NS, BEL.NS)..." autocomplete="off" spellcheck="false" aria-label="Enter ticker symbol">
+                        </div>
+
+                        <div class="quick-ticker-chips" id="quick-ticker-chips" role="group" aria-label="Benchmark Ticker Quick-Select">
+                            <button type="button" class="ticker-chip active" data-ticker="">🎲 Any</button>
+                            <button type="button" class="ticker-chip" data-ticker="NVDA">NVDA</button>
+                            <button type="button" class="ticker-chip" data-ticker="AAPL">AAPL</button>
+                            <button type="button" class="ticker-chip" data-ticker="MSFT">MSFT</button>
+                            <button type="button" class="ticker-chip" data-ticker="BEL.NS">BEL.NS</button>
+                            <button type="button" class="ticker-chip" data-ticker="TCS.NS">TCS.NS</button>
+                            <button type="button" class="ticker-chip" data-ticker="HAL.NS">HAL.NS</button>
+                        </div>
+
+                        <select id="domain-selector" class="elevated-select" aria-label="Or select an industry">
+                            <option value="Any Random Domain">Or filter by sector: Any Industry</option>
+                            <option value="Indian IT & Defence">Indian IT &amp; Defence (Schedule III)</option>
+                            <option value="US AI & Cloud Semiconductors">US AI &amp; Cloud (US GAAP)</option>
+                            <option value="Global FinTech & SaaS">Global FinTech &amp; SaaS</option>
+                            <option value="Indian FMCG & Consumer">Indian Consumer &amp; FMCG</option>
+                            <option value="Healthcare & BioPharma">Healthcare &amp; BioPharma</option>
+                            <option value="Clean Energy & EV">Clean Energy &amp; EV</option>
                         </select>
                         <button class="primary-button btn-live-scrape" id="btn-live-scrape" type="button">
-                            Run live valuation
+                            Run Institutional Valuation
                         </button>
                     </div>
                 </div>
@@ -2308,6 +2445,35 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             </div>
         </div>
     </main>
+
+    <!-- ZERO-BOUNCE ENTERPRISE TRIAL ACTIVATION MODAL -->
+    <div id="trial-upgrade-modal" class="modal-overlay" hidden>
+        <div class="modal-card">
+            <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">&times;</button>
+            <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3);">
+                <span class="pulse-dot"></span>
+                <span style="font-size:var(--font-xs); font-weight:700; color:var(--accent-odd); text-transform:uppercase; letter-spacing:0.05em;">Executive Access Guarantee</span>
+            </div>
+            <h2 style="font-size:var(--font-xl); font-weight:750; color:var(--text-primary); margin:0 0 var(--space-2) 0; letter-spacing:-0.02em;">
+                Unlock 5 Full Valuations + Live Downloads
+            </h2>
+            <p style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.5; margin:0 0 var(--space-4) 0;">
+                You have completed your initial evaluation. Activate your 14-day Free Trial to generate 5 full institutional models, live-formula Excel workbooks, and PowerPoint pitchbooks with zero credit card required.
+            </p>
+            <form id="trial-modal-form" style="display:flex; flex-direction:column; gap:var(--space-3);">
+                <label style="font-size:var(--font-xs); font-weight:600; color:var(--text-secondary); text-align:left;">
+                    Corporate / Work Email
+                    <input type="email" id="trial-modal-email" class="ticker-search-input" required placeholder="cfo@enterprise.com" style="margin-top:6px; padding-left:14px;" autocomplete="email">
+                </label>
+                <button type="submit" class="primary-button" id="btn-trial-modal-submit" style="width:100%; justify-content:center; padding:var(--space-3) var(--space-4); margin-top:4px;">
+                    Activate 14-Day Free Trial (Instant Access)
+                </button>
+            </form>
+            <p id="trial-modal-feedback" style="font-size:var(--font-xs); color:var(--text-dim); margin-top:var(--space-3); text-align:center;">
+                Instant activation · No password required · 0.000000e+00 accuracy guarantee
+            </p>
+        </div>
+    </div>
 
     <footer>
         MarketLens Analytics &middot; Sovereign Financial Modeling & Valuation Engine &middot; Informational modeling tools, not investment advice.

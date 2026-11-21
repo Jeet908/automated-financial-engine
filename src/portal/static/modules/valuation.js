@@ -166,7 +166,30 @@ export async function apiJobResult(jobId) {
     });
 }
 
+export function openTrialUpgradeModal() {
+    const modal = document.getElementById('trial-upgrade-modal');
+    if (modal) {
+        modal.hidden = false;
+        const emailInput = document.getElementById('trial-modal-email');
+        if (emailInput) {
+            emailInput.focus();
+        }
+    }
+}
+
+export function closeTrialUpgradeModal() {
+    const modal = document.getElementById('trial-upgrade-modal');
+    if (modal) {
+        modal.hidden = true;
+    }
+}
+
+// Global hook for modal control
+window._openTrialUpgradeModal = openTrialUpgradeModal;
+
 export async function triggerLiveScrape() {
+    const tickerInput = document.getElementById('ticker-search-input');
+    const ticker = tickerInput && tickerInput.value.trim() ? tickerInput.value.trim().toUpperCase() : null;
     const domainSelect = document.getElementById('domain-selector');
     const domain = domainSelect ? domainSelect.value : 'Any Random Domain';
     const processFlow = document.getElementById('process-flow');
@@ -180,9 +203,13 @@ export async function triggerLiveScrape() {
     if (resultsDashboard) resultsDashboard.style.display = 'none';
 
     const stepLabel1 = document.getElementById('step-label-1');
-    if (stepLabel1) stepLabel1.textContent = `Discovering a company in ${domain}`;
+    if (stepLabel1) {
+        stepLabel1.textContent = ticker
+            ? `Valuing ${ticker} via live regulatory filings`
+            : `Discovering a benchmark company in ${domain}`;
+    }
     const progMsg = document.getElementById('progress-message');
-    if (progMsg) progMsg.textContent = 'Submitting a private valuation job.';
+    if (progMsg) progMsg.textContent = 'Submitting an institutional valuation job.';
     setStep(1);
 
     try {
@@ -192,17 +219,21 @@ export async function triggerLiveScrape() {
             headers['X-Guest-Run'] = '1';
         }
 
+        const payload = { domain, market: 'random' };
+        if (ticker) {
+            payload.ticker = ticker;
+        }
+
         const job = await apiRequest('/api/v1/model/live-scrape', {
             method: 'POST',
             headers,
-            body: JSON.stringify({ domain, market: 'random' })
+            body: JSON.stringify(payload)
         });
         appState.setState({ currentJobId: job.job_id });
         window._currentJobId = job.job_id;
 
         const result = await apiJobResult(job.job_id);
-        const { currentAccount } = appState.getState();
-        if (!currentAccount) {
+        if (!appState.getState().currentAccount) {
             localStorage.setItem('marketlens_guest_run', '1');
             document.cookie = 'marketlens_guest_run=1; path=/; max-age=2592000';
         }
@@ -211,10 +242,19 @@ export async function triggerLiveScrape() {
         await refreshAccount();
     } catch (error) {
         const { currentAccount } = appState.getState();
-        if (!currentAccount && error.status === 401) {
-            showAuthPanel('register');
+        const isGuestLimit = error.status === 401 || (error.message && error.message.includes('Guest valuation limit'));
+        const isQuotaLimit = error.status === 429 || (error.message && error.message.includes('valuation(s) for this month'));
+
+        if (isGuestLimit || (!currentAccount && isQuotaLimit)) {
+            // High-converting frictionless enterprise modal (zero red error message)
+            openTrialUpgradeModal();
+        } else if (isQuotaLimit) {
+            showToast('Monthly valuation limit reached. Please choose an upgraded plan below.', 'error');
+            const plansSec = document.querySelector('.plans-card') || document.getElementById('plans-heading');
+            if (plansSec) plansSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            showError(`Live valuation notice: ${error.message}`);
         }
-        showError(`Live valuation failed: ${error.message}`);
         if (processFlow) processFlow.style.display = 'none';
     } finally {
         appState.setState({ analysisBusy: false });
@@ -603,6 +643,95 @@ window._refreshJobHistory = refreshJobHistory;
 export function initValuation() {
     const liveBtn = document.getElementById('btn-live-scrape');
     if (liveBtn) liveBtn.addEventListener('click', triggerLiveScrape);
+
+    const tickerInput = document.getElementById('ticker-search-input');
+    if (tickerInput) {
+        tickerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                triggerLiveScrape();
+            }
+        });
+    }
+
+    const quickChips = document.getElementById('quick-ticker-chips');
+    if (quickChips) {
+        quickChips.addEventListener('click', (e) => {
+            const btn = e.target.closest('.ticker-chip');
+            if (!btn) return;
+            quickChips.querySelectorAll('.ticker-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const targetTicker = btn.dataset.ticker || '';
+            if (tickerInput) {
+                tickerInput.value = targetTicker;
+            }
+            if (targetTicker) {
+                triggerLiveScrape();
+            }
+        });
+    }
+
+    // Modal Controls for Enterprise Free Trial
+    const modal = document.getElementById('trial-upgrade-modal');
+    const closeBtn = document.getElementById('modal-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', closeTrialUpgradeModal);
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeTrialUpgradeModal();
+            }
+        });
+    }
+
+    const trialForm = document.getElementById('trial-modal-form');
+    if (trialForm) {
+        trialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('trial-modal-email');
+            const feedback = document.getElementById('trial-modal-feedback');
+            const submitBtn = document.getElementById('btn-trial-modal-submit');
+            const email = emailInput ? emailInput.value.trim() : '';
+            if (!email) return;
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Activating Free Trial...';
+            }
+            if (feedback) feedback.textContent = 'Setting up your institutional access...';
+
+            try {
+                const res = await apiRequest('/api/v1/auth/trial/guest-activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                localStorage.removeItem('marketlens_guest_run');
+                appState.setState({
+                    currentAccount: res.account,
+                    csrfToken: res.csrf_token || res.account.csrf_token
+                });
+                setAccess(res.account);
+                closeTrialUpgradeModal();
+                showToast('14-Day Free Trial Activated! 5 valuation credits ready.', 'success');
+                await refreshAccount();
+
+                // Automatically resume the valuation the user requested
+                triggerLiveScrape();
+            } catch (err) {
+                if (feedback) {
+                    feedback.textContent = err.message || 'Could not activate trial. Please try again.';
+                    feedback.style.color = '#ef4444';
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Activate 14-Day Free Trial (Instant Access)';
+                }
+            }
+        });
+    }
 
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');

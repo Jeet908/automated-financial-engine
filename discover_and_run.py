@@ -32,16 +32,18 @@ def run_discovery_pipeline(
     quiet: bool = False,
     workspace_root: str | Path | None = None,
     job_id: str | None = None,
+    ticker: str | None = None,
 ) -> dict:
     """
     Executes the entire end-to-end zero-touch pipeline:
-    1. Scrapes live multi-statement company data by domain.
+    1. Scrapes live multi-statement company data by domain or exact ticker.
     2. Exports client_inbox/<Ticker>_Live_Scraped.xlsx and inputs/<ticker>_live_config.json.
     3. Runs Engine A (Deep Stochastic & Interactive Dashboard Suite).
     4. Runs Engine B (Client Executive Pack: .xlsx, .pdf, .pptx, .zip).
     5. Returns unified paths and valuation summaries.
     """
     t0 = time.time()
+    target_desc = f"ticker '{ticker}'" if ticker else f"domain '{domain or 'Random Auto-Select'}'"
     if not quiet:
         print("=" * 80)
         print("   ZERO-TOUCH AUTONOMOUS FINANCIAL DISCOVERY & VALUATION PIPELINE")
@@ -52,10 +54,10 @@ def run_discovery_pipeline(
     # Step 1: Scrape & Auto-Adapt Financial Statements
     # -------------------------------------------------------------
     if not quiet:
-        print(f"[*] Step 1: Querying sector indices for domain: '{domain or 'Random Auto-Select'}'...")
+        print(f"[*] Step 1: Querying sector indices for {target_desc}...")
 
     if job_id:
-        emit_job_progress(job_id, "ingestion", 15, "Extracting XBRL balance sheet tags & trial balance...", round(time.time() - t0, 2))
+        emit_job_progress(job_id, "ingestion", 15, f"Extracting financial filings for {ticker or domain or 'target company'}...", round(time.time() - t0, 2))
 
     workspace = Path(workspace_root).resolve() if workspace_root else PROJECT_ROOT
     scraper = LiveWebScraper(
@@ -65,6 +67,7 @@ def run_discovery_pipeline(
     company_data, xlsx_inbox_path, json_config_path = scraper.discover_and_extract(
         domain=domain,
         market=market,
+        ticker=ticker,
     )
 
     ticker = company_data["ticker"]

@@ -366,6 +366,25 @@ def test_frictionless_guest_1_valuation_and_401_limit():
         assert resp2.status_code == 401
         assert "Guest valuation limit reached" in resp2.json()["detail"]
 
+        # 3rd step: Guest activates instant 14-day free trial via modal (zero email delivery blocker)
+        activate_resp = client.post(
+            "/api/v1/auth/trial/guest-activate",
+            json={"email": "cfo_prospect@hedgefund.com"},
+        )
+        assert activate_resp.status_code == 200
+        act_data = activate_resp.json()
+        assert act_data["status"] == "trial_activated"
+        assert act_data["account"]["plan"]["key"] == "free_trial"
+        assert act_data["account"]["plan"]["monthly_valuations"] == 5
+
+        # 4th step: Valuation now succeeds smoothly with trial session
+        resp3 = client.post(
+            "/api/v1/model/live-scrape",
+            json={"domain": "Clean Energy & EV", "ticker": "TSLA", "market": "random"},
+        )
+        assert resp3.status_code == 202
+        assert "job_id" in resp3.json()
+
 
 def test_tier_gating_feature_matrix_and_403_rejection():
     """

@@ -78,6 +78,7 @@ def live_scrape_task(
     user_id: str,
     domain: str | None,
     market: str,
+    ticker: str | None = None,
 ) -> dict[str, Any]:
     """
     Executes end-to-end multi-document scraping, 3-statement synthesis,
@@ -104,6 +105,7 @@ def live_scrape_task(
             quiet=True,
             workspace_root=workspace,
             job_id=job_id,
+            ticker=ticker,
         )
         model = pipeline["engine_a_model"]
         paths = pipeline["paths"]

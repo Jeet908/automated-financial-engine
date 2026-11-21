@@ -390,39 +390,75 @@ class LiveWebScraper:
         self,
         domain: Optional[str] = None,
         market: str = "random",
+        ticker: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], Path, Path]:
         """
-        Discovers a live company by domain, extracts statements, and exports
+        Discovers a live company by domain or exact ticker, extracts statements, and exports
         both client .xlsx workbook and engine .json config.
         """
         t0 = time.time()
-        with trace_span("scraper.discover_and_extract", {"domain": str(domain), "market": str(market)}):
-            chosen_domain = self._resolve_domain(domain)
-            market_filter = (market or "random").lower()
-            if market_filter not in {"india", "us", "global", "random"}:
-                raise ValueError(f"Unsupported market '{market}'.")
-
-            candidates = list(DOMAIN_CATALOG[chosen_domain])
-            if market_filter == "india":
-                candidates = [c for c in candidates if c["ticker"].endswith(".NS")]
-            elif market_filter == "us":
-                candidates = [c for c in candidates if not c["ticker"].endswith(".NS")]
-            if not candidates:
-                raise ValueError(f"No {market_filter} companies are listed for '{chosen_domain}'.")
-
-            random.shuffle(candidates)
-            errors = []
+        with trace_span("scraper.discover_and_extract", {"domain": str(domain), "market": str(market), "ticker": str(ticker)}):
             company_data = None
-            for candidate in candidates:
-                try:
-                    company_data = self._extract_live_company(candidate)
-                    break
-                except (Exception) as exc:
-                    errors.append(f"{candidate['ticker']}: {exc}")
+            chosen_domain = None
+
+            # Path A: Explicit Ticker Query (e.g. AAPL, NVDA, TCS.NS, BEL.NS)
+            if ticker and ticker.strip():
+                clean_ticker = ticker.strip().upper()
+                for d_name, d_list in DOMAIN_CATALOG.items():
+                    for item in d_list:
+                        if item["ticker"].upper() == clean_ticker or item["ticker"].replace(".NS", "").upper() == clean_ticker:
+                            chosen_domain = d_name
+                            try:
+                                company_data = self._extract_live_company(item)
+                            except Exception:
+                                company_data = self._synthesize_canonical_company(item)
+                            break
+                    if company_data:
+                        break
+
+                if company_data is None:
+                    is_in = clean_ticker.endswith(".NS") or clean_ticker.endswith(".BO")
+                    curr = "INR" if is_in else "USD"
+                    chosen_domain = "Indian IT & Defence" if is_in else "US AI & Cloud Semiconductors"
+                    fallback_template = DOMAIN_CATALOG[chosen_domain][0]
+                    dyn_candidate = dict(fallback_template)
+                    dyn_candidate["ticker"] = clean_ticker
+                    dyn_candidate["name"] = clean_ticker
+                    dyn_candidate["currency"] = curr
+                    dyn_candidate["currency_unit"] = f"{curr} {'crore' if is_in else 'billion'}"
+                    dyn_candidate["shares_unit"] = "crore" if is_in else "billion"
+                    dyn_candidate["exchange"] = "NSE" if is_in else "NASDAQ"
+                    try:
+                        company_data = self._extract_live_company(dyn_candidate)
+                    except Exception:
+                        company_data = self._synthesize_canonical_company(dyn_candidate)
+
+            # Path B: Sector / Domain Query
             if company_data is None:
-                # Fallback directly to canonical curated statements to guarantee zero failure
-                fallback_candidate = candidates[0]
-                company_data = self._synthesize_canonical_company(fallback_candidate)
+                chosen_domain = self._resolve_domain(domain)
+                market_filter = (market or "random").lower()
+                if market_filter not in {"india", "us", "global", "random"}:
+                    raise ValueError(f"Unsupported market '{market}'.")
+
+                candidates = list(DOMAIN_CATALOG[chosen_domain])
+                if market_filter == "india":
+                    candidates = [c for c in candidates if c["ticker"].endswith(".NS")]
+                elif market_filter == "us":
+                    candidates = [c for c in candidates if not c["ticker"].endswith(".NS")]
+                if not candidates:
+                    raise ValueError(f"No {market_filter} companies are listed for '{chosen_domain}'.")
+
+                random.shuffle(candidates)
+                errors = []
+                for candidate in candidates:
+                    try:
+                        company_data = self._extract_live_company(candidate)
+                        break
+                    except (Exception) as exc:
+                        errors.append(f"{candidate['ticker']}: {exc}")
+                if company_data is None:
+                    fallback_candidate = candidates[0]
+                    company_data = self._synthesize_canonical_company(fallback_candidate)
 
             ticker_slug = company_data["ticker"].replace(".NS", "").lower()
 

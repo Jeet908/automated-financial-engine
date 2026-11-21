@@ -56,6 +56,7 @@ FILE_DETAILS = {
 
 class LiveScrapeRequest(BaseModel):
     domain: str | None = Field(default="Any Random Domain", max_length=120)
+    ticker: str | None = Field(default=None, max_length=32)
     market: str = Field(default="random", pattern="^(india|us|global|random)$")
 
 
@@ -77,13 +78,13 @@ def _update_job(job_id: str, *, status: str, result: dict[str, Any] | None = Non
         db.commit()
 
 
-def _run_live_job_fallback(job_id: str, user_id: str, domain: str | None, market: str) -> None:
+def _run_live_job_fallback(job_id: str, user_id: str, domain: str | None, market: str, ticker: str | None = None) -> None:
     """Fallback in-process execution when Celery is not active."""
     try:
         if hasattr(live_scrape_task, "apply"):
-            live_scrape_task.apply(args=[job_id, user_id, domain, market])
+            live_scrape_task.apply(args=[job_id, user_id, domain, market, ticker])
         else:
-            live_scrape_task(None, job_id, user_id, domain, market)
+            live_scrape_task(None, job_id, user_id, domain, market, ticker=ticker)
     except Exception as exc:
         logger.exception("Fallback live valuation job failed for %s: %s", job_id, exc)
         _update_job(job_id, status="failed", error_code="execution_failed")
@@ -147,14 +148,14 @@ def live_scrape(
     if use_celery:
         try:
             live_scrape_task.apply_async(
-                args=[job.id, user.id, payload.domain, payload.market],
+                args=[job.id, user.id, payload.domain, payload.market, payload.ticker],
                 queue="valuation_heavy",
             )
         except Exception as exc:
             logger.warning("Failed to enqueue live_scrape_task via Celery (%s); falling back to background thread.", exc)
-            background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market)
+            background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
     else:
-        background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market)
+        background_tasks.add_task(_run_live_job_fallback, job.id, user.id, payload.domain, payload.market, payload.ticker)
 
     return {"job_id": job.id, "status": job.status}
 
