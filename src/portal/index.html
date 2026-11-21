@@ -633,6 +633,112 @@
             justify-content: center;
         }
 
+        /* Institutional Deliverable Factory & Live Preview Cards */
+        .deliverable-pill-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: var(--space-2) var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .deliverable-pill-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-elevated);
+        }
+        .deliv-card-icon {
+            font-size: 1.15rem;
+        }
+        .deliv-card-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .deliv-name {
+            font-size: var(--font-xs);
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .deliv-format {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .deliv-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .deliv-btn-preview, .deliv-btn-dl {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-hairline);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .deliv-btn-preview:hover, .deliv-btn-dl:hover {
+            background: var(--accent-odd-soft);
+            border-color: var(--accent-odd);
+            color: var(--text-primary);
+        }
+        .preview-tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: var(--font-xs);
+            font-weight: 600;
+            padding: var(--space-3) var(--space-3);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .preview-tab-btn:hover {
+            color: var(--text-primary);
+        }
+        .preview-tab-btn.active {
+            color: var(--accent-odd);
+            border-bottom-color: var(--accent-odd);
+            background: rgba(255, 90, 31, 0.05);
+        }
+        .markdown-preview-box h1, .markdown-preview-box h2, .markdown-preview-box h3 {
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-hairline);
+            padding-bottom: 0.35rem;
+        }
+        .markdown-preview-box table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+        .markdown-preview-box th, .markdown-preview-box td {
+            border: 1px solid var(--border-hairline);
+            padding: 6px 10px;
+            text-align: left;
+        }
+        .markdown-preview-box th {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
         .dropzone-card {
             border: 1px dashed var(--border-hairline);
             text-align: center;
@@ -2444,20 +2550,79 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             </div>
 
             <div class="cta-section">
-                <div style="margin-bottom: var(--space-4);">
-                    <a href="#" class="btn-zip" id="btn-zip-download">
-                        Download executive pack (.zip)
+                <div style="display:flex; flex-wrap:wrap; gap:var(--space-3); margin-bottom:var(--space-4); align-items:center;">
+                    <a href="#" class="btn-zip" id="btn-zip-download" style="flex:1 1 240px; text-align:center;">
+                        📦 Download Executive Pack (.zip)
                     </a>
-                    <a href="#" class="btn-dash" id="btn-open-dashboard" target="_blank">
-                        Open interactive dashboard
-                    </a>
+                    <button type="button" class="btn-dash" id="btn-open-dashboard" style="flex:1 1 240px; text-align:center; cursor:pointer;">
+                        👁 Live In-Browser Preview
+                    </button>
                 </div>
-                <div class="sub-downloads">
-                    <a href="#" class="btn-sub" id="btn-dl-xlsx">Financial model (.xlsx)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-pdf">Valuation report (.pdf)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-pptx">Presentation (.pptx)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-memo">Investment memo (.md)</a>
-                    <a href="#" class="btn-sub" id="btn-dl-audit">Audit certificate (.json)</a>
+                <div class="deliverable-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:var(--space-2); margin-bottom:var(--space-2);">
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">📊</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Interactive Dashboard</span>
+                            <span class="deliv-format">HTML5 Webview</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <button type="button" class="deliv-btn-preview" data-preview="dashboard" title="Preview inside modal">👁</button>
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-html" target="_blank" title="Open in new window">⤓</a>
+                        </div>
+                    </div>
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">📈</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Financial Model</span>
+                            <span class="deliv-format">Excel (.xlsx) Live Formulas</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-xlsx" download title="Download Excel Model">⤓</a>
+                        </div>
+                    </div>
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">📑</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Valuation Tear Sheet</span>
+                            <span class="deliv-format">Vector PDF Report</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <a href="#" class="deliv-btn-preview" id="btn-preview-pdf" target="_blank" title="View Vector PDF in browser">👁</a>
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-pdf" download title="Download PDF">⤓</a>
+                        </div>
+                    </div>
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">📊</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Executive Pitchbook</span>
+                            <span class="deliv-format">PowerPoint (.pptx)</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-pptx" download title="Download PPTX">⤓</a>
+                        </div>
+                    </div>
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">📝</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Investment Memo</span>
+                            <span class="deliv-format">Markdown (.md)</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <button type="button" class="deliv-btn-preview" data-preview="memo" title="Preview Investment Memo">👁</button>
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-memo" download title="Download Markdown">⤓</a>
+                        </div>
+                    </div>
+                    <div class="deliverable-pill-card">
+                        <span class="deliv-card-icon">🛡️</span>
+                        <div class="deliv-card-info">
+                            <span class="deliv-name">Audit Certificate</span>
+                            <span class="deliv-format">Merkle JSON (0.00 Err)</span>
+                        </div>
+                        <div class="deliv-actions">
+                            <button type="button" class="deliv-btn-preview" data-preview="audit" title="Preview Audit JSON">👁</button>
+                            <a href="#" class="deliv-btn-dl" id="btn-dl-audit" download title="Download JSON">⤓</a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2595,6 +2760,101 @@ curl -X GET https://automated-financial-engine-production.up.railway.app/api/v1/
             <p style="font-size:11px; color:var(--text-dim); text-align:center; margin:0;">
                 All credentials &amp; tokens are vaulted using Fernet AES-256 encryption under tenant isolation.
             </p>
+        </div>
+    </div>
+
+    <!-- INSTITUTIONAL DELIVERABLE FACTORY & LIVE PREVIEW MODAL -->
+    <div id="deliverable-preview-modal" class="modal-overlay hidden" hidden style="display: none;">
+        <div class="modal-card deliverable-preview-dialog" style="max-width: 1080px; width: 95vw; height: 88vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 12px;">
+            <!-- Header -->
+            <div class="preview-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:var(--space-3) var(--space-4); background:var(--bg-elevated); border-bottom:1px solid var(--border-hairline);">
+                <div style="display:flex; align-items:center; gap:var(--space-2);">
+                    <span class="status-dot-badge" style="background:rgba(255,90,31,0.1); border-color:var(--accent-odd-border); color:var(--accent-odd);">
+                        <span class="pulse-dot" style="background:var(--accent-odd);"></span> DELIVERABLE FACTORY
+                    </span>
+                    <h3 id="preview-modal-title" style="margin:0; font-size:var(--font-base); font-weight:700; color:var(--text-primary);">
+                        Interactive Deliverable Inspector
+                    </h3>
+                </div>
+                <div style="display:flex; align-items:center; gap:var(--space-2);">
+                    <a href="#" class="secondary-button" id="preview-modal-download-btn" target="_blank" download style="font-size:var(--font-xs); padding:4px 10px;">
+                        ⤓ Download File
+                    </a>
+                    <button type="button" class="modal-close-btn" id="preview-modal-close" aria-label="Close preview modal" style="position:static; margin:0;">&times;</button>
+                </div>
+            </div>
+
+            <!-- Tab bar -->
+            <div class="preview-tab-bar" style="display:flex; gap:2px; background:#0c0c0e; border-bottom:1px solid var(--border-hairline); padding:0 var(--space-3); overflow-x:auto;">
+                <button type="button" class="preview-tab-btn active" data-tab="dashboard">📊 Interactive Dashboard</button>
+                <button type="button" class="preview-tab-btn" data-tab="memo">📝 Investment Memo (.md)</button>
+                <button type="button" class="preview-tab-btn" data-tab="audit">🛡️ Cryptographic Audit (.json)</button>
+                <button type="button" class="preview-tab-btn" data-tab="valuation">📈 Valuation Data (.json)</button>
+                <button type="button" class="preview-tab-btn" data-tab="hub">📦 Deliverable Hub</button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="preview-modal-body" style="flex:1; overflow-y:auto; background:var(--bg-canvas); position:relative;">
+                <!-- Tab 1: Dashboard Iframe -->
+                <div class="preview-tab-pane" id="preview-pane-dashboard" style="height:100%; width:100%;">
+                    <iframe id="preview-dashboard-iframe" src="about:blank" style="width:100%; height:100%; border:none; background:#09090b;" title="Interactive Dashboard Preview"></iframe>
+                </div>
+
+                <!-- Tab 2: Investment Memo -->
+                <div class="preview-tab-pane" id="preview-pane-memo" style="display:none; padding:var(--space-6); max-width:860px; margin:0 auto;">
+                    <div id="preview-memo-content" class="markdown-preview-box" style="color:var(--text-primary); line-height:1.65; font-size:var(--font-sm);">
+                        Loading investment committee memo...
+                    </div>
+                </div>
+
+                <!-- Tab 3: Cryptographic Audit JSON -->
+                <div class="preview-tab-pane" id="preview-pane-audit" style="display:none; padding:var(--space-4); height:100%; box-sizing:border-box;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-2);">
+                        <span style="font-size:var(--font-xs); color:var(--text-secondary); font-family:'JetBrains Mono', monospace;">Stage 4 Merkle Root &amp; 6-Gate Invariant Attestation</span>
+                        <button type="button" class="secondary-button" id="btn-copy-preview-audit" style="font-size:var(--font-xs); padding:3px 8px;">Copy JSON</button>
+                    </div>
+                    <pre id="preview-audit-json" class="code-preview-block" style="background:#050507; border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-3); color:#34d399; font-family:'JetBrains Mono', monospace; font-size:var(--font-xs); height:calc(100% - 40px); overflow:auto; margin:0;"></pre>
+                </div>
+
+                <!-- Tab 4: Valuation Output JSON -->
+                <div class="preview-tab-pane" id="preview-pane-valuation" style="display:none; padding:var(--space-4); height:100%; box-sizing:border-box;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-2);">
+                        <span style="font-size:var(--font-xs); color:var(--text-secondary); font-family:'JetBrains Mono', monospace;">Structured Engine DCF, Monte Carlo &amp; DuPont Payload</span>
+                        <button type="button" class="secondary-button" id="btn-copy-preview-val" style="font-size:var(--font-xs); padding:3px 8px;">Copy JSON</button>
+                    </div>
+                    <pre id="preview-val-json" class="code-preview-block" style="background:#050507; border:1px solid var(--border-hairline); border-radius:8px; padding:var(--space-3); color:#60a5fa; font-family:'JetBrains Mono', monospace; font-size:var(--font-xs); height:calc(100% - 40px); overflow:auto; margin:0;"></pre>
+                </div>
+
+                <!-- Tab 5: Deliverable Hub -->
+                <div class="preview-tab-pane" id="preview-pane-hub" style="display:none; padding:var(--space-6);">
+                    <div class="hub-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:var(--space-4);">
+                        <div class="hub-card" style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; padding:var(--space-4);">
+                            <div style="font-size:1.5rem; margin-bottom:var(--space-2);">📦</div>
+                            <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">Complete Board Pack (.zip)</div>
+                            <p style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:var(--space-3);">All 8 institutional deliverables bundled into one signed archive.</p>
+                            <a href="#" class="primary-button" id="hub-dl-zip" style="width:100%; justify-content:center; font-size:var(--font-xs);">Download ZIP Pack</a>
+                        </div>
+                        <div class="hub-card" style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; padding:var(--space-4);">
+                            <div style="font-size:1.5rem; margin-bottom:var(--space-2);">📈</div>
+                            <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">Live-Formula Excel Model (.xlsx)</div>
+                            <p style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:var(--space-3);">3-statement audit-ready model with dynamic Excel formulas.</p>
+                            <a href="#" class="secondary-button" id="hub-dl-xlsx" download style="width:100%; justify-content:center; font-size:var(--font-xs);">Download Excel (.xlsx)</a>
+                        </div>
+                        <div class="hub-card" style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; padding:var(--space-4);">
+                            <div style="font-size:1.5rem; margin-bottom:var(--space-2);">📑</div>
+                            <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">Executive PDF Tear Sheet (.pdf)</div>
+                            <p style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:var(--space-3);">Institutional 2-page tearsheet formatted for Investment Committees.</p>
+                            <a href="#" class="secondary-button" id="hub-dl-pdf" target="_blank" style="width:100%; justify-content:center; font-size:var(--font-xs);">Open Vector PDF</a>
+                        </div>
+                        <div class="hub-card" style="background:var(--bg-elevated); border:1px solid var(--border-hairline); border-radius:10px; padding:var(--space-4);">
+                            <div style="font-size:1.5rem; margin-bottom:var(--space-2);">📊</div>
+                            <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">PowerPoint Pitchbook (.pptx)</div>
+                            <p style="font-size:var(--font-xs); color:var(--text-secondary); margin-bottom:var(--space-3);">Executive presentation deck for board and sponsor reviews.</p>
+                            <a href="#" class="secondary-button" id="hub-dl-pptx" download style="width:100%; justify-content:center; font-size:var(--font-xs);">Download Pitchbook (.pptx)</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

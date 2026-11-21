@@ -407,11 +407,17 @@ export function renderLiveDashboard(data) {
 
     setFileLink('btn-zip-download', files.zip_pack);
     setFileLink('btn-open-dashboard', files.dashboard_html);
+    setFileLink('btn-dl-html', files.dashboard_html);
     setFileLink('btn-dl-xlsx', files.xlsx_model);
     setFileLink('btn-dl-pdf', files.pdf_tearsheet);
+    setFileLink('btn-preview-pdf', files.pdf_tearsheet ? `${files.pdf_tearsheet}?inline=true` : null);
     setFileLink('btn-dl-pptx', files.pptx_pitchbook);
     setFileLink('btn-dl-memo', files.investment_memo_md);
     setFileLink('btn-dl-audit', files.audit_certificate_json);
+    setFileLink('hub-dl-zip', files.zip_pack);
+    setFileLink('hub-dl-xlsx', files.xlsx_model);
+    setFileLink('hub-dl-pdf', files.pdf_tearsheet ? `${files.pdf_tearsheet}?inline=true` : null);
+    setFileLink('hub-dl-pptx', files.pptx_pitchbook);
 
     appState.setState({ lastValuationResult: data });
     window._lastValuationResult = data;
@@ -507,6 +513,193 @@ export function closeAuditLedgerModal() {
         modal.hidden = true;
         modal.classList.add('hidden');
         modal.style.display = 'none';
+    }
+}
+
+function renderSimpleMarkdown(mdText) {
+    if (!mdText) return '<p>No content available.</p>';
+    const lines = mdText.split('\n');
+    let html = '';
+    let inTable = false;
+    let tableHeadDone = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (!line) {
+            if (inTable) {
+                html += '</tbody></table>';
+                inTable = false;
+                tableHeadDone = false;
+            }
+            continue;
+        }
+
+        // Table row
+        if (line.startsWith('|') && line.endsWith('|')) {
+            const cells = line.split('|').slice(1, -1).map(c => c.trim());
+            if (cells.every(c => c.match(/^:?-+:?$/))) {
+                // Table header separator line
+                tableHeadDone = true;
+                continue;
+            }
+            if (!inTable) {
+                inTable = true;
+                html += '<table><thead><tr>';
+                cells.forEach(c => { html += `<th>${escapeHtml(c)}</th>`; });
+                html += '</tr></thead><tbody>';
+            } else {
+                html += '<tr>';
+                cells.forEach(c => { html += `<td>${escapeHtml(c)}</td>`; });
+                html += '</tr>';
+            }
+            continue;
+        } else if (inTable) {
+            html += '</tbody></table>';
+            inTable = false;
+            tableHeadDone = false;
+        }
+
+        // Headers
+        if (line.startsWith('### ')) {
+            html += `<h3>${escapeHtml(line.slice(4))}</h3>`;
+        } else if (line.startsWith('## ')) {
+            html += `<h2>${escapeHtml(line.slice(3))}</h2>`;
+        } else if (line.startsWith('# ')) {
+            html += `<h1>${escapeHtml(line.slice(2))}</h1>`;
+        } else if (line.startsWith('* ') || line.startsWith('- ')) {
+            const boldParsed = line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html += `<ul><li>${boldParsed}</li></ul>`;
+        } else if (line.startsWith('---')) {
+            html += '<hr style="border:none; border-top:1px solid var(--border-hairline); margin:1rem 0;">';
+        } else {
+            const boldParsed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html += `<p>${boldParsed}</p>`;
+        }
+    }
+    if (inTable) {
+        html += '</tbody></table>';
+    }
+    return html;
+}
+
+export async function openDeliverablePreviewModal(initialTab = 'dashboard') {
+    const modal = document.getElementById('deliverable-preview-modal');
+    if (!modal) return;
+    const currentId = appState.getState().currentJobId || window._currentJobId;
+    const lastRes = appState.getState().lastValuationResult || window._lastValuationResult;
+
+    if (!currentId && !lastRes) {
+        showToast('Run or upload a valuation first to preview deliverables.', 'info');
+        return;
+    }
+
+    const titleEl = document.getElementById('preview-modal-title');
+    if (titleEl && lastRes && lastRes.company) {
+        titleEl.textContent = `${lastRes.company.name || 'Company'} (${lastRes.company.ticker || ''}) — Deliverable Inspector`;
+    }
+
+    modal.hidden = false;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    await switchPreviewTab(initialTab);
+}
+
+export function closeDeliverablePreviewModal() {
+    const modal = document.getElementById('deliverable-preview-modal');
+    if (modal) {
+        modal.hidden = true;
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+export async function switchPreviewTab(tabKey) {
+    const tabs = document.querySelectorAll('.preview-tab-btn');
+    tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabKey));
+
+    const panes = {
+        dashboard: document.getElementById('preview-pane-dashboard'),
+        memo: document.getElementById('preview-pane-memo'),
+        audit: document.getElementById('preview-pane-audit'),
+        valuation: document.getElementById('preview-pane-valuation'),
+        hub: document.getElementById('preview-pane-hub'),
+    };
+
+    Object.entries(panes).forEach(([k, pane]) => {
+        if (pane) pane.style.display = (k === tabKey) ? 'block' : 'none';
+    });
+
+    const currentId = appState.getState().currentJobId || window._currentJobId;
+    const lastRes = appState.getState().lastValuationResult || window._lastValuationResult || {};
+    const files = lastRes.files || {};
+    const dlBtn = document.getElementById('preview-modal-download-btn');
+
+    if (tabKey === 'dashboard') {
+        const iframe = document.getElementById('preview-dashboard-iframe');
+        if (iframe && files.dashboard_html) {
+            iframe.src = files.dashboard_html;
+        }
+        if (dlBtn && files.dashboard_html) {
+            dlBtn.href = files.dashboard_html;
+            dlBtn.textContent = '⤓ Open Full Dashboard';
+        }
+    } else if (tabKey === 'memo') {
+        const memoBox = document.getElementById('preview-memo-content');
+        if (memoBox) memoBox.innerHTML = '<em>Loading Investment Committee Memorandum...</em>';
+        if (dlBtn && files.investment_memo_md) {
+            dlBtn.href = files.investment_memo_md;
+            dlBtn.textContent = '⤓ Download Memo (.md)';
+        }
+        if (currentId) {
+            try {
+                const res = await apiRequest(`/api/v1/jobs/${encodeURIComponent(currentId)}/preview/investment_memo_md`);
+                if (memoBox) memoBox.innerHTML = renderSimpleMarkdown(res.content_text);
+            } catch (err) {
+                if (memoBox) memoBox.innerHTML = `<p style="color:#ef4444;">Could not load memo: ${escapeHtml(err.message)}</p>`;
+            }
+        }
+    } else if (tabKey === 'audit') {
+        const auditBox = document.getElementById('preview-audit-json');
+        if (auditBox) auditBox.textContent = 'Loading Cryptographic Invariant Certificate...';
+        if (dlBtn && files.audit_certificate_json) {
+            dlBtn.href = files.audit_certificate_json;
+            dlBtn.textContent = '⤓ Download Certificate (.json)';
+        }
+        if (currentId) {
+            try {
+                const res = await apiRequest(`/api/v1/jobs/${encodeURIComponent(currentId)}/preview/audit_certificate_json`);
+                if (auditBox) auditBox.textContent = JSON.stringify(res.content_json || res, null, 2);
+            } catch (err) {
+                if (auditBox && lastRes.accounting_audit) {
+                    auditBox.textContent = JSON.stringify(lastRes.accounting_audit, null, 2);
+                }
+            }
+        }
+    } else if (tabKey === 'valuation') {
+        const valBox = document.getElementById('preview-val-json');
+        if (valBox) valBox.textContent = 'Loading Structured Engine Output...';
+        if (dlBtn && files.valuation_output_json) {
+            dlBtn.href = files.valuation_output_json;
+            dlBtn.textContent = '⤓ Download Valuation JSON';
+        }
+        if (currentId) {
+            try {
+                const res = await apiRequest(`/api/v1/jobs/${encodeURIComponent(currentId)}/preview/valuation_output_json`);
+                if (valBox) valBox.textContent = JSON.stringify(res.content_json || res, null, 2);
+            } catch {
+                if (valBox) valBox.textContent = JSON.stringify(lastRes, null, 2);
+            }
+        }
+    } else if (tabKey === 'hub') {
+        setFileLink('hub-dl-zip', files.zip_pack);
+        setFileLink('hub-dl-xlsx', files.xlsx_model);
+        setFileLink('hub-dl-pdf', files.pdf_tearsheet);
+        setFileLink('hub-dl-pptx', files.pptx_pitchbook);
+        if (dlBtn && files.zip_pack) {
+            dlBtn.href = files.zip_pack;
+            dlBtn.textContent = '⤓ Download Board Pack (.zip)';
+        }
     }
 }
 
@@ -956,4 +1149,69 @@ export function initValuation() {
         auditStat.style.cursor = 'pointer';
         auditStat.addEventListener('click', () => openAuditLedgerModal());
     }
+
+    // Institutional Deliverable Factory & Live Preview Modal triggers
+    const openDashBtn = document.getElementById('btn-open-dashboard');
+    if (openDashBtn) {
+        openDashBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openDeliverablePreviewModal('dashboard');
+        });
+    }
+
+    // Preview buttons next to each deliverable card
+    document.querySelectorAll('[data-preview]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tab = btn.dataset.preview || 'dashboard';
+            openDeliverablePreviewModal(tab);
+        });
+    });
+
+    const previewModal = document.getElementById('deliverable-preview-modal');
+    const previewClose = document.getElementById('preview-modal-close');
+    if (previewClose) previewClose.addEventListener('click', closeDeliverablePreviewModal);
+
+    if (previewModal) {
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) closeDeliverablePreviewModal();
+        });
+    }
+
+    document.querySelectorAll('.preview-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            if (tab) switchPreviewTab(tab);
+        });
+    });
+
+    const copyPreviewAuditBtn = document.getElementById('btn-copy-preview-audit');
+    if (copyPreviewAuditBtn) {
+        copyPreviewAuditBtn.addEventListener('click', () => {
+            const pre = document.getElementById('preview-audit-json');
+            if (pre && pre.textContent) {
+                navigator.clipboard.writeText(pre.textContent);
+                showToast('Audit JSON copied to clipboard!', 'success');
+            }
+        });
+    }
+
+    const copyPreviewValBtn = document.getElementById('btn-copy-preview-val');
+    if (copyPreviewValBtn) {
+        copyPreviewValBtn.addEventListener('click', () => {
+            const pre = document.getElementById('preview-val-json');
+            if (pre && pre.textContent) {
+                navigator.clipboard.writeText(pre.textContent);
+                showToast('Valuation JSON copied to clipboard!', 'success');
+            }
+        });
+    }
+
+    // Escape key closes modals
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeDeliverablePreviewModal();
+            closeAuditLedgerModal();
+        }
+    });
 }

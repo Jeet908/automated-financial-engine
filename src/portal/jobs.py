@@ -427,6 +427,9 @@ def download_job_file(
         raise HTTPException(status_code=404, detail="Report not found.")
 
     media_type, attachment = FILE_DETAILS[file_key]
+    if request.query_params.get("inline") == "true" or file_key == "dashboard_html":
+        attachment = False
+
     headers = {
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
@@ -436,7 +439,7 @@ def download_job_file(
         headers["Content-Security-Policy"] = (
             "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; "
-            "img-src data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+            "img-src data:; connect-src 'none'; frame-ancestors 'self'; base-uri 'none'"
         )
     return FileResponse(
         path,
@@ -444,6 +447,65 @@ def download_job_file(
         filename=path.name if attachment else None,
         headers=headers,
     )
+
+
+@router.get("/jobs/{job_id}/preview/{file_key}")
+def preview_job_file(
+    job_id: str,
+    file_key: str,
+    request: Request,
+    auth: AuthContext = Depends(require_scope("model:read", allow_guest=True)),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Lightweight in-browser deliverable preview endpoint.
+    Returns rendered text, JSON payloads, or download coordinates for modals and tabbed viewers.
+    """
+    user = auth.user
+    tenant_id = auth.tenant_id
+    job = get_tenant_job(db, job_id, tenant_id)
+    if job is None or job.status != "succeeded":
+        raise HTTPException(status_code=404, detail="Valuation deliverable not found.")
+    if file_key not in FILE_DETAILS:
+        raise HTTPException(status_code=404, detail="Deliverable type not recognized.")
+
+    result = json.loads(job.result_json or "{}")
+    files = result.get("_private_files") or {}
+    file_value = files.get(file_key)
+    download_url = f"/api/v1/jobs/{job_id}/files/{file_key}"
+    inline_url = f"/api/v1/jobs/{job_id}/files/{file_key}?inline=true"
+
+    if not file_value:
+        raise HTTPException(status_code=404, detail="File path not found for job.")
+    base = Path(job.workspace_path).resolve()
+    path = Path(file_value).resolve()
+    if not path.is_relative_to(base) or not path.is_file():
+        raise HTTPException(status_code=404, detail="Deliverable file not found on disk.")
+
+    media_type, _ = FILE_DETAILS[file_key]
+    response_payload = {
+        "job_id": job_id,
+        "file_key": file_key,
+        "filename": path.name,
+        "media_type": media_type,
+        "file_size_bytes": path.stat().st_size,
+        "download_url": download_url,
+        "inline_url": inline_url,
+    }
+
+    # Text / structured payloads
+    if file_key in ("investment_memo_md", "audit_certificate_json", "valuation_output_json"):
+        try:
+            content_str = path.read_text(encoding="utf-8")
+            if file_key.endswith("_json"):
+                response_payload["content_json"] = json.loads(content_str)
+            else:
+                response_payload["content_text"] = content_str
+        except Exception as exc:
+            logger.warning("Could not read preview text for %s: %s", file_key, exc)
+            response_payload["error"] = str(exc)
+
+    return response_payload
 
 
 class VerifyHashRequest(BaseModel):
