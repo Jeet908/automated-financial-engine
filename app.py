@@ -34,15 +34,26 @@ app = FastAPI(
     openapi_url=None if is_production else "/openapi.json",
 )
 
-allowed_hosts = [
-    host.strip()
-    for host in os.environ.get(
-        "ALLOWED_HOSTS",
-        "localhost,127.0.0.1,testserver,*.up.railway.app,*.railway.app,*.railway.internal,*",
-    ).split(",")
-    if host.strip()
-]
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+raw_allowed = os.environ.get("ALLOWED_HOSTS", "*")
+allowed_hosts: list[str] = []
+for h in raw_allowed.split(","):
+    clean = h.strip().lower()
+    if "://" in clean:
+        clean = clean.split("://", 1)[1]
+    clean = clean.split("/")[0].split(":")[0]
+    if clean:
+        allowed_hosts.append(clean)
+
+# In Railway environments or when wildcard is specified, allow Railway's edge router to handle host routing
+if "*" in allowed_hosts or not allowed_hosts or bool(os.environ.get("RAILWAY_ENVIRONMENT")):
+    allowed_hosts = ["*"]
+else:
+    for default_h in ["localhost", "127.0.0.1", "testserver", "*.up.railway.app", "*.railway.app", "*.railway.internal"]:
+        if default_h not in allowed_hosts:
+            allowed_hosts.append(default_h)
+
+if allowed_hosts != ["*"]:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 app.add_middleware(
     SessionMiddleware,
     secret_key=load_session_secret(),
