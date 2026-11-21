@@ -86,6 +86,7 @@ def _run_live_job_fallback(job_id: str, user_id: str, domain: str | None, market
             live_scrape_task(None, job_id, user_id, domain, market)
     except Exception as exc:
         logger.exception("Fallback live valuation job failed for %s: %s", job_id, exc)
+        _update_job(job_id, status="failed", error_code="execution_failed")
 
 
 def _run_upload_job_fallback(job_id: str, user_id: str, input_path: str) -> None:
@@ -97,6 +98,7 @@ def _run_upload_job_fallback(job_id: str, user_id: str, input_path: str) -> None
             generate_pack_task(None, job_id, user_id, input_path)
     except Exception as exc:
         logger.exception("Fallback upload valuation job failed for %s: %s", job_id, exc)
+        _update_job(job_id, status="failed", error_code="execution_failed")
 
 
 @router.post("/model/live-scrape", status_code=202)

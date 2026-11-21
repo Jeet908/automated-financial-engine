@@ -38,7 +38,7 @@ allowed_hosts = [
     host.strip()
     for host in os.environ.get(
         "ALLOWED_HOSTS",
-        "localhost,127.0.0.1,testserver,*.up.railway.app",
+        "localhost,127.0.0.1,testserver,*.up.railway.app,*.railway.app,*.railway.internal,*",
     ).split(",")
     if host.strip()
 ]
@@ -83,7 +83,36 @@ app.include_router(index_routes.router)
 
 STATIC_DIR = PROJECT_ROOT / "src" / "portal" / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+_static_mounted = False
+try:
+    import aiofiles  # Verify aiofiles runtime availability
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    _static_mounted = True
+    logger.info("[*] StaticFiles mounted successfully at /static")
+except Exception as exc:
+    logger.warning("FastAPI StaticFiles mount bypassed (%s). Enabling native fallback handler.", exc)
+
+if not _static_mounted:
+    @app.get("/static/{file_path:path}")
+    async def serve_static_fallback(file_path: str):
+        safe_path = (STATIC_DIR / file_path).resolve()
+        if not safe_path.is_relative_to(STATIC_DIR.resolve()) or not safe_path.is_file():
+            raise HTTPException(status_code=404, detail="Static asset not found.")
+        media_type = "application/javascript" if safe_path.suffix == ".js" else (
+            "text/css" if safe_path.suffix == ".css" else (
+                "application/json" if safe_path.suffix == ".json" else "application/octet-stream"
+            )
+        )
+        return Response(
+            content=safe_path.read_bytes(),
+            media_type=f"{media_type}; charset=utf-8" if "text" in media_type or "javascript" in media_type else media_type,
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
 
 
 @app.middleware("http")

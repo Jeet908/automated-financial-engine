@@ -186,9 +186,15 @@ export async function triggerLiveScrape() {
     setStep(1);
 
     try {
+        const { currentAccount } = appState.getState();
+        const headers = csrfHeaders({ 'Content-Type': 'application/json' });
+        if (!currentAccount) {
+            headers['X-Guest-Run'] = '1';
+        }
+
         const job = await apiRequest('/api/v1/model/live-scrape', {
             method: 'POST',
-            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            headers,
             body: JSON.stringify({ domain, market: 'random' })
         });
         appState.setState({ currentJobId: job.job_id });
@@ -237,9 +243,15 @@ export async function handleUpload(file) {
     const fileInput = document.getElementById('file-input');
 
     try {
+        const { currentAccount } = appState.getState();
+        const uploadHeaders = csrfHeaders();
+        if (!currentAccount) {
+            uploadHeaders['X-Guest-Run'] = '1';
+        }
+
         const job = await apiRequest('/api/v1/model/generate-pack', {
             method: 'POST',
-            headers: csrfHeaders(),
+            headers: uploadHeaders,
             body: formData
         });
         appState.setState({ currentJobId: job.job_id });
