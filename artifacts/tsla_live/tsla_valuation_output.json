@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "name": "Tesla, Inc.",
+    "ticker": "TSLA",
+    "industry": "Auto Manufacturers",
+    "currency": "USD",
+    "currency_unit": "USD billion",
+    "shares_unit": "billion",
+    "historical_years": [
+      "FY22A",
+      "FY23A",
+      "FY24A",
+      "FY25A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Live Yahoo Finance annual statements and quote for Tesla, Inc. (NMS); other assets and liabilities are aggregated to fit the engine's simplified schema."
+  },
+  "valuation": {
+    "fair_value_per_share": 11.331063733310737,
+    "enterprise_value": 42.99495220847645,
+    "equity_value": 44.788952208476445,
+    "wacc": 0.13908447000000002,
+    "sum_pv_fcff": 13.595579638848426,
+    "terminal_value": 56.37904513182282,
+    "pv_terminal_value": 29.399372569628024
+  },
+  "comps": {
+    "implied_price_per_share": 126.60617524627727,
+    "median_ev_ebitda": 42.608695652173914
+  },
+  "lbo": {
+    "moic": 2.350231925199076,
+    "irr": 0.18637543125162703
+  },
+  "monte_carlo": {
+    "mean_price": 11.427000762337226,
+    "median_price": 11.315420247327635,
+    "pct_5_var": 9.631128103290328,
+    "pct_95": 13.569525063068928,
+    "prob_undervalued": 0.0
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true
+  }
+}

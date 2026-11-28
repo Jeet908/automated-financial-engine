@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "name": "Aethel BioPharma Global Corp",
+    "ticker": "ABIO",
+    "industry": "Specialty Pharmaceuticals & Oncology Therapeutics",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "High-margin commercial oncology biopharma with accelerating pipeline commercialization"
+  },
+  "historicals": {
+    "revenue": [500.0, 620.0, 780.0],
+    "cogs": [125.0, 155.0, 195.0],
+    "employee_costs": [110.0, 136.4, 171.6],
+    "other_expenses": [90.0, 111.6, 140.4],
+    "depreciation": [30.0, 35.0, 42.0],
+    "interest": [12.0, 10.0, 8.0],
+    "tax": [27.93, 36.12, 46.83],
+    "dividends": [0.0, 0.0, 0.0],
+    "cash": [120.0, 160.0, 210.0],
+    "receivables": [61.64, 76.44, 96.16],
+    "inventory": [20.55, 25.48, 32.05],
+    "net_fixed_assets": [264.95, 292.08, 320.0],
+    "payables": [17.14, 21.23, 26.71],
+    "debt": [150.0, 125.0, 100.0],
+    "share_capital": [200.0, 200.0, 200.0],
+    "retained_earnings": [100.0, 207.77, 331.5]
+  },
+  "assumptions": {
+    "revenue_growth": [0.22, 0.18, 0.15, 0.12, 0.10],
+    "cogs_pct_revenue": [0.25, 0.25, 0.25, 0.25, 0.25],
+    "employee_pct_revenue": [0.22, 0.21, 0.20, 0.19, 0.18],
+    "other_opex_pct_revenue": [0.18, 0.17, 0.16, 0.15, 0.14],
+    "receivable_days": [45.0, 45.0, 45.0, 45.0, 45.0],
+    "inventory_days": [60.0, 60.0, 60.0, 60.0, 60.0],
+    "payable_days": [50.0, 50.0, 50.0, 50.0, 50.0],
+    "capex_pct_revenue": [0.06, 0.06, 0.05, 0.05, 0.05],
+    "depreciation_pct_opening_nb": [0.12, 0.12, 0.12, 0.12, 0.12],
+    "interest_rate": [0.065, 0.065, 0.065, 0.065, 0.065],
+    "debt_repayment": [20.0, 20.0, 20.0, 20.0, 20.0],
+    "tax_rate": [0.21, 0.21, 0.21, 0.21, 0.21],
+    "dividend_payout": [0.0, 0.0, 0.0, 0.0, 0.0]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.043,
+    "beta": 0.95,
+    "equity_risk_premium": 0.055,
+    "pretax_cost_of_debt": 0.065,
+    "debt_weight": 0.10,
+    "terminal_growth_rate": 0.030,
+    "shares_outstanding": 40.0,
+    "exit_multiple_ev_ebitda": 14.0,
+    "current_market_price": 75.0
+  }
+}

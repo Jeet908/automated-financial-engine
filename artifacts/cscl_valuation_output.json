@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "CloudScale Technologies Inc",
+    "ticker": "CSCL",
+    "industry": "B2B Enterprise Software & SaaS",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "Enterprise SaaS business with high gross margins, low capex, and negative working capital"
+  },
+  "valuation": {
+    "fair_value_per_share": 131.44,
+    "fair_value_rounded": 131,
+    "current_market_price": 110.0,
+    "projected_upside_pct": 19.49,
+    "enterprise_value": 3135.98,
+    "equity_value": 3285.98,
+    "wacc": 0.10778,
+    "wacc_displayed": 0.108,
+    "cost_of_equity": 0.11075,
+    "after_tax_cost_of_debt": 0.05135,
+    "debt_weight": 0.05,
+    "equity_weight": 0.95,
+    "sum_pv_fcff": 642.18,
+    "terminal_value_gordon": 4160.35,
+    "pv_terminal_value": 2493.80,
+    "terminal_value_pct_of_ev": 79.52,
+    "terminal_growth_rate": 0.035,
+    "shares_outstanding": 25.0,
+    "base_debt_fy25": 30.0,
+    "base_cash_fy25": 180.0,
+    "net_debt_fy25": -150.0
+  },
+  "comps": {
+    "implied_price_per_share": 135.0,
+    "median_ev_ebitda": 18.0
+  },
+  "lbo": {
+    "moic": 2.65,
+    "irr": 0.215
+  },
+  "monte_carlo": {
+    "mean_price": 132.8,
+    "median_price": 131.5,
+    "pct_5_var": 102.4,
+    "pct_95": 172.6,
+    "prob_undervalued": 82.4
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true,
+    "max_discrepancy": 0.0
+  }
+}

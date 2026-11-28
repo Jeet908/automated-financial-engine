@@ -1,0 +1,243 @@
+<!-- ======================================================================= -->
+<!-- MARKETLENS ANALYTICS — SAASLAUNCHER THEME WORDPRESS EMBED BLOCK        -->
+<!-- Ready-to-paste Custom HTML Block for www.marketlensanalytics.in          -->
+<!-- Target Engine Endpoint: https://app.marketlensanalytics.in/api/v1/model/generate-pack -->
+<!-- ======================================================================= -->
+
+<div class="marketlens-embed-wrapper" id="ml-embed-container">
+    <style>
+        #ml-embed-container {
+            --ml-bg: #0b1120;
+            --ml-card-bg: rgba(17, 24, 39, 0.95);
+            --ml-border: rgba(255, 255, 255, 0.1);
+            --ml-primary: #3b82f6;
+            --ml-accent: #8b5cf6;
+            --ml-success: #10b981;
+            --ml-text: #f3f4f6;
+            --ml-muted: #94a3b8;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--ml-bg);
+            border: 1px solid var(--ml-border);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            color: var(--ml-text);
+            max-width: 900px;
+            margin: 2rem auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        #ml-embed-container h3 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        #ml-embed-container p.ml-sub {
+            color: var(--ml-muted);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+        .ml-dropzone {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px dashed rgba(59, 130, 246, 0.35);
+            border-radius: 1.25rem;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ml-dropzone:hover, .ml-dropzone.ml-dragover {
+            border-color: var(--ml-primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: scale(1.01);
+        }
+        .ml-drop-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+        .ml-drop-text { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .ml-drop-hint { color: var(--ml-muted); font-size: 0.88rem; }
+        .ml-badges { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap; }
+        .ml-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--ml-border);
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        .ml-progress { display: none; margin-top: 1.5rem; text-align: center; }
+        .ml-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--ml-primary);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: ml-spin 1s linear infinite;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+        @keyframes ml-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ml-result-card {
+            display: none;
+            margin-top: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--ml-border);
+            border-radius: 1rem;
+            padding: 1.75rem;
+        }
+        .ml-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .ml-kpi-box {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--ml-border);
+        }
+        .ml-kpi-t { font-size: 0.75rem; text-transform: uppercase; color: var(--ml-muted); font-weight: 600; }
+        .ml-kpi-v { font-size: 1.5rem; font-weight: 800; margin-top: 0.25rem; color: #fff; }
+        .ml-dl-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            padding: 0.85rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            transition: opacity 0.2s;
+        }
+        .ml-dl-btn:hover { opacity: 0.92; }
+    </style>
+
+    <div class="ml-header">
+        <h3>MarketLens Institutional Valuation Generator</h3>
+        <p class="ml-sub">Instantly turn raw financial statements into an Audit-Verified 3-Statement Model, PDF Tear-Sheet & PowerPoint Pitchbook.</p>
+    </div>
+
+    <div class="ml-dropzone" id="mlDropzone">
+        <div class="ml-drop-icon">📊</div>
+        <div class="ml-drop-text">Drag & drop your client file here</div>
+        <div class="ml-drop-hint">Supports .xlsx, .xls, .csv, .json, and PDF trial balances</div>
+        <div class="ml-badges">
+            <span class="ml-badge">Ind AS / Indian GAAP</span>
+            <span class="ml-badge">US GAAP / IFRS</span>
+            <span class="ml-badge">SaaS Cohort MIS</span>
+            <span class="ml-badge">Zero Formula Errors</span>
+        </div>
+        <input type="file" id="mlFileInput" style="display: none;" accept=".xlsx,.xls,.csv,.json,.pdf">
+    </div>
+
+    <div class="ml-progress" id="mlProgress">
+        <div class="ml-spinner"></div>
+        <div style="font-weight: 600; font-size: 1rem;" id="mlProgressText">Ingesting & Building Financial Model...</div>
+        <div style="color: var(--ml-muted); font-size: 0.85rem; margin-top: 0.25rem;">Calibrating drivers, linking 3 statements, and compiling valuation pack...</div>
+    </div>
+
+    <div class="ml-result-card" id="mlResult">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <div>
+                <div style="font-size: 1.35rem; font-weight: 800;" id="mlEntityName">Target Entity</div>
+                <div style="font-size: 0.85rem; color: var(--ml-muted);" id="mlMetaStr">Ind AS • INR Crores</div>
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-weight: 700; padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+                ✓ Audit Verified ($0.00 Variance)
+            </div>
+        </div>
+
+        <div class="ml-kpis">
+            <div class="ml-kpi-box">
+                <div class="ml-kpi-t">Enterprise Value (Base)</div>
+                <div class="ml-kpi-v" id="mlEvVal">-</div>
+            </div>
+            <div class="ml-kpi-box">
+                <div class="ml-kpi-t">Equity Value (Base)</div>
+                <div class="ml-kpi-v" id="mlEqVal">-</div>
+            </div>
+            <div class="ml-kpi-box">
+                <div class="ml-kpi-t">Valuation Football Field</div>
+                <div class="ml-kpi-v" id="mlRangeVal" style="font-size: 1.15rem;">-</div>
+            </div>
+        </div>
+
+        <a href="#" class="ml-dl-btn" id="mlZipBtn" target="_blank">
+            📦 Download Complete Client Valuation Pack (.ZIP)
+        </a>
+    </div>
+
+    <script>
+        (function() {
+            const dropzone = document.getElementById('mlDropzone');
+            const fileInput = document.getElementById('mlFileInput');
+            const progress = document.getElementById('mlProgress');
+            const result = document.getElementById('mlResult');
+
+            // API Endpoint (Relative for proxy, or full SaaS URL)
+            const API_ENDPOINT = window.location.hostname.includes('marketlensanalytics.in') 
+                ? 'https://app.marketlensanalytics.in/api/v1/model/generate-pack'
+                : '/api/v1/model/generate-pack';
+
+            dropzone.addEventListener('click', () => fileInput.click());
+
+            ['dragenter', 'dragover'].forEach(eName => {
+                dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.add('ml-dragover'); }, false);
+            });
+            ['dragleave', 'drop'].forEach(eName => {
+                dropzone.addEventListener(eName, (e) => { e.preventDefault(); dropzone.classList.remove('ml-dragover'); }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length) upload(files[0]);
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) upload(fileInput.files[0]);
+            });
+
+            async function upload(file) {
+                progress.style.display = 'block';
+                result.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch(API_ENDPOINT, { method: 'POST', body: formData });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'Generation failed');
+                    }
+                    const data = await res.json();
+                    progress.style.display = 'none';
+                    result.style.display = 'block';
+
+                    const meta = data.metadata || {};
+                    const prev = data.preview || {};
+                    const curr = meta.currency === 'INR' ? '₹' : (meta.currency === 'USD' ? '$' : meta.currency + ' ');
+                    const unit = meta.unit ? ' ' + meta.unit : '';
+
+                    document.getElementById('mlEntityName').textContent = meta.name || file.name.replace(/\.[^/.]+$/, "");
+                    document.getElementById('mlMetaStr').textContent = `${meta.standard || 'Ind AS'} • ${meta.currency || 'INR'} ${meta.unit || 'Crores'}`;
+
+                    if (prev.ev_base) document.getElementById('mlEvVal').textContent = `${curr}${prev.ev_base.toLocaleString()}${unit}`;
+                    if (prev.equity_base) document.getElementById('mlEqVal').textContent = `${curr}${prev.equity_base.toLocaleString()}${unit}`;
+                    if (prev.ev_bear && prev.ev_bull) document.getElementById('mlRangeVal').textContent = `${curr}${prev.ev_bear.toLocaleString()} - ${curr}${prev.ev_bull.toLocaleString()}${unit}`;
+
+                    document.getElementById('mlZipBtn').href = data.zip_download_url || '#';
+                } catch (err) {
+                    alert('MarketLens Engine Error: ' + err.message);
+                    progress.style.display = 'none';
+                }
+            }
+        })();
+    </script>
+</div>

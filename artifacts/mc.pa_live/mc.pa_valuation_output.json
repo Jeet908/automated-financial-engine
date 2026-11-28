@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "name": "LVMH Mo\u00ebt Hennessy - Louis Vuitton, Soci\u00e9t\u00e9 Europ\u00e9enne",
+    "ticker": "MC.PA",
+    "industry": "Luxury Goods",
+    "currency": "EUR",
+    "currency_unit": "EUR billion",
+    "shares_unit": "billion",
+    "historical_years": [
+      "FY22A",
+      "FY23A",
+      "FY24A",
+      "FY25A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Live Yahoo Finance annual statements and quote for LVMH Mo\u00ebt Hennessy - Louis Vuitton, Soci\u00e9t\u00e9 Europ\u00e9enne (PAR); other assets and liabilities are aggregated to fit the engine's simplified schema."
+  },
+  "valuation": {
+    "fair_value_per_share": 587.1250252909024,
+    "enterprise_value": 315.99825331822984,
+    "equity_value": 288.06125331822983,
+    "wacc": 0.08794429375812152,
+    "sum_pv_fcff": 68.24615630557498,
+    "terminal_value": 377.61621290484266,
+    "pv_terminal_value": 247.75209701265484
+  },
+  "comps": {
+    "implied_price_per_share": 2158.123261502356,
+    "median_ev_ebitda": 42.608695652173914
+  },
+  "lbo": {
+    "moic": 1.5947333896348606,
+    "irr": 0.09783637791012656
+  },
+  "monte_carlo": {
+    "mean_price": 611.4724903383111,
+    "median_price": 585.5871927197751,
+    "pct_5_var": 434.3952331225993,
+    "pct_95": 870.9436837773746,
+    "prob_undervalued": 98.38
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true
+  }
+}

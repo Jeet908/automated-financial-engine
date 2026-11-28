@@ -1,0 +1,39 @@
+{
+  "company": "Aethel BioPharma Global Corp",
+  "ticker": "ABIO",
+  "audit_timestamp": "2026-11-16T11:51:25+05:30",
+  "overall_status": "PASSED",
+  "tolerance": 0.0001,
+  "invariants": {
+    "balance_sheet_identity": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Total Assets == Total Liabilities + Equity for all 8 periods"
+    },
+    "cash_flow_roll_forward": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Closing Cash == Opening Cash + CFO + CFI + CFF"
+    },
+    "retained_earnings_roll_forward": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Closing RE == Opening RE + PAT - Dividends"
+    },
+    "fixed_assets_net_block_roll_forward": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Closing Net Block == Opening Net Block + Capex - Depreciation"
+    },
+    "debt_amortization_roll_forward": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Closing Debt == Opening Debt - Debt Repayments"
+    },
+    "working_capital_reconciliation": {
+      "status": "PASSED",
+      "max_discrepancy": 0.0,
+      "description": "Delta NWC == NWC(t) - NWC(t-1) for all projected years"
+    }
+  }
+}

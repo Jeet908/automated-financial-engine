@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "name": "Tesla, Inc.",
+    "ticker": "TSLA",
+    "industry": "Auto Manufacturers",
+    "currency": "USD",
+    "currency_unit": "USD billion",
+    "shares_unit": "billion",
+    "historical_years": [
+      "FY22A",
+      "FY23A",
+      "FY24A",
+      "FY25A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Live Yahoo Finance annual statements and quote for Tesla, Inc. (NMS); other assets and liabilities are aggregated to fit the engine's simplified schema."
+  },
+  "historicals": {
+    "revenue": [
+      81.462,
+      96.773,
+      97.69,
+      94.827
+    ],
+    "cogs": [
+      60.609,
+      79.113,
+      80.24,
+      77.733
+    ],
+    "employee_costs": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "other_expenses": [
+      3.2,
+      2.839,
+      2.765,
+      5.391
+    ],
+    "depreciation": [
+      3.747,
+      4.667,
+      5.368,
+      6.148
+    ],
+    "interest": [
+      0.191,
+      0.156,
+      0.35,
+      0.338
+    ],
+    "tax": [
+      1.132,
+      -5.001,
+      1.837,
+      1.423
+    ],
+    "dividends": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "cash": [
+      16.253,
+      16.398,
+      16.139,
+      16.513
+    ],
+    "receivables": [
+      2.952,
+      3.508,
+      4.418,
+      4.576
+    ],
+    "inventory": [
+      12.839,
+      13.626,
+      12.017,
+      12.392
+    ],
+    "net_fixed_assets": [
+      50.294,
+      73.086,
+      89.496,
+      104.32500000000002
+    ],
+    "payables": [
+      30.692,
+      33.436,
+      34.767,
+      40.222
+    ],
+    "debt": [
+      5.748,
+      9.573,
+      13.623,
+      14.719
+    ],
+    "share_capital": [
+      0.003,
+      0.003,
+      0.003,
+      0.003
+    ],
+    "retained_earnings": [
+      45.894999999999996,
+      63.605999999999995,
+      73.67699999999999,
+      82.86200000000001
+    ],
+    "reported_net_ppe": [
+      36.635,
+      45.124,
+      51.506,
+      56.18
+    ],
+    "reported_accounts_payable": [
+      15.255,
+      14.431,
+      12.474,
+      13.371
+    ],
+    "total_assets": [
+      82.338,
+      106.618,
+      122.07,
+      137.806
+    ],
+    "total_liabilities": [
+      36.44,
+      43.009,
+      48.39,
+      54.941
+    ],
+    "total_equity": [
+      45.898,
+      63.609,
+      73.68,
+      82.865
+    ],
+    "capex": [
+      7.172,
+      8.899,
+      11.342,
+      8.527
+    ],
+    "operating_cash_flow": [
+      14.724,
+      13.256,
+      14.923,
+      14.747
+    ],
+    "investing_cash_flow": [
+      -11.973,
+      -15.584,
+      -18.787,
+      -15.478
+    ],
+    "financing_cash_flow": [
+      -3.527,
+      2.589,
+      3.853,
+      1.139
+    ],
+    "reported_net_income": [
+      12.583,
+      14.999,
+      7.13,
+      3.794
+    ]
+  },
+  "assumptions": {
+    "revenue_growth": [
+      0.0532,
+      0.0493,
+      0.0448,
+      0.0403,
+      0.0364
+    ],
+    "cogs_pct_revenue": null,
+    "employee_pct_revenue": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "other_opex_pct_revenue": [
+      0.0383,
+      0.0383,
+      0.0383,
+      0.0383,
+      0.0383
+    ],
+    "receivable_days": [
+      15.2,
+      15.2,
+      15.2,
+      15.2,
+      15.2
+    ],
+    "inventory_days": [
+      62.4,
+      62.4,
+      62.4,
+      62.4,
+      62.4
+    ],
+    "payable_days": [
+      170.6,
+      170.6,
+      170.6,
+      170.6,
+      170.6
+    ],
+    "capex_pct_revenue": [
+      0.0969,
+      0.0969,
+      0.0969,
+      0.0969,
+      0.0969
+    ],
+    "depreciation_pct_opening_nb": [
+      0.0687,
+      0.0687,
+      0.0687,
+      0.0687,
+      0.0687
+    ],
+    "interest_rate": [
+      0.023,
+      0.023,
+      0.023,
+      0.023,
+      0.023
+    ],
+    "debt_repayment": [
+      2.9438,
+      2.9438,
+      2.9438,
+      2.9438,
+      2.9438
+    ],
+    "tax_rate": [
+      0.2728,
+      0.2728,
+      0.2728,
+      0.2728,
+      0.2728
+    ],
+    "dividend_payout": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.044,
+    "beta": 1.743,
+    "equity_risk_premium": 0.055,
+    "pretax_cost_of_debt": 0.085,
+    "debt_weight": 0.01,
+    "terminal_growth_rate": 0.04,
+    "shares_outstanding": 3.952757946,
+    "exit_multiple_ev_ebitda": 25.0,
+    "current_market_price": 390.22
+  }
+}

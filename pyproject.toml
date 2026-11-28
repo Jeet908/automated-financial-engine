@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "financial-engine"
+version = "1.0.0"
+description = "Production-ready, 100% zero-touch Automated Financial Modeling & Valuation Engine"
+readme = "README.md"
+authors = [{ name = "Principal Financial Architect & Quantitative Engineer" }]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "openpyxl>=3.1.0",
+    "pandas>=1.5.0",
+    "numpy>=1.22.0",
+    "scipy>=1.9.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.22.0",
+    "python-multipart>=0.0.6",
+    "httpx>=0.24.0",
+    "SQLAlchemy>=2.0.36",
+    "psycopg[binary]>=3.2.3",
+    "itsdangerous>=2.1.2",
+    "reportlab>=4.0.0",
+    "python-pptx>=0.6.21",
+    "matplotlib>=3.7.0",
+    "yfinance>=0.2.20",
+    "PyMuPDF>=1.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+analytics = [
+    "numpy>=1.22.0",
+    "pandas>=1.5.0",
+    "scipy>=1.9.0",
+]
+
+[project.scripts]
+financial-engine = "financial_engine.cli:main"

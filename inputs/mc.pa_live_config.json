@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "name": "LVMH Mo\u00ebt Hennessy - Louis Vuitton, Soci\u00e9t\u00e9 Europ\u00e9enne",
+    "ticker": "MC.PA",
+    "industry": "Luxury Goods",
+    "currency": "EUR",
+    "currency_unit": "EUR billion",
+    "shares_unit": "billion",
+    "historical_years": [
+      "FY22A",
+      "FY23A",
+      "FY24A",
+      "FY25A"
+    ],
+    "projection_years": [
+      "FY26E",
+      "FY27E",
+      "FY28E",
+      "FY29E",
+      "FY30E"
+    ],
+    "description": "Live Yahoo Finance annual statements and quote for LVMH Mo\u00ebt Hennessy - Louis Vuitton, Soci\u00e9t\u00e9 Europ\u00e9enne (PAR); other assets and liabilities are aggregated to fit the engine's simplified schema."
+  },
+  "historicals": {
+    "revenue": [
+      79.183,
+      86.153,
+      84.682,
+      80.807
+    ],
+    "cogs": [
+      24.988,
+      26.876,
+      27.918,
+      27.279
+    ],
+    "employee_costs": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "other_expenses": [
+      28.141,
+      30.28,
+      30.075,
+      28.022
+    ],
+    "depreciation": [
+      6.226,
+      7.177,
+      7.796,
+      8.001
+    ],
+    "interest": [
+      0.382,
+      0.973,
+      1.186,
+      1.151
+    ],
+    "tax": [
+      5.362,
+      5.673,
+      5.157,
+      5.476
+    ],
+    "dividends": [
+      6.025,
+      6.251,
+      6.492,
+      6.465
+    ],
+    "cash": [
+      7.3,
+      7.774,
+      9.631,
+      8.794
+    ],
+    "receivables": [
+      4.258,
+      4.728,
+      4.731,
+      4.332
+    ],
+    "inventory": [
+      20.319,
+      22.952,
+      23.669,
+      22.659
+    ],
+    "net_fixed_assets": [
+      102.76899999999999,
+      108.23999999999998,
+      111.15899999999999,
+      106.25200000000001
+    ],
+    "payables": [
+      42.895,
+      42.117,
+      38.7,
+      36.357
+    ],
+    "debt": [
+      35.147,
+      38.876,
+      41.203,
+      36.731
+    ],
+    "share_capital": [
+      0.151,
+      0.151,
+      0.15,
+      0.149
+    ],
+    "retained_earnings": [
+      56.45299999999999,
+      62.55,
+      69.13699999999999,
+      68.80000000000001
+    ],
+    "reported_net_ppe": [
+      37.67,
+      42.695,
+      46.506,
+      44.018
+    ],
+    "reported_accounts_payable": [
+      8.788,
+      9.049,
+      8.63,
+      8.223
+    ],
+    "total_assets": [
+      134.646,
+      143.694,
+      149.19,
+      142.037
+    ],
+    "total_liabilities": [
+      78.042,
+      80.993,
+      79.903,
+      73.088
+    ],
+    "total_equity": [
+      56.604,
+      62.701,
+      69.287,
+      68.949
+    ],
+    "capex": [
+      5.082,
+      7.807,
+      5.552,
+      4.67
+    ],
+    "operating_cash_flow": [
+      17.835,
+      18.403,
+      18.925,
+      18.875
+    ],
+    "investing_cash_flow": [
+      -5.92,
+      -8.31,
+      -6.539,
+      -4.64
+    ],
+    "financing_cash_flow": [
+      -12.686,
+      -9.397,
+      -10.716,
+      -14.896
+    ],
+    "reported_net_income": [
+      14.084,
+      15.174,
+      12.55,
+      10.878
+    ]
+  },
+  "assumptions": {
+    "revenue_growth": [
+      0.038,
+      0.0352,
+      0.032,
+      0.0288,
+      0.026
+    ],
+    "cogs_pct_revenue": null,
+    "employee_pct_revenue": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "other_opex_pct_revenue": [
+      0.3522,
+      0.3522,
+      0.3522,
+      0.3522,
+      0.3522
+    ],
+    "receivable_days": [
+      19.9,
+      19.9,
+      19.9,
+      19.9,
+      19.9
+    ],
+    "inventory_days": [
+      305.5,
+      305.5,
+      305.5,
+      305.5,
+      305.5
+    ],
+    "payable_days": [
+      545.7,
+      545.7,
+      545.7,
+      545.7,
+      545.7
+    ],
+    "capex_pct_revenue": [
+      0.0699,
+      0.0699,
+      0.0699,
+      0.0699,
+      0.0699
+    ],
+    "depreciation_pct_opening_nb": [
+      0.072,
+      0.072,
+      0.072,
+      0.072,
+      0.072
+    ],
+    "interest_rate": [
+      0.0313,
+      0.0313,
+      0.0313,
+      0.0313,
+      0.0313
+    ],
+    "debt_repayment": [
+      7.3462000000000005,
+      7.3462000000000005,
+      7.3462000000000005,
+      7.3462000000000005,
+      7.3462000000000005
+    ],
+    "tax_rate": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3
+    ],
+    "dividend_payout": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.044,
+    "beta": 0.896,
+    "equity_risk_premium": 0.055,
+    "pretax_cost_of_debt": 0.085,
+    "debt_weight": 0.1579545956743186,
+    "terminal_growth_rate": 0.04,
+    "shares_outstanding": 0.490630174,
+    "exit_multiple_ev_ebitda": 25.0,
+    "current_market_price": 399.1
+  }
+}

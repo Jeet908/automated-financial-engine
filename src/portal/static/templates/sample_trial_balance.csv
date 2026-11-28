@@ -1,0 +1,16 @@
+Account Code,Account Name,Account Type,Debit,Credit
+4000,Operating Revenue,Revenue,0,124800000.00
+5000,Cost of Goods Sold (COGS),Expense,71610000.00,0
+5100,Salaries & Employee Benefits,Expense,12060000.00,0
+5200,General & Administrative Expenses,Expense,14790000.00,0
+5300,Depreciation & Amortization,Expense,4300000.00,0
+5400,Interest Expense / Financing Costs,Expense,2300000.00,0
+5500,Income Tax Provision,Expense,4850000.00,0
+1000,Cash & Cash Equivalents,Asset,26950000.00,0
+1100,Accounts Receivable,Asset,15330000.00,0
+1200,Inventories,Asset,9810000.00,0
+1500,Property Plant & Equipment (Net PPE),Asset,46500000.00,0
+2000,Accounts Payable,Liability,0,11770000.00
+2100,Long Term Debt & Notes Payable,Liability,0,18400000.00
+3000,Common Stock / Share Capital,Equity,0,20000000.00
+3100,Retained Earnings & Reserves,Equity,0,48420000.00

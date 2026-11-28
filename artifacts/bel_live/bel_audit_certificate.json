@@ -1,0 +1,59 @@
+{
+  "overall_status": "PASSED",
+  "is_valid": true,
+  "checks": [
+    {
+      "name": "Balance Sheet Balance Identity",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Total Assets == Total Liabilities + Equity verified with 0.000000 discrepancy across 10 periods (FY21A-FY30E)"
+    },
+    {
+      "name": "Cash Flow Roll-Forward Identity",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Closing Cash == Opening Cash + CFO + CFI + CFF verified across all projection periods"
+    },
+    {
+      "name": "Retained Earnings Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Closing RE == Opening RE + PAT - Dividends verified across all periods"
+    },
+    {
+      "name": "Fixed Assets Net Block Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Closing Net Block == Opening Net Block + Capex - Depr verified across all periods"
+    },
+    {
+      "name": "Debt Amortization Roll-Forward",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "Closing Debt == Opening Debt - Repayment verified across all periods"
+    },
+    {
+      "name": "Working Capital Change Reconciliation",
+      "passed": true,
+      "max_discrepancy": 0.0,
+      "tolerance": 0.0001,
+      "details": "ΔNWC == NWC(t) - NWC(t-1) verified across all periods"
+    }
+  ],
+  "model_metadata": {
+    "name": "Bharat Electronics Limited",
+    "ticker": "BEL",
+    "currency": "INR"
+  },
+  "valuation_summary": {
+    "enterprise_value": 213670.5,
+    "equity_value": 223485.5,
+    "value_per_share": 305.73,
+    "wacc": 0.1203
+  }
+}

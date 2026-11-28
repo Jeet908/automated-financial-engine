@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "Bharat Electronics Limited",
+    "ticker": "BEL",
+    "industry": "Aerospace & Defence Electronics",
+    "currency": "INR",
+    "currency_unit": "INR crore",
+    "shares_unit": "crore",
+    "historical_years": ["FY21A", "FY22A", "FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "Live web-scraped model of Bharat Electronics Limited (NSE: BEL) with verified accounting invariants."
+  },
+  "valuation": {
+    "fair_value_per_share": 305.73,
+    "fair_value_rounded_rs": 306,
+    "current_market_price": 298.50,
+    "projected_upside_pct": 2.42,
+    "enterprise_value": 213670.5,
+    "equity_value": 223485.5,
+    "wacc": 0.1203,
+    "wacc_displayed": 0.120,
+    "cost_of_equity": 0.12325,
+    "after_tax_cost_of_debt": 0.06375,
+    "debt_weight": 0.05,
+    "equity_weight": 0.95,
+    "sum_pv_fcff": 19450.5,
+    "terminal_value_gordon": 342850.0,
+    "pv_terminal_value": 194220.0,
+    "terminal_value_pct_of_ev": 90.9,
+    "terminal_growth_rate": 0.055,
+    "shares_outstanding": 730.98,
+    "base_debt_fy25": 35.0,
+    "base_cash_fy25": 9850.0,
+    "net_debt_fy25": -9815.0
+  },
+  "comps": {
+    "implied_price_per_share": 318.0,
+    "median_ev_ebitda": 32.5
+  },
+  "lbo": {
+    "moic": 2.45,
+    "irr": 0.198
+  },
+  "monte_carlo": {
+    "mean_price": 308.5,
+    "median_price": 307.2,
+    "pct_5_var": 254.5,
+    "pct_95": 368.2,
+    "prob_undervalued": 56.8
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true,
+    "max_discrepancy": 0.0
+  }
+}

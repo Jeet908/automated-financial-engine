@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "Titan Heavy Industries Corp",
+    "ticker": "THIC",
+    "industry": "Industrial Machinery & Capital Goods",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "Capital-intensive heavy machinery manufacturer with cyclically leveraged balance sheet"
+  },
+  "valuation": {
+    "fair_value_per_share": 55.35,
+    "fair_value_rounded": 55,
+    "current_market_price": 50.0,
+    "projected_upside_pct": 10.7,
+    "enterprise_value": 980.2,
+    "equity_value": 830.2,
+    "wacc": 0.090725,
+    "wacc_displayed": 0.091,
+    "cost_of_equity": 0.1055,
+    "after_tax_cost_of_debt": 0.05625,
+    "debt_weight": 0.30,
+    "equity_weight": 0.70,
+    "sum_pv_fcff": 282.4,
+    "terminal_value_gordon": 1084.2,
+    "pv_terminal_value": 697.8,
+    "terminal_value_pct_of_ev": 71.19,
+    "terminal_growth_rate": 0.025,
+    "shares_outstanding": 15.0,
+    "base_debt_fy25": 210.0,
+    "base_cash_fy25": 60.0,
+    "net_debt_fy25": 150.0
+  },
+  "comps": {
+    "implied_price_per_share": 52.0,
+    "median_ev_ebitda": 6.5
+  },
+  "lbo": {
+    "moic": 1.88,
+    "irr": 0.135
+  },
+  "monte_carlo": {
+    "mean_price": 55.6,
+    "median_price": 55.2,
+    "pct_5_var": 42.1,
+    "pct_95": 71.8,
+    "prob_undervalued": 68.5
+  },
+  "accounting_audit": {
+    "status": "PASSED",
+    "all_passed": true,
+    "max_discrepancy": 0.0
+  }
+}

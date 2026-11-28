@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "name": "CloudScale Technologies Inc",
+    "ticker": "CSCL",
+    "industry": "B2B Enterprise Software & SaaS",
+    "currency": "USD",
+    "currency_unit": "USD million",
+    "shares_unit": "million",
+    "historical_years": ["FY23A", "FY24A", "FY25A"],
+    "projection_years": ["FY26E", "FY27E", "FY28E", "FY29E", "FY30E"],
+    "description": "Enterprise SaaS business with high gross margins, low capex, and negative working capital"
+  },
+  "historicals": {
+    "revenue": [250.0, 340.0, 450.0],
+    "cogs": [50.0, 68.0, 90.0],
+    "employee_costs": [90.0, 115.0, 145.0],
+    "other_expenses": [60.0, 75.0, 95.0],
+    "depreciation": [12.0, 15.0, 18.0],
+    "interest": [5.0, 4.0, 3.0],
+    "tax": [8.0, 15.0, 24.5],
+    "dividends": [0.0, 0.0, 0.0],
+    "cash": [85.0, 120.0, 180.0],
+    "receivables": [35.0, 48.0, 62.0],
+    "inventory": [0.0, 0.0, 0.0],
+    "net_fixed_assets": [45.0, 52.0, 60.0],
+    "payables": [40.0, 55.0, 75.0],
+    "debt": [50.0, 40.0, 30.0],
+    "share_capital": [100.0, 100.0, 100.0],
+    "retained_earnings": [-25.0, 25.0, 97.0]
+  },
+  "assumptions": {
+    "revenue_growth": [0.28, 0.24, 0.20, 0.16, 0.12],
+    "cogs_pct_revenue": [0.20, 0.20, 0.20, 0.20, 0.20],
+    "employee_pct_revenue": [0.30, 0.29, 0.28, 0.27, 0.26],
+    "other_opex_pct_revenue": [0.20, 0.19, 0.18, 0.17, 0.16],
+    "receivable_days": [50.0, 50.0, 50.0, 50.0, 50.0],
+    "inventory_days": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "payable_days": [60.0, 60.0, 60.0, 60.0, 60.0],
+    "capex_pct_revenue": [0.03, 0.03, 0.03, 0.03, 0.03],
+    "depreciation_pct_opening_nb": [0.20, 0.20, 0.20, 0.20, 0.20],
+    "interest_rate": [0.06, 0.06, 0.06, 0.06, 0.06],
+    "debt_repayment": [10.0, 10.0, 10.0, 0.0, 0.0],
+    "tax_rate": [0.21, 0.21, 0.21, 0.21, 0.21],
+    "dividend_payout": [0.0, 0.0, 0.0, 0.0, 0.0]
+  },
+  "valuation_inputs": {
+    "risk_free_rate": 0.042,
+    "beta": 1.25,
+    "equity_risk_premium": 0.055,
+    "pretax_cost_of_debt": 0.065,
+    "debt_weight": 0.05,
+    "terminal_growth_rate": 0.035,
+    "shares_outstanding": 25.0,
+    "exit_multiple_ev_ebitda": 18.0,
+    "current_market_price": 75.0
+  }
+}

@@ -1,0 +1,62 @@
+name: Daily Automated Financial Modeling & Valuation Pipeline
+
+on:
+  schedule:
+    # Runs every day at 00:00 UTC (05:30 AM IST)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual one-click trigger from GitHub Actions UI
+
+permissions:
+  contents: write # Grants permission to commit and push updated artifacts to the repo
+
+jobs:
+  run-and-sync-models:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install openpyxl
+
+      - name: Smoke-test web application startup
+        run: |
+          python -c "from fastapi.testclient import TestClient; from app import app; from discover_and_run import run_discovery_pipeline; response = TestClient(app).get('/api/v1/health'); assert response.status_code == 200 and response.json()['status'] == 'online'"
+
+      - name: Execute Automated Financial Modeling & Valuation Engine
+        run: |
+          python run_engine.py
+
+      - name: Run Test Suite & Accounting Invariant Verification
+        run: |
+          python tests/run_tests.py
+
+      - name: Commit and Push Updated Artifacts
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stage artifacts and updated outputs
+          git add artifacts/ inputs/ client_outbox/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes detected in model outputs."
+          else
+            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            git commit -m "chore(automated): daily financial valuation update - ${TIMESTAMP} [skip ci]"
+            git push origin main
+          fi

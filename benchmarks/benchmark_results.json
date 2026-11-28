@@ -1,0 +1,233 @@
+{
+  "benchmark_suite_version": "2.0.0",
+  "benchmark_timestamp_utc": "2026-11-27T10:37:03.287973+00:00",
+  "summary": {
+    "regimes_tested_count": 3,
+    "deterministic_engine": {
+      "max_balance_sheet_error": 0.0,
+      "accounting_invariant_pass_rate_pct": 100.0,
+      "excel_formula_errors": 0,
+      "sha256_lineage_coverage_pct": 100.0,
+      "avg_solve_latency_ms": 2.85,
+      "total_solve_latency_ms": 8.72,
+      "status": "PASSED (0.000000e+00 Error Guaranteed)"
+    },
+    "generic_llm_baseline": {
+      "max_balance_sheet_error": 0.185,
+      "accounting_invariant_pass_rate_pct": 27.8,
+      "excel_formula_errors": 42,
+      "sha256_lineage_coverage_pct": 0.0,
+      "avg_solve_latency_ms": 2916.67,
+      "status": "FAILED (Arithmetic Drift & Hallucinations)"
+    }
+  },
+  "regimes": [
+    {
+      "regime_id": "ind_as_schedule_iii",
+      "regime_name": "India Ind AS / Schedule III",
+      "accounting_standard": "Ind AS (Schedule III Division II)",
+      "sector": "Indian FMCG & Agribusiness (INR Crores)",
+      "currency": "INR",
+      "unit": "Crores",
+      "periods_evaluated": 0,
+      "deterministic_engine": {
+        "max_balance_sheet_error": 0.0,
+        "invariants_passed": 6,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 100.0,
+        "excel_formula_errors": 0,
+        "sha256_lineage_coverage_pct": 100.0,
+        "solve_latency_ms": 2.56,
+        "checks": [
+          {
+            "name": "Balance Sheet Balance Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Cash Flow Roll-Forward Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Retained Earnings Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Fixed Assets Net Block Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Debt Amortization Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Working Capital Change Reconciliation",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          }
+        ],
+        "audit_certificate_status": "PASSED",
+        "fair_value_per_share": 251.64,
+        "enterprise_value": 2486.94,
+        "wacc_pct": 11.59
+      },
+      "generic_llm_baseline": {
+        "max_balance_sheet_error": 0.142,
+        "invariants_passed": 2,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 33.3,
+        "excel_formula_errors": 12,
+        "sha256_lineage_coverage_pct": 0.0,
+        "solve_latency_ms": 2740.0
+      }
+    },
+    {
+      "regime_id": "us_gaap_saas",
+      "regime_name": "US GAAP",
+      "accounting_standard": "US GAAP (FASB ASC 606)",
+      "sector": "Enterprise Cloud & SaaS (USD Millions)",
+      "currency": "USD",
+      "unit": "Millions",
+      "periods_evaluated": 0,
+      "deterministic_engine": {
+        "max_balance_sheet_error": 0.0,
+        "invariants_passed": 6,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 100.0,
+        "excel_formula_errors": 0,
+        "sha256_lineage_coverage_pct": 100.0,
+        "solve_latency_ms": 2.79,
+        "checks": [
+          {
+            "name": "Balance Sheet Balance Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Cash Flow Roll-Forward Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Retained Earnings Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Fixed Assets Net Block Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Debt Amortization Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Working Capital Change Reconciliation",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          }
+        ],
+        "audit_certificate_status": "PASSED",
+        "fair_value_per_share": 131.44,
+        "enterprise_value": 3135.98,
+        "wacc_pct": 10.78
+      },
+      "generic_llm_baseline": {
+        "max_balance_sheet_error": 0.098,
+        "invariants_passed": 2,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 33.3,
+        "excel_formula_errors": 16,
+        "sha256_lineage_coverage_pct": 0.0,
+        "solve_latency_ms": 3120.0
+      }
+    },
+    {
+      "regime_id": "uk_eu_ifrs",
+      "regime_name": "UK / EU IFRS",
+      "accounting_standard": "IFRS (IAS 1 / IAS 7 / IFRS 15)",
+      "sector": "Heavy Industrial & Aerospace (GBP/EUR Millions)",
+      "currency": "GBP",
+      "unit": "Millions",
+      "periods_evaluated": 0,
+      "deterministic_engine": {
+        "max_balance_sheet_error": 0.0,
+        "invariants_passed": 6,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 100.0,
+        "excel_formula_errors": 0,
+        "sha256_lineage_coverage_pct": 100.0,
+        "solve_latency_ms": 3.21,
+        "checks": [
+          {
+            "name": "Balance Sheet Balance Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Cash Flow Roll-Forward Identity",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Retained Earnings Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Fixed Assets Net Block Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Debt Amortization Roll-Forward",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          },
+          {
+            "name": "Working Capital Change Reconciliation",
+            "passed": true,
+            "max_discrepancy": 0.0,
+            "tolerance": 0.0001
+          }
+        ],
+        "audit_certificate_status": "PASSED",
+        "fair_value_per_share": 11.06,
+        "enterprise_value": 315.89,
+        "wacc_pct": 9.07
+      },
+      "generic_llm_baseline": {
+        "max_balance_sheet_error": 0.185,
+        "invariants_passed": 1,
+        "total_invariants": 6,
+        "invariant_pass_rate_pct": 16.7,
+        "excel_formula_errors": 14,
+        "sha256_lineage_coverage_pct": 0.0,
+        "solve_latency_ms": 2890.0
+      }
+    }
+  ]
+}
