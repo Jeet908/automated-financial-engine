@@ -206,6 +206,7 @@ class ExecutivePackCompiler:
             metadata=meta,
             is_startup=is_startup,
             audit_passed=audit_passed,
+            quant_review=quant_review,
         )
 
         # 5. Deliverable 3: 8-Slide Valuation Pitchbook (.pptx)
@@ -385,6 +386,7 @@ class ExecutivePackCompiler:
         metadata: dict,
         is_startup: bool,
         audit_passed: bool,
+        quant_review: Optional[dict] = None,
     ):
         doc = SimpleDocTemplate(
             pdf_path,
@@ -770,6 +772,45 @@ class ExecutivePackCompiler:
             story.append(wc_tbl)
 
         story.append(Spacer(1, 8))
+
+        # ── Quant Reviewer Agent & IC Guardrails ────────────────────────────
+        q_rev = quant_review or review_quant_anomalies(engine_output, metadata)
+        q_status = str(q_rev.get("status", "clean")).upper()
+        q_anomalies = q_rev.get("anomalies", [])
+        story.append(Paragraph(f"<b>QUANT REVIEWER AGENT &amp; IC GUARDRAILS ({q_status})</b>", section_style))
+        story.append(Spacer(1, 3))
+        if not q_anomalies:
+            story.append(
+                Paragraph(
+                    f"<font size='7.5' color='#047857'>✔ {q_rev.get('summary', 'All quantitative diagnostics within institutional guardrails.')}</font>",
+                    cell_style,
+                )
+            )
+        else:
+            qr_rows = [[
+                Paragraph("<font color='#FFFFFF'>Severity</font>", cell_bold),
+                Paragraph("<font color='#FFFFFF'>Diagnostic</font>", cell_bold),
+                Paragraph("<font color='#FFFFFF'>Metric &amp; Recommendation</font>", cell_bold),
+            ]]
+            for item in q_anomalies[:3]:
+                qr_rows.append([
+                    Paragraph(f"<b>{item.get('severity', 'MEDIUM')}</b>", cell_bold),
+                    Paragraph(str(item.get("title", "")), cell_style),
+                    Paragraph(f"<b>{item.get('metric', '')}</b> — {item.get('recommendation', '')}", cell_style),
+                ])
+            qr_tbl = Table(qr_rows, colWidths=[65, 145, 330])
+            qr_tbl.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), RL_CARD_BG),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                ("GRID", (0, 0), (-1, -1), 0.5, RL_BORDER),
+            ]))
+            story.append(qr_tbl)
+
+        story.append(Spacer(1, 6))
 
         # Footer Note
         job_id = metadata.get("job_id", "JOB-LIVE-VERIFIED")

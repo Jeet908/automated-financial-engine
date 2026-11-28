@@ -423,6 +423,7 @@ export function renderLiveDashboard(data) {
     window._lastValuationResult = data;
 
     renderPainPoints(data);
+    renderQuantReview(data);
     initSensitivityHeatmap(data);
     initMonteCarloCanvas(data);
     initDuPontWaterfall(data);
@@ -935,6 +936,57 @@ export function renderPainPoints(data) {
             <div style="font-size:var(--font-sm); color:var(--accent-odd); font-weight:600; line-height:1.4;">${c.impact}</div>
         </div>
     `).join('');
+    panel.style.display = 'block';
+}
+
+export function renderQuantReview(data) {
+    const panel = document.getElementById('quant-review-panel');
+    const container = document.getElementById('quant-review-items');
+    const badge = document.getElementById('quant-review-status-badge');
+    const summaryEl = document.getElementById('quant-review-summary');
+    if (!panel || !container) return;
+
+    const qr = data && data.quant_review;
+    if (!qr) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    const status = String(qr.status || 'clean').toLowerCase();
+    if (badge) {
+        badge.textContent = status.toUpperCase();
+        badge.style.color = status === 'clean' ? 'var(--status-pass)' : (status === 'attention' ? '#d97706' : '#dc2626');
+    }
+    if (summaryEl) {
+        summaryEl.textContent = qr.summary || 'Quantitative diagnostics complete.';
+    }
+
+    const anomalies = Array.isArray(qr.anomalies) ? qr.anomalies : [];
+    if (!anomalies.length) {
+        container.innerHTML = `
+            <div class="bento-cell" style="padding:var(--space-4); border-radius:10px; border-left:3px solid var(--status-pass);">
+                <div style="font-weight:700; color:var(--text-primary); font-size:var(--font-base); margin-bottom:var(--space-1);">✓ Institutional Guardrails Passed</div>
+                <div style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.45;">WACC, Terminal Value concentration, Perpetuity spread, and Working Capital days are within institutional thresholds.</div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = anomalies.map(a => {
+            const sev = String(a.severity || 'MEDIUM').toUpperCase();
+            const sevColor = sev === 'HIGH' ? '#dc2626' : (sev === 'MEDIUM' ? '#d97706' : '#0284c7');
+            const sevBg = sev === 'HIGH' ? 'rgba(220,38,38,0.12)' : (sev === 'MEDIUM' ? 'rgba(217,119,6,0.12)' : 'rgba(2,132,199,0.12)');
+            return `
+                <div class="bento-cell" style="padding:var(--space-4); border-radius:10px; border-left:3px solid ${sevColor};">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-2);">
+                        <span style="font-size:var(--font-xs); font-weight:700; font-family:'JetBrains Mono', monospace; color:${sevColor};">${escapeHtml(a.code || 'GUARDRAIL')}</span>
+                        <span style="font-size:var(--font-xs); font-weight:700; padding:0.15rem 0.55rem; border-radius:9999px; background:${sevBg}; color:${sevColor};">${escapeHtml(sev)}</span>
+                    </div>
+                    <div style="font-weight:700; color:var(--text-primary); font-size:var(--font-base); margin-bottom:var(--space-1);">${escapeHtml(a.title || '')}</div>
+                    <div style="font-size:var(--font-xs); font-family:'JetBrains Mono', monospace; color:var(--text-secondary); margin-bottom:var(--space-2);">${escapeHtml(a.metric || '')}</div>
+                    <div style="font-size:var(--font-sm); color:var(--text-secondary); line-height:1.45;">${escapeHtml(a.recommendation || '')}</div>
+                </div>
+            `;
+        }).join('');
+    }
     panel.style.display = 'block';
 }
 

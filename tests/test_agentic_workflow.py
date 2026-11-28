@@ -129,3 +129,18 @@ def test_coa_agent_maps_nonstandard_private_ledger():
     assert normalized.cash == [25.0, 32.0]
     assert normalized.coa_mapping_report is not None
     assert normalized.coa_mapping_report["mapped_count"] >= 2
+
+
+def test_portal_ui_and_memo_include_quant_reviewer():
+    from pathlib import Path
+    from financial_engine.engine import FinancialEngine
+    from financial_engine.reporting.executive_memo import ExecutiveMemoGenerator
+
+    index_html = Path("src/portal/index.html").read_text(encoding="utf-8")
+    valuation_js = Path("src/portal/static/modules/valuation.js").read_text(encoding="utf-8")
+    assert "quant-review-panel" in index_html
+    assert "renderQuantReview" in valuation_js
+
+    model = FinancialEngine.from_template("kaveri_foods").solve(run_mc=True, mc_iterations=100)
+    memo_md = ExecutiveMemoGenerator(model).render()
+    assert "## 7. Quant Reviewer Agent & IC Guardrails" in memo_md

@@ -4,6 +4,7 @@ Synthesizes DCF, Comps, LBO, Sensitivity, and Monte Carlo findings into an insti
 """
 
 from financial_engine.engine import FinancialModel
+from financial_engine.reporting.quant_agents import review_quant_anomalies
 
 
 class ExecutiveMemoGenerator:
@@ -55,6 +56,31 @@ class ExecutiveMemoGenerator:
         opening_debt = hist.debt[-1]
         closing_debt = m.debt_schedule.closing_debt[-1]
         final_interest = m.debt_schedule.interest_expense[-1]
+
+        quant_review = review_quant_anomalies(
+            {
+                "Base": {
+                    "wacc": float(dcf.wacc),
+                    "dcf": {
+                        "enterprise_value": float(dcf.enterprise_value),
+                        "pv_tv": float(dcf.pv_terminal_value_gordon),
+                        "terminal_growth_rate": float(dcf.terminal_growth_rate),
+                        "beta": float(dcf.wacc_details.beta),
+                    },
+                }
+            },
+            pain_points=getattr(m, "pain_points", None),
+        )
+        qr_status = str(quant_review.get("status", "clean")).upper()
+        qr_anomalies = quant_review.get("anomalies", [])
+        qr_lines = (
+            "\n".join(
+                f"* **[{a['severity']}] {a['title']} ({a['metric']}):** {a['recommendation']}"
+                for a in qr_anomalies
+            )
+            if qr_anomalies
+            else "* **CLEAN:** All quantitative diagnostics (WACC, Terminal Value share, Perpetuity spread, and Working Capital) are within institutional guardrails."
+        )
 
         md = f"""# INVESTMENT COMMITTEE MEMORANDUM
 
@@ -157,6 +183,14 @@ A 10,000-run Monte Carlo simulation incorporating normal volatility on WACC (sig
 ```
 {audit.summary()}
 ```
+
+---
+
+## 7. Quant Reviewer Agent & IC Guardrails ({qr_status})
+
+{quant_review.get("summary", "")}
+
+{qr_lines}
 
 **Conclusion:** The financial model is completely self-balancing, robust against stochastic stress testing, and verified ready for institutional deployment.
 """
