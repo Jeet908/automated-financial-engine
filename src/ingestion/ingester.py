@@ -206,17 +206,24 @@ class UniversalIngester:
 
         for page in doc:
             # find_tables is available in PyMuPDF >= 1.23
+            page_rows: list = []
             if hasattr(page, "find_tables"):
                 tables = page.find_tables()
                 for table in tables.tables:
-                    rows = table.extract()
-                    all_rows.extend(rows)
+                    page_rows.extend(table.extract())
+
+            if page_rows:
+                all_rows.extend(page_rows)
             else:
-                # Fallback: extract raw text blocks as rows
+                # Fallback: parse multi-space/tab-delimited financial rows from raw text
+                import re
                 text = page.get_text("text")
                 for line in text.split("\n"):
-                    if line.strip():
-                        all_rows.append([line.strip()])
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    cols = [c.strip() for c in re.split(r"\s{2,}|\t+", stripped) if c.strip()]
+                    all_rows.append(cols if len(cols) >= 2 else [stripped])
 
         doc.close()
 

@@ -10,6 +10,7 @@ from typing import Any
 
 from discover_and_run import run_discovery_pipeline
 from financial_engine.audit.provenance import LineageNode, SourceFact, build_provenance_ledger
+from financial_engine.reporting.quant_agents import review_quant_anomalies
 from src.cli import process_file
 from src.portal import database
 from src.portal.database import AuditArtifact, AuditLedgerEntry, Job, init_database, utc_now
@@ -245,6 +246,21 @@ def live_scrape_task(
                 ],
             },
             "pain_points": getattr(model, "pain_points", None),
+            "quant_review": review_quant_anomalies(
+                {
+                    "Base": {
+                        "wacc": float(model.wacc),
+                        "dcf": {
+                            "enterprise_value": float(model.enterprise_value),
+                            "pv_tv": float(getattr(model.dcf_result, "pv_terminal_value", getattr(model.dcf_result, "pv_tv", 0.0))),
+                            "terminal_growth_rate": float(getattr(model.dcf_result, "terminal_growth_rate", 0.025)),
+                            "beta": float(getattr(model, "beta", 1.0)),
+                        },
+                    }
+                },
+                meta={"data_tier": company.get("data_tier", "")},
+                pain_points=getattr(model, "pain_points", None),
+            ),
             "sensitivity": {
                 "center_wacc": round(float(model.wacc), 4),
                 "center_growth": round(float(model.dcf_result.terminal_growth_rate), 4),
@@ -530,6 +546,7 @@ def generate_pack_task(
                 "equity_value": round(equity_base, 2),
             },
             "accounting_audit": accounting_audit,
+            "quant_review": preview.get("quant_review") or review_quant_anomalies(eng_out, meta),
             "sensitivity": sensitivity,
             "monte_carlo": monte_carlo,
             "dupont_roe": {

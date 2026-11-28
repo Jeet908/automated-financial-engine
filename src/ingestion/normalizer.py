@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from pydantic import BaseModel, Field
 
+from src.ingestion.coa_agent import CoAMappingAgent
+
 
 # ---------------------------------------------------------------------------
 # Pydantic output model
@@ -76,6 +78,7 @@ class NormalizedFinancials(BaseModel):
     revenue_standard: str = ""     # e.g. "IND_AS_115", "IFRS_15", "ASC_606"
     lease_adjustment_applied: bool = False
     revenue_adjustment_applied: bool = False
+    coa_mapping_report: Optional[Dict[str, Any]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -240,9 +243,22 @@ class DataNormalizer:
             # Fallback: treat all columns except the first as period columns
             period_cols = [str(c) for c in raw_df.columns[1:]]
 
-        # --- Extract all canonical series ---
+        # --- Extract all canonical series (regex first, then Agentic CoA fallback) ---
+        raw_series: Dict[str, List[Optional[float]]] = {
+            field_name: _extract_series(raw_df, field_name, period_cols)
+            for field_name in _ROW_PATTERNS
+        }
+        already_mapped = {
+            f for f, vals in raw_series.items() if any(v is not None for v in vals)
+        }
+        agent_series, coa_report = CoAMappingAgent().map_unmatched_rows(
+            raw_df, period_cols, already_mapped
+        )
+        for field_name, vals in agent_series.items():
+            raw_series[field_name] = vals
+
         def get(field: str) -> List[Optional[float]]:
-            return _extract_series(raw_df, field, period_cols)
+            return raw_series.get(field, [None] * len(period_cols))
 
         revenue       = get("revenue")
         cogs          = get("cogs")
@@ -368,4 +384,5 @@ class DataNormalizer:
             revenue_standard=_derive_revenue_standard(standard),
             lease_adjustment_applied=False,    # pass-through flag
             revenue_adjustment_applied=False,  # pass-through flag
+            coa_mapping_report=coa_report,
         )

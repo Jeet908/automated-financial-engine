@@ -44,7 +44,7 @@ def build_raw_data(wb, normalized):
 
     # Dump each field
     skip_fields = {"standard", "currency", "unit", "multiplier", "fiscal_year_end",
-                   "periods", "is_startup"}
+                   "periods", "is_startup", "coa_mapping_report"}
     row = 5
 
     for field, value in data.items():
@@ -62,9 +62,10 @@ def build_raw_data(wb, normalized):
                     cell.number_format = S.currency_format
         elif isinstance(value, dict):
             for c_idx, (k, v) in enumerate(value.items(), 2):
-                cell = ws.cell(row, c_idx, v if v is not None else "")
+                safe_v = str(v) if isinstance(v, (list, dict, tuple, set)) else v
+                cell = ws.cell(row, c_idx, safe_v if safe_v is not None else "")
                 cell.font = Font(color=S.BLUE)
-                if isinstance(v, float):
+                if isinstance(safe_v, float):
                     cell.number_format = S.currency_format
         elif isinstance(value, (int, float)):
             cell = ws.cell(row, 2, value)

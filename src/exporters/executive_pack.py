@@ -45,6 +45,7 @@ from pptx.enum.shapes import MSO_SHAPE
 # Existing financial engine components
 from src.exporters.workbook_compiler import WorkbookCompiler, _prepare_output
 from src.exporters.formula_checker import FormulaChecker
+from financial_engine.reporting.quant_agents import generate_ic_thesis, review_quant_anomalies
 
 
 # ── Color Palettes & Styles ──────────────────────────────────────────────────
@@ -194,6 +195,7 @@ class ExecutivePackCompiler:
                     break
 
         audit_passed = no_formula_errors and bs_balanced
+        quant_review = review_quant_anomalies(prepared_output, meta, kwargs.get("pain_points"))
 
         # 4. Deliverable 2: 2-Page Institutional Valuation Tear-Sheet (.pdf)
         pdf_path = os.path.join(output_dir, f"{clean_name}_Valuation_TearSheet.pdf")
@@ -215,6 +217,7 @@ class ExecutivePackCompiler:
             metadata=meta,
             is_startup=is_startup,
             audit_passed=audit_passed,
+            quant_review=quant_review,
         )
 
         # 6. Bundling into Unified ZIP Archive
@@ -266,6 +269,7 @@ class ExecutivePackCompiler:
             "ebitda": float(last_ebitda),
             "net_income": float(last_net_income),
             "pat": float(last_net_income),
+            "quant_review": quant_review,
         }
 
         return {
@@ -957,6 +961,7 @@ class ExecutivePackCompiler:
         metadata: dict,
         is_startup: bool,
         audit_passed: bool,
+        quant_review: Optional[dict] = None,
     ):
         prs = Presentation()
         prs.slide_width = Inches(13.333)
@@ -978,7 +983,7 @@ class ExecutivePackCompiler:
         self._slide_1_cover(prs, metadata, dcf_base, dcf_bull, dcf_bear)
 
         # Slide 2: Executive Summary & Investment Thesis
-        self._slide_2_exec_summary(prs, metadata, dcf_base, dcf_bull, dcf_bear, cagr)
+        self._slide_2_exec_summary(prs, metadata, dcf_base, dcf_bull, dcf_bear, cagr, engine_output=engine_output, quant_review=quant_review)
 
         # Slide 3: Historical Financial Performance & Margin Evolution
         self._slide_3_historical(prs, metadata, fin)
@@ -996,7 +1001,7 @@ class ExecutivePackCompiler:
         self._slide_7_sensitivity_football_field(prs, metadata, base, dcf_base, dcf_bull, dcf_bear, is_startup, normalized_financials)
 
         # Slide 8: Automated Audit & Reconciliation Certificate
-        self._slide_8_audit_certificate(prs, metadata, audit_passed)
+        self._slide_8_audit_certificate(prs, metadata, audit_passed, quant_review=quant_review)
 
         prs.save(pptx_path)
 
@@ -1199,7 +1204,17 @@ class ExecutivePackCompiler:
         p_d.font.size = Pt(8)
         p_d.font.color.rgb = PPTX_TEXT_MUTED
 
-    def _slide_2_exec_summary(self, prs, meta: dict, dcf_base: dict, dcf_bull: dict, dcf_bear: dict, cagr: float):
+    def _slide_2_exec_summary(
+        self,
+        prs,
+        meta: dict,
+        dcf_base: dict,
+        dcf_bull: dict,
+        dcf_bear: dict,
+        cagr: float,
+        engine_output: Optional[dict] = None,
+        quant_review: Optional[dict] = None,
+    ):
         slide = self._add_slide(prs)
         self._add_slide_header(
             slide,
@@ -1234,44 +1249,25 @@ class ExecutivePackCompiler:
             accent_color=PPTX_AMBER,
         )
 
-        # 4 Structured Thesis Cards
+        # 4 Structured Thesis Cards (grounded dynamically in solved model metrics)
+        accent_map = {
+            "blue": PPTX_BLUE,
+            "emerald": PPTX_EMERALD,
+            "amber": PPTX_AMBER,
+            "rose": PPTX_ROSE,
+        }
+        raw_thesis = generate_ic_thesis(
+            engine_output=engine_output or {},
+            meta=meta,
+            dcf_base=dcf_base,
+            dcf_bull=dcf_bull,
+            dcf_bear=dcf_bear,
+            cagr=cagr,
+            quant_review=quant_review,
+        )
         thesis_items = [
-            (
-                "Core Market Moat & Leadership",
-                [
-                    "Demonstrated competitive advantage with high recurring revenue.",
-                    "Mission-critical customer relationships with strong retention.",
-                    "Expanding total addressable market through disciplined execution.",
-                ],
-                PPTX_BLUE,
-            ),
-            (
-                "Operating Leverage & Expansion",
-                [
-                    "Operating margins expanding with fixed-cost leverage.",
-                    "Automation & scale driving sustained EBITDA efficiency.",
-                    "Unit economics resilient across inflationary regimes.",
-                ],
-                PPTX_EMERALD,
-            ),
-            (
-                "Free Cash Flow Generation",
-                [
-                    "High cash conversion cycle with minimal working capital drag.",
-                    "Capex-light operational model maximizing unlevered FCF.",
-                    "Zero structural debt enabling strategic capital redeployment.",
-                ],
-                PPTX_AMBER,
-            ),
-            (
-                "Downside Buffer & Valuation",
-                [
-                    "DCF intrinsic value anchored by audited historical baseline.",
-                    "Conservative terminal growth & WACC stress-tested.",
-                    "Robust balance sheet providing asymmetric risk-reward.",
-                ],
-                PPTX_ROSE,
-            ),
+            (title, bullets, accent_map.get(accent_key, PPTX_BLUE))
+            for title, bullets, accent_key in raw_thesis
         ]
 
         card_w = 2.7
@@ -1748,7 +1744,7 @@ class ExecutivePackCompiler:
         ]
         self._add_pptx_table(slide, 7.3, 2.4, 5.0, 3.8, ff_headers, ff_rows, [1.4, 1.2, 1.2, 1.2])
 
-    def _slide_8_audit_certificate(self, prs, meta: dict, audit_passed: bool):
+    def _slide_8_audit_certificate(self, prs, meta: dict, audit_passed: bool, quant_review: Optional[dict] = None):
         slide = self._add_slide(prs)
         self._add_slide_header(
             slide,
@@ -1813,7 +1809,12 @@ class ExecutivePackCompiler:
         ps2.font.color.rgb = PPTX_EMERALD if audit_passed else PPTX_ROSE
 
         ps3 = tfs.add_paragraph()
-        ps3.text = f"Cryptographic Merkle Root: {merkle_root[:24]}... | Verify: /api/v1/audit/verify/{job_id}"
+        q_status = str((quant_review or {}).get("status", "clean")).upper()
+        q_count = int((quant_review or {}).get("anomaly_count", 0))
+        ps3.text = (
+            f"Cryptographic Merkle Root: {merkle_root[:24]}... | "
+            f"Quant Reviewer: {q_status} ({q_count} flag(s)) | Verify: /api/v1/audit/verify/{job_id}"
+        )
         ps3.font.size = Pt(8)
         ps3.font.color.rgb = PPTX_TEXT_MUTED
 
